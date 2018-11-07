@@ -1,0 +1,13 @@
+{
+  "name": "asset-manager",
+  "plugins": {
+    "mongo": "3.2.9",
+    "memcached": "1.4.31"
+  },
+  "config": {
+    "NODE_ENV": "production"
+  },
+  "storage": {
+    "/var": "/app/var"
+  }
+}
