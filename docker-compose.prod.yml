@@ -12,7 +12,7 @@ services:
       PASSWORD: admin
       SIMPLE_ENCRYPTOR_KEY: 'secret-replace-me'
       NODE_ENV: production
-      ALLOW_IP: 172.19.
+      ALLOW_IP: "172."
       SOURCE_BASE: http://app:1234/source/
     volumes:
       - var:/app/var
