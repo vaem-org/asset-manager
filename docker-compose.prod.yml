@@ -1,0 +1,29 @@
+version: "3"
+volumes:
+  var:
+services:
+  app:
+    image: vaem/asset-manager
+    ports:
+    - 1234:1234
+    environment:
+      MONGO_URL: mongodb://mongo:27017/asset-manager
+      MEMCACHED_URL: memcached://memcached:11211
+      PASSWORD: admin
+      SIMPLE_ENCRYPTOR_KEY: 'secret-replace-me'
+      NODE_ENV: production
+      ALLOW_IP: 172.19.
+      SOURCE_BASE: http://app:1234/source/
+    volumes:
+      - var:/app/var
+
+  encoder:
+    image: vaem/encoder
+    environment:
+      ASSETMANAGER_URL: http://app:1234/
+
+  mongo:
+    image: mongo
+
+  memcached:
+    image: memcached

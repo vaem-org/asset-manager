@@ -29,6 +29,7 @@ import {renderIndex} from '../util/render-index';
 import {File} from '../model/file';
 import {Asset} from '../model/asset';
 import * as subtitles from '../util/subtitles';
+import {guessChannelLayout} from '../util/source';
 
 export default app => {
   const io = app.io.of('/uploads', null);

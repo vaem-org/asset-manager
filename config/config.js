@@ -17,7 +17,6 @@
  */
 require('dotenv').config();
 
-const _ = require('lodash');
 const fs = require('fs');
 
 const root = fs.realpathSync(`${__dirname}/..`);
@@ -63,5 +62,7 @@ module.exports = merge({
   tmp: `${root}/var/tmp`,
   source: `${root}/var/uploads`,
   archive: `${root}/var/archive`,
-  protocol: process.env.PROTOCOL
+  protocol: process.env.PROTOCOL,
+
+  sourceBase: process.env.SOURCE_BASE
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);

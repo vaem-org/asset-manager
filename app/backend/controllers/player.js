@@ -28,10 +28,10 @@ import moment from 'moment';
 import cors from 'cors';
 
 import querystring from 'querystring';
-import authUtil from '../util/auth';
 import {Asset} from '../model/asset';
 import {api, catchExceptions} from '../util/express-helpers';
 import {renderIndex} from '../util/render-index';
+import {checkIp} from '../util/auth';
 
 export default app => {
   const router = new express.Router({});
@@ -63,7 +63,7 @@ export default app => {
 
   // check authentication of stream
   const checkAuth = (req, res, next) => {
-    if (authUtil.checkIp(app.config, req.ip) || req.session.passport) {
+    if (checkIp(app.config, req.ip) || req.session.passport || req.session.basicAuthenticated) {
       return next();
     }
 

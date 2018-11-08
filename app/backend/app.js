@@ -125,6 +125,10 @@ run(1, () => {
         req.session.authenticated = null;
       }
 
+      if (req.session.basicAuthenticated) {
+        return next();
+      }
+
       if (config.googleAuth && !user) {
         if (!req.session.passport && !req.session.authenticated) {
           return res.redirect('/auth/passport/');
@@ -138,6 +142,9 @@ run(1, () => {
         res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
         res.statusCode = /^\/shared\/player/.exec(req.url) ? 403 : 401;
         return res.end();
+      }
+      else if (user) {
+        req.session.basicAuthenticated = true;
       }
 
       next();
