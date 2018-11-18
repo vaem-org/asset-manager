@@ -32,6 +32,11 @@ const passportMiddleware = app => {
       clientSecret: config.clientSecret,
       callbackURL: (config.base || '') + '/auth/passport/google'
     }, (accessToken, refreshToken, profile, done) => {
+      const domain = _.get(profile, '_json.domain');
+
+      if (domain !== config.hd) {
+        return done('Access denied');
+      }
       done(null, _.omit(profile, ['_raw', '_json']));
     }));
 
