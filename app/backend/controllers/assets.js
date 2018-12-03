@@ -205,7 +205,7 @@ export default app => {
     if (!await fs.exists(`${thumbnails}/${req.params.assetId}.png`)) {
       // create png thumbnail with ffmpeg
       const url = `${app.config.outputBase || req.base}/player/streams/${req.session.id}/${req.params.assetId}.m3u8`;
-      await createThumbnail(url, `${thumbnails}/${req.params.assetId}.png`, '0:00:10');
+      await createThumbnail(url, `${thumbnails}/${req.params.assetId}.png`, '0:00:00');
     }
 
     if (req.params[0] === 'jpg' && !await fs.exists(`${thumbnails}/${req.params.assetId}.jpg`)) {
