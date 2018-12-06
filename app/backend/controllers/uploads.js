@@ -200,12 +200,12 @@ export default app => {
 
   router.get('/assets', api(async () => Asset.find({state: 'processed'}).select('title').sort({createdAt: -1})));
 
-  router.post('/items/:id/assign-to/:assetId', fetchItem, api(async req => {
+  router.post('/items/:id/assign-to/:language/:assetId', fetchItem, api(async req => {
     return subtitles.convert(
       `${app.config.outputBase || req.base}/player/streams/${req.session.id}`,
       req.params.assetId,
       `${app.config.source}/${req.item.name}`,
-      'nl');
+      req.params.language);
   }));
 
   router.post('/archive', json, api(async req => {

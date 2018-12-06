@@ -89,6 +89,11 @@
                 item-text="title"
                 item-value="_id"
             />
+            <v-select
+                label="Language"
+                v-model="assignToAssetLanguage"
+                :items="['nl','en','fr','de']"
+            />
           </v-card-text>
           <v-card-actions>
             <v-spacer/>
@@ -245,6 +250,7 @@
         assignToAssetAssets: [],
         assignToAssetAsset: null,
         assignToAssetLoading: false,
+        assignToAssetLanguage: 'nl',
         loading: false,
         advancedAddToQueueDialog: false,
         advancedAddToQueueAudio: '',
@@ -316,7 +322,7 @@
 
         this.assignToAssetLoading = true;
         try {
-          await api.post(`items/${this.$refs.items.selected[0]._id}/assign-to/${this.assignToAssetAsset}`);
+          await api.post(`items/${this.$refs.items.selected[0]._id}/assign-to/${this.assignToAssetLanguage}/${this.assignToAssetAsset}`);
           this.assignToAssetLoading = false;
           this.assignToAssetDialog = false;
         }
