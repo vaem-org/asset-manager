@@ -25,10 +25,10 @@
     >
       <v-list>
         <template v-for="action in actions">
-          <v-list-tile @click="action.action" v-if="!action.file" :disabled="!getEnabled(action)">
+          <v-list-tile @click="action.action" v-if="!action.file && getEnabled(action)">
             <v-list-tile-title>{{ action.text }}</v-list-tile-title>
           </v-list-tile>
-          <v-list-tile v-else :disabled="!getEnabled(action)">
+          <v-list-tile v-else-if="getEnabled(action)">
             <v-list-tile-title class="file">
               {{ action.text }}
               <input type="file" @change="action.action" :multiple="action.multiple">
