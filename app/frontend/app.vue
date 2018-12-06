@@ -17,57 +17,50 @@
   -->
 
 <template>
-    <v-app id="inspire">
-        <v-toolbar
-                fixed
-                app
-                clipped-right
-                v-if="showToolbar"
-        >
-            <v-toolbar-side-icon @click.stop="drawer = !drawer"/>
-            <v-toolbar-title>{{ $route.meta.title }}</v-toolbar-title>
-        </v-toolbar>
-        <v-navigation-drawer
-                fixed
-                v-model="drawer"
-                app
-        >
-            <v-list>
-                <v-list-tile :to="{path: '/assets/'}">
-                    <v-list-tile-action>
-                        <v-icon>videocam</v-icon>
-                    </v-list-tile-action>
-                    <v-list-tile-content>
-                        Assets
-                    </v-list-tile-content>
-                </v-list-tile>
-                <v-list-tile :to="{path: '/encoders/'}">
-                    <v-list-tile-action>
-                        <v-icon>storage</v-icon>
-                    </v-list-tile-action>
-                    <v-list-tile-content>
-                        Encoders
-                    </v-list-tile-content>
-                </v-list-tile>
-                <v-list-tile :to="{path: '/uploads/'}">
-                    <v-list-tile-action>
-                        <v-icon>folder</v-icon>
-                    </v-list-tile-action>
-                    <v-list-tile-content>
-                        Uploads
-                    </v-list-tile-content>
-                </v-list-tile>
-            </v-list>
-        </v-navigation-drawer>
-        <v-content>
-            <router-view/>
-        </v-content>
-        <v-footer class="px-3" app>
-            <span>Asset manager</span>
-            <v-spacer/>
-            <span>&copy; {{ year }}</span>
-        </v-footer>
-    </v-app>
+  <v-app id="inspire">
+    <v-toolbar
+        fixed
+        app
+        clipped-right
+        v-if="showToolbar"
+    >
+      <v-toolbar-side-icon @click.stop="drawer = !drawer"/>
+      <v-toolbar-title>{{ $route.meta.title }}</v-toolbar-title>
+    </v-toolbar>
+    <v-navigation-drawer
+        fixed
+        v-model="drawer"
+        app
+    >
+      <v-list>
+        <v-list-tile :to="{path: '/assets/'}">
+          <v-list-tile-action>
+            <v-icon>videocam</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            Assets
+          </v-list-tile-content>
+        </v-list-tile>
+        <v-list-tile :to="{path: '/uploads/'}">
+          <v-list-tile-action>
+            <v-icon>folder</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            Uploads
+          </v-list-tile-content>
+        </v-list-tile>
+      </v-list>
+    </v-navigation-drawer>
+    <v-content>
+      <router-view/>
+    </v-content>
+    <v-footer app>
+      <v-btn icon small :to="{path:'/encoders/'}"><v-icon small>storage</v-icon></v-btn>
+      <span>Asset manager</span>
+      <v-spacer/>
+      <span>&copy; {{ year }}</span>
+    </v-footer>
+  </v-app>
 </template>
 <script>
   import moment from 'moment';

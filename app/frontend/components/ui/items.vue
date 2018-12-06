@@ -25,10 +25,10 @@
     >
       <v-list>
         <template v-for="action in actions">
-          <v-list-tile @click="action.action" v-if="!action.file && getEnabled(action)">
+          <v-list-tile @click="action.action" v-if="!action.file && getEnabled(action, true)">
             <v-list-tile-title>{{ action.text }}</v-list-tile-title>
           </v-list-tile>
-          <v-list-tile v-else-if="getEnabled(action)">
+          <v-list-tile v-else-if="getEnabled(action, true)">
             <v-list-tile-title class="file">
               {{ action.text }}
               <input type="file" @change="action.action" :multiple="action.multiple">
@@ -186,9 +186,9 @@
         this.refreshing = false;
       }, 250, {leading: true}),
 
-      getEnabled(action) {
+      getEnabled(action, contextMenu) {
         if (action.enabled) {
-          return action.enabled(this.selected);
+          return action.enabled(this.selected, contextMenu);
         }
 
         return action.multiple ? (this.selected.length !== 0) : (this.selected.length === 1);

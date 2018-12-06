@@ -160,7 +160,7 @@
             file: true,
             multiple: true,
             action: this.upload,
-            enabled: () => true
+            enabled: (selection, contextMenu) => !contextMenu
           },
           {
             text: 'Download',

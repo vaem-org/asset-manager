@@ -142,7 +142,7 @@
 </template>
 <script>
   import api from '@/util/api';
-  import {get as _get, clone as _clone, map as _map} from 'lodash';
+  import _ from 'lodash';
   import setClipboard from '@/util/set-clipboard';
   import alert from '@/util/alert';
 
@@ -162,8 +162,8 @@
     },
     data() {
       const atMostOneAndProcessed = () =>
-        _get(this, '$refs.items.selected.length') === 1 &&
-        _get(this, '$refs.items.selected[0].state') === 'processed';
+        _.get(this, '$refs.items.selected.length') === 1 &&
+        _.get(this, '$refs.items.selected[0].state') === 'processed';
 
       return {
         actions: [
@@ -246,7 +246,7 @@
 
       async edit() {
         this.labels = await api.get('labels');
-        this.editItem = _clone(this.$refs.items.selected[0]);
+        this.editItem = _.clone(this.$refs.items.selected[0]);
         this.editDialog = true;
       },
 
@@ -261,7 +261,7 @@
           this.shareUrl = await api.post(`items/${this.editItem._id}/share-url`, this.share);
         }
         else {
-          this.editItem = _clone(this.$refs.items.selected[0]);
+          this.editItem = _.clone(this.$refs.items.selected[0]);
           this.share = {
             weeksValid: 2
           };
@@ -278,7 +278,7 @@
         if (this.distributorDialog) {
           // perform set
           await api.post('set-distributor', {
-            ids: _map(this.$refs.items.selected, '_id'),
+            ids: _.map(this.$refs.items.selected, '_id'),
             distributor: this.selectedDistributor
           });
           this.distributorDialog = false;
@@ -319,7 +319,7 @@
           return;
         }
 
-        await api.post('remove', _map(this.$refs.items.selected, '_id'));
+        await api.post('remove', _.map(this.$refs.items.selected, '_id'));
         setTimeout(() => this.$refs.items.refresh(), 250);
       },
 
