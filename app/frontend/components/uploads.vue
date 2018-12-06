@@ -20,13 +20,6 @@
   <v-container fluid @drop.stop.prevent="upload" @dragover.prevent="dragover">
     <items :actions="actions" ref="items" :headers="headers" uri="items" sort-by="name" :loading="loading">
       <template slot="items" slot-scope="{props}">
-        <td>
-          <v-checkbox
-              primary
-              hide-details
-              v-model="props.selected"
-          />
-        </td>
         <td>{{ props.item.name }}</td>
         <td>{{ props.item.createdAt | dateFormat }}</td>
         <td>{{ props.item.size | bytes }}</td>

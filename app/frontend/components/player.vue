@@ -20,12 +20,12 @@
   <div>
     <v-dialog v-model="dialog" max-width="600px" v-if="useDialog">
       <v-card>
-        <v-card-media>
+        <v-responsive>
           <div class="player-container">
             <video controls class="video-js vjs-default-skin" preload="none" ref="video" autoplay>
             </video>
           </div>
-        </v-card-media>
+        </v-responsive>
       </v-card>
     </v-dialog>
     <div :class="playerClass" v-if="!useDialog">

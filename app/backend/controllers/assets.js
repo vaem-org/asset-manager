@@ -93,14 +93,14 @@ export default app => {
       .pipe(res);
   });
 
-  router.put('/items/:id/subtitles', (req, res) => {
+  router.put('/items/:id/subtitles/:language', (req, res) => {
     const ext = req.query.name.replace(/^.*\.([^.]+)$/, '$1');
     if (!fileType.isSubtitle(req.query.name)) {
       return res.json(false);
     }
 
     fs.ensureDirSync(`${app.config.root}/var/tmp`);
-    const lang = 'nl';
+    const lang = req.params.language;
     const sourceFile = `${app.config.root}/var/tmp/${req.params.id}.${lang}.${ext}`;
 
     const output = fs.createWriteStream(sourceFile);
@@ -116,15 +116,15 @@ export default app => {
     }).pipe(output);
   });
 
-  router.get('/items/:id/subtitles', catchExceptions(async (req, res, next) => {
+  router.get('/items/:id/subtitles/:language', catchExceptions(async (req, res, next) => {
     const asset = await Asset.findById(req.params.id);
 
     if (!asset || !asset.subtitles) {
       return next();
     }
 
-    res.setHeader('content-disposition', `attachment; filename="${req.params.id}.nl.vtt"`);
-    fs.createReadStream(`${app.config.root}/var/subtitles/${req.params.id}.nl.vtt`)
+    res.setHeader('content-disposition', `attachment; filename="${req.params.id}.${req.params.language}.vtt"`);
+    fs.createReadStream(`${app.config.root}/var/subtitles/${req.params.id}.${req.params.language}.vtt`)
       .pipe(res);
   }));
 
@@ -195,7 +195,10 @@ export default app => {
     maxAge: 7 * 24 * 3600 * 1000
   }));
 
-  app.get('/thumbnails/:assetId.(jpg|png)', catchExceptions(async (req, res) => {
+  app.get([
+      '/thumbnails/:assetId.(jpg|png)',
+      '/thumbnails/:time/:assetId.(jpg|png)'
+    ], catchExceptions(async (req, res) => {
     const item = await Asset.findById(req.params.assetId);
     if (!item) {
       console.log('Item not found');
@@ -205,7 +208,7 @@ export default app => {
     if (!await fs.exists(`${thumbnails}/${req.params.assetId}.png`)) {
       // create png thumbnail with ffmpeg
       const url = `${app.config.outputBase || req.base}/player/streams/${req.session.id}/${req.params.assetId}.m3u8`;
-      await createThumbnail(url, `${thumbnails}/${req.params.assetId}.png`, '0:00:00');
+      await createThumbnail(url, `${thumbnails}/${req.params.assetId}.png`, req.params.time || '0:00:00');
     }
 
     if (req.params[0] === 'jpg' && !await fs.exists(`${thumbnails}/${req.params.assetId}.jpg`)) {

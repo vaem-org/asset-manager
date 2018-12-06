@@ -62,7 +62,7 @@
         </v-flex>
       </v-layout>
       <v-data-table
-          :headers="headers"
+          :headers="[{value: '_id', sortable: false}, ...headers]"
           :items="items"
           :pagination.sync="pagination"
           :total-items="totalItems"
@@ -76,7 +76,17 @@
           class="table"
       >
         <template slot="items" slot-scope="props">
-          <tr @click="props.selected=!props.selected" @contextmenu.prevent="showContextMenu($event, props.item)">
+          <tr @click="selectItem($event, props)">
+            <th>
+              <v-checkbox
+                  primary
+                  hide-details
+                  v-model="props.selected"
+              />
+            </th>
+            <th class="px-0">
+              <v-btn icon @click="showContextMenu($event, props.item)" class="mx-0"><v-icon>more_vert</v-icon></v-btn>
+            </th>
             <slot name="items" v-bind:props="props"/>
           </tr>
         </template>
@@ -182,6 +192,14 @@
         }
 
         return action.multiple ? (this.selected.length !== 0) : (this.selected.length === 1);
+      },
+
+      selectItem(event, {item}) {
+        if (event.target.matches('th,th *')) {
+          return;
+        }
+
+        this.selected = [item];
       }
     }
   }

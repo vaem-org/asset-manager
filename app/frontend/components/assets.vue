@@ -21,20 +21,13 @@
     <v-navigation-drawer right fixed clipped app v-model="filtersVisible">
       <div class="px-3 py-3">
         <h2>Filters</h2>
-        <v-select :items="filterLabels" label="Label" autocomplete="" clearable v-model="filtersForm.labels"/>
+        <v-autocomplete :items="filterLabels" label="Label" clearable v-model="filtersForm.labels"/>
       </div>
     </v-navigation-drawer>
 
     <items ref="items" :headers="headers" uri="items" :actions="actions" sort-by="createdAt" :descending="true"
            :loading="loading" :filters="filtersForm">
       <template slot="items" slot-scope="{props}">
-        <td>
-          <v-checkbox
-              primary
-              hide-details
-              v-model="props.selected"
-          />
-        </td>
         <td>{{ props.item.title }}</td>
         <td>
           <v-chip v-for="label in props.item.labels" :key="label">{{ label }}</v-chip>
@@ -71,7 +64,7 @@
           <v-card-text>
             <v-text-field label="Title" v-model="editItem.title"/>
             <distributor-selector v-model="editItem.distributor"/>
-            <v-select label="Labels" v-model="editItem.labels" tags chips deletable-chips :items="labels"/>
+            <v-combobox label="Labels" v-model="editItem.labels" multiple chips deletable-chips :items="labels"/>
           </v-card-text>
           <v-card-actions>
             <v-spacer/>

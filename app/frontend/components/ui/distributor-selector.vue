@@ -18,10 +18,9 @@
 
 <template>
   <v-layout row class="align-baseline">
-    <v-select v-model="selected"
+    <v-autocomplete v-model="selected"
               :items="distributors"
               label="Distributor"
-              autocomplete
               item-text="name"
               item-value="_id"
               clearable
@@ -67,7 +66,6 @@
 
   export default {
     name: 'DistributorSelector',
-
     props: {'value': String, 'uri': {type: String, default: '/distributors'}},
 
     data() {
