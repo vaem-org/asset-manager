@@ -85,7 +85,7 @@
             <v-select
                 label="Language"
                 v-model="assignToAssetLanguage"
-                :items="['nl','en','fr','de']"
+                :items="languages"
             />
           </v-card-text>
           <v-card-actions>
@@ -137,6 +137,7 @@
   import Items from './ui/items';
   import moment from 'moment';
   import alert from '@/util/alert';
+  import {languages} from '@/defaults';
 
   const channels = {
     'stereo': ['Stereo left', 'Stereo right'],
@@ -248,7 +249,8 @@
         advancedAddToQueueDialog: false,
         advancedAddToQueueAudio: '',
         advancedAddToQueueVideoFilter: '',
-        advancedAddToQueueSkip: ''
+        advancedAddToQueueSkip: '',
+        languages
       }
     },
 

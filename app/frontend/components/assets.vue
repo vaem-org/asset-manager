@@ -149,6 +149,7 @@
   import Items from './ui/items';
   import Player from './player';
   import DistributorSelector from './ui/distributor-selector';
+  import {languages} from '@/defaults';
 
   export default {
     name: 'Assets',
@@ -180,22 +181,20 @@
           },
           {text: 'Queue missing bitrates', action: this.addMissingBitrates, contextOnly: true},
           {text: 'Set distributor', action: this.setDistributor, multiple: true},
-          {
-            text: 'Upload subtitles',
-            action: this.uploadSubtitles,
+          ...languages.map(language => ({
+            text: `Upload subtitles (${language})`,
+            action: this.uploadSubtitles(language),
             file: true,
             contextOnly: true,
             enabled: atMostOneAndProcessed
-          },
-          {
-            text: 'Download subtitles',
-            action: this.downloadSubtitles,
+          })),
+          ...languages.map(language => ({
+            text: `Download subtitles (${language})`,
+            action: this.downloadSubtitles(language),
             contextOnly: true,
             enabled: () =>
-              this.$refs.items &&
-              this.$refs.items.selected.length === 1 &&
-              this.$refs.items.selected[0].subtitles
-          },
+              _.get(this, `$refs.items.selected[0].subtitles.${language}`)
+          })),
           {text: 'Copy id', action: this.copyId, contextOnly: true},
           {text: 'Remove', action: this.remove, contextOnly: true, multiple: true}
         ],
@@ -300,17 +299,19 @@
         setClipboard(this.$refs.items.selected[0]._id);
       },
 
-      async uploadSubtitles(e) {
-        this.loading = true;
-        await api.uploadFile(`items/${this.$refs.items.selected[0]._id}/subtitles`, e.target.files[0]);
-        await this.refresh();
-        this.loading = false;
-        this.snackbarText = 'Subtitles added successfully';
-        this.snackbar = true;
+      uploadSubtitles(language) {
+        return async e => {
+          this.loading = true;
+          await api.uploadFile(`items/${this.$refs.items.selected[0]._id}/subtitles/${language}`, e.target.files[0]);
+          await this.refresh();
+          this.loading = false;
+          this.snackbarText = 'Subtitles added successfully';
+          this.snackbar = true;
+        };
       },
 
-      downloadSubtitles() {
-        window.location.href = `items/${this.$refs.items.selected[0]._id}/subtitles`;
+      downloadSubtitles(language) {
+        return () => window.location.href = `items/${this.$refs.items.selected[0]._id}/subtitles/${language}`;
       },
 
       async remove() {
