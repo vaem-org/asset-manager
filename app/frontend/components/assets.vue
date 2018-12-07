@@ -195,6 +195,9 @@
             enabled: () =>
               _.get(this, `$refs.items.selected[0].subtitles.${language}`)
           })),
+          ...(process.env.PUBLIC_STREAMS ? [{
+            text: 'Copy URL', action: this.copyUrl, contextOnly: true
+          }] : []),
           {text: 'Copy id', action: this.copyId, contextOnly: true},
           {text: 'Remove', action: this.remove, contextOnly: true, multiple: true}
         ],
@@ -297,6 +300,12 @@
 
       copyId() {
         setClipboard(this.$refs.items.selected[0]._id);
+      },
+
+      copyUrl() {
+        setClipboard(
+          `${location.origin}/player/streams/-/${this.$refs.items.selected[0]._id}.m3u8`
+        );
       },
 
       uploadSubtitles(language) {

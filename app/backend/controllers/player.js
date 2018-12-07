@@ -46,7 +46,6 @@ export default app => {
       })
   );
 
-
   router.use(express.static(`${app.config.root}/public`));
   router.get('/:id', cookieParser(), catchExceptions(async (req, res, next) => {
     const item = await Asset.findById(req.params.id);
@@ -59,11 +58,13 @@ export default app => {
 
   router.use('/subtitles', cors(), express.static(`${app.config.root}/var/subtitles`));
 
-  router.use('/streams', cors(), express.static(app.config.output));
+  router.use('/streams', cors(), express.static(app.config.output, {
+    maxAge: 7 * 24 * 3600 * 1000
+  }));
 
   // check authentication of stream
   const checkAuth = (req, res, next) => {
-    if (checkIp(app.config, req.ip) || req.session.passport || req.session.basicAuthenticated) {
+    if (checkIp(app.config, req.ip) || req.session.passport || req.session.basicAuthenticated || app.config.publicStreams) {
       return next();
     }
 
@@ -100,6 +101,9 @@ export default app => {
     if (!item) {
       return next();
     }
+
+    res.setHeader('expires', moment().add(7, 'days').toISOString());
+    res.setHeader('cache-control', 'private,max-age=604800');
 
     res.send(new Buffer(item.hls_enc_key, 'hex'));
   }));
@@ -236,7 +240,9 @@ export default app => {
     });
   }));
 
-  router.use('/streams/:sid', express.static(config.output));
+  router.use('/streams/:sid', express.static(config.output, {
+    maxAge: 7 * 24 * 3600 * 1000
+  }));
 
   app.use('/player', router);
   app.use('/shared/player', (req, res, next) => {

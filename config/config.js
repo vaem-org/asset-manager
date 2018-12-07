@@ -39,7 +39,7 @@ module.exports = merge({
   auth: {
     username: 'admin',
     password: process.env.PASSWORD,
-    allowIp: (process.env.ALLOW_IP || '10.').split(',')
+    allowIp: (process.env.ALLOW_IP || '').split(',')
   },
 
   profiles: require(`${__dirname}/profiles.json`),
@@ -64,5 +64,6 @@ module.exports = merge({
   archive: `${root}/var/archive`,
   protocol: process.env.PROTOCOL,
 
-  sourceBase: process.env.SOURCE_BASE
+  sourceBase: process.env.SOURCE_BASE,
+  publicStreams: process.env.PUBLIC_STREAMS
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);

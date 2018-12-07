@@ -26,6 +26,8 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
+const DotEnvPlugin = require('dotenv-webpack');
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const sassLoader = {
@@ -118,8 +120,10 @@ module.exports = {
     ]
   },
 
-  plugins: (env === 'production' ? [
+  plugins: [
     new VueLoaderPlugin(),
+    new DotEnvPlugin(),
+    ...(env === 'production' ? [
     new CleanWebpackPlugin([outputPath], {root: config.root}),
     new MiniCssExtractPlugin(),
     new UglifyJsPlugin({
@@ -142,9 +146,8 @@ module.exports = {
       }
     })
   ] : [
-    new VueLoaderPlugin(),
     new webpack.NoEmitOnErrorsPlugin()
-  ]),
+  ])],
 
   devtool: env === 'production' ? false : 'source-map',
 
