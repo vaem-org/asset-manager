@@ -169,7 +169,7 @@ const guessChannelLayout = async source => {
   }
 
   return {
-    stereo: parameters.audioStreams,
+    stereo: parameters.audioStreams.length > 0 ? parameters.audioStreams  : _.map(_.filter(audioStreams, {channels: 2}), 'index'),
     surround: _.map(surround, 'index')
   };
 };

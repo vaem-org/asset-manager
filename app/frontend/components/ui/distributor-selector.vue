@@ -17,7 +17,7 @@
   -->
 
 <template>
-  <v-layout row class="align-baseline">
+  <v-layout row class="align-center align-content-center">
     <v-autocomplete v-model="selected"
               :items="distributors"
               label="Distributor"
@@ -102,6 +102,7 @@
         else {
           this.dialogAction = this.add;
           this.dialogTitle = 'Add distributor';
+          this.newDistributorName = '';
           this.dialog = true;
           this.$nextTick(() => this.$refs.input.focus());
         }
@@ -120,6 +121,7 @@
         }
         else {
           this.dialogAction = this.rename;
+          this.newDistributorName = _.find(this.distributors, {_id: this.selected}).name;
           this.dialogTitle = 'Rename distributor';
           this.dialog = true;
           this.$nextTick(() => this.$refs.input.focus());

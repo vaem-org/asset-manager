@@ -48,6 +48,33 @@ const getAudioJobs = async (asset, file, source) => {
     throw 'Invalid number of surround channels';
   }
 
+  let surroundMap = null;
+  if (!_.isEmpty(channels.surround)) {
+    surroundMap = channels.surround.length > 1 ? {
+      'filter_complex': `${channels.surround.map(stream => `[0:${stream}]`).join('')}amerge=inputs=6[aout]`,
+      'map': '[aout]'
+    } : {
+      'map': `0:${channels.surround[0]}`,
+    }
+  }
+
+  let stereoMap = null;
+  if (channels.stereo.length > 1) {
+    stereoMap = {
+      'filter_complex': `${channels.stereo.map(stream => `[0:${stream}]`).join('')}amerge=inputs=2[aout]`,
+      'map': '[aout]'
+    };
+  }
+  else if (channels.stereo.length === 1) {
+    stereoMap = {
+      'map': `0:${channels.stereo[0]}`
+    };
+  }
+  else {
+    // if no stereo channels are available downmix the surround channel to stereo
+    stereoMap = surroundMap;
+  }
+
   ['64k', '128k'].forEach(bitrate => {
     jobs.push({
       bitrate: `aac-${bitrate}`,
@@ -58,12 +85,7 @@ const getAudioJobs = async (asset, file, source) => {
         'c:a': 'libfdk_aac',
         'ac': 2,
         'vn': true
-      }, channels.stereo.length > 1 ? {
-        'filter_complex': `${channels.stereo.map(stream => `[0:${stream}]`).join('')}amerge=inputs=2[aout]`,
-        'map': '[aout]'
-      } : {
-        'map': `0:${channels.stereo[0]}`
-      })
+      }, stereoMap)
     });
   });
 
@@ -76,12 +98,7 @@ const getAudioJobs = async (asset, file, source) => {
         'c:a': 'ac3',
         'ac': 6,
         'vn': true
-      }, channels.surround.length > 1 ? {
-        'filter_complex': `${channels.surround.map(stream => `[0:${stream}]`).join('')}amerge=inputs=6[aout]`,
-        'map': '[aout]'
-      } : {
-        'map': `0:${channels.surround[0]}`,
-      })
+      }, surroundMap)
     });
   }
 
