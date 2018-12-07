@@ -1,4 +1,4 @@
-FROM vaem/node-ffmpeg:10.11.0
+FROM vaem/node-ffmpeg:10.11.0-1
 
 # add mono for running Subtitle Edit for subtitle conversion
 RUN apt-get update && \
