@@ -37,7 +37,7 @@ const getAudioJobs = async (asset, file, source) => {
     return [];
   }
 
-  const channels = !_.isEmpty(file.audioStreams) ? file.audioStreams : await guessChannelLayout(source);
+  const channels = file && !_.isEmpty(file.audioStreams) ? file.audioStreams : await guessChannelLayout(source);
 
   // check validity of channel layout
   if (channels.stereo.length > 2) {

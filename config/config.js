@@ -39,7 +39,7 @@ module.exports = merge({
   auth: {
     username: 'admin',
     password: process.env.PASSWORD,
-    allowIp: (process.env.ALLOW_IP || '').split(',')
+    allowIp: (process.env.ALLOW_IP || '').split(',').filter(value => value.length !== 0)
   },
 
   profiles: require(`${__dirname}/profiles.json`),

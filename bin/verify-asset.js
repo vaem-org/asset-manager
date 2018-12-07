@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {authorizationHeaders} from '../app/backend/util/source';
+
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const childProcess = require('child_process');
@@ -32,6 +34,7 @@ const getDuration = async source => {
   const {stdout} = await execFile('ffprobe', [
     '-print_format', 'json',
     '-show_format',
+    '-headers', authorizationHeaders,
     source
   ]);
 

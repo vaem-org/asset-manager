@@ -31,8 +31,6 @@ export default app => {
   router.post('/', express.json(), api(async req => {
     const data = simpleEncryptor.decrypt(req.body.auth) || {};
 
-    console.log(data);
-
     if (Object.keys(data).length === 0) {
       throw 'Invalid link';
     }

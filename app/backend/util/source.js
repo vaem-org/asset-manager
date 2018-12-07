@@ -47,6 +47,8 @@ const getSource = (req, source) => {
     source.split('/').map(encodeURIComponent).join('/');
 };
 
+export const authorizationHeaders = `Authorization: Basic ${Buffer.from(`${config.auth.username}:${config.auth.password}`).toString('base64')}`;
+
 /**
  * Get video parameters
  * @param {String} source
@@ -70,7 +72,8 @@ const getVideoParameters = async (source, audioStreams = null) => {
     print_format: 'json',
     show_format: true,
     show_streams: true,
-    seekable: getSeekable(source)
+    seekable: getSeekable(source),
+    headers: authorizationHeaders,
   }).concat([source]));
 
   const sourceParameters = JSON.parse(stdout);
