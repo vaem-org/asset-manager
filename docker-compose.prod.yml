@@ -20,7 +20,7 @@ services:
   encoder:
     image: vaem/encoder
     environment:
-      ASSETMANAGER_URL: http://app:1234/
+      ASSETMANAGER_URL: http://admin:admin@app:1234/
 
   mongo:
     image: mongo
