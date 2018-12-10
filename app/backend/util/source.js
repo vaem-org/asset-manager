@@ -26,26 +26,26 @@ const execFile = util.promisify(child_process.execFile);
 /**
  * Check the http seekable option for given source
  */
-const getSeekable = source => {
+export function getSeekable(source) {
   if (!/^https?:/.exec(source)) {
     return undefined;
   }
   return /\.mxf$/i.exec(source) ? 0 : -1;
-};
+}
 
 /**
  * Get an absolute path for given source
  * @param {{}} req
  * @param {string} source
  */
-const getSource = (req, source) => {
+export function getSource(req, source) {
   if (/^https?:/.exec(source)) {
     return source;
   }
 
   return (config.sourceBase || (`${req.protocol}://${req.get('host')}/source/`)) +
     source.split('/').map(encodeURIComponent).join('/');
-};
+}
 
 export const authorizationHeaders = `Authorization: Basic ${Buffer.from(`${config.auth.username}:${config.auth.password}`).toString('base64')}`;
 
@@ -54,7 +54,7 @@ export const authorizationHeaders = `Authorization: Basic ${Buffer.from(`${confi
  * @param {String} source
  * @param {[] | null} [audioStreams] the audio streams to use
  */
-const getVideoParameters = async (source, audioStreams = null) => {
+export async function getVideoParameters(source, audioStreams = null) {
   const result = {
     'bitrate': 0,
     'width': false,
@@ -144,9 +144,14 @@ const getVideoParameters = async (source, audioStreams = null) => {
   result.ffprobe = sourceParameters;
 
   return result;
-};
+}
 
-const guessChannelLayout = async source => {
+/**
+ * Guess the channel layout for a source file
+ * @param {string} source
+ * @return {Promise<*>}
+ */
+export async function guessChannelLayout(source) {
   const parameters =  await getVideoParameters(source);
 
   if (!parameters.hasAudio) {
@@ -175,6 +180,25 @@ const guessChannelLayout = async source => {
     stereo: parameters.audioStreams.length > 0 ? parameters.audioStreams  : _.map(_.filter(audioStreams, {channels: 2}), 'index'),
     surround: _.map(surround, 'index')
   };
-};
+}
 
-export {getSeekable, getVideoParameters, getSource, guessChannelLayout};
+/**
+ * Perform a first pass for audio normalization and return the audio filter string
+ * @param {string} source
+ * @param {[]} parameters
+ * @return {Promise<string>}
+ */
+export async function getNormalizeParameters(source, parameters = ['-map', '0:1']) {
+  const {stderr} = await execFile('ffmpeg', ['-hide_banner', '-i', source, '-filter:a', 'loudnorm=print_format=json', '-f', 'null', ...parameters, '-']);
+
+  const parsed = JSON.parse(stderr.split('\n').slice(-13).join('\n'));
+
+  return [
+    'loadnorm=linear=true',
+    `measured_I=${parsed['input_i']}`,
+    `measured_LRA=${parsed['input_lra']}`,
+    `measured_tp=${parsed['input_tp']}`,
+    `measured_thresh=${parsed['input_thresh']}`,
+    `offset=${parsed['target_offset']}`
+  ].join(':');
+}
