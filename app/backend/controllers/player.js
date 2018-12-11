@@ -236,7 +236,7 @@ export default app => {
 
       res.header('Content-Type', 'application/vnd.apple.mpegurl');
 
-      res.send(m3u.toString());
+      res.end(m3u.toString());
     });
   }));
 

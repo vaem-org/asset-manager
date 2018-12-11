@@ -183,7 +183,7 @@ export async function guessChannelLayout(source) {
 }
 
 /**
- * Perform a first pass for audio normalization and return the audio filter string
+ * Perform a first pass for audio normalisation and return the audio filter string
  * @param {string} source
  * @param {[]} parameters
  * @return {Promise<string>}
