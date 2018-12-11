@@ -30,6 +30,7 @@ import {File} from '../model/file';
 import {Asset} from '../model/asset';
 import * as subtitles from '../util/subtitles';
 import {guessChannelLayout} from '../util/source';
+import {getNormalizeParameters} from '../util/source';
 
 export default app => {
   const io = app.io.of('/uploads', null);
@@ -196,6 +197,19 @@ export default app => {
   router.post('/items/:id/audio-streams', fetchItem, json, api(async req => {
     req.item.audioStreams = req.body;
     await req.item.save();
+  }));
+
+  router.get('/items/:id/loudnorm', fetchItem, api(async req => {
+    const source = sourceUtil.getSource(req, req.item.name);
+
+    const {stereo} = req.item.audioStreams || await sourceUtil.guessChannelLayout(source);
+
+    return await getNormalizeParameters(
+      source,
+      stereo.length > 1 ?
+        ['-filter_complex', `[0:${stereo[0]}][0:${stereo[1]}]amerge=inputs=2[aout]`, '-map [aout]'] :
+        ['-map', `0:${stereo[0]}`]
+    );
   }));
 
   router.get('/assets', api(async () => Asset.find({state: 'processed'}).select('title').sort({createdAt: -1})));

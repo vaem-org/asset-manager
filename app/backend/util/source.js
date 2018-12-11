@@ -149,7 +149,7 @@ export async function getVideoParameters(source, audioStreams = null) {
 /**
  * Guess the channel layout for a source file
  * @param {string} source
- * @return {Promise<*>}
+ * @return {Promise<{stereo: [int], surround: [int]}>}
  */
 export async function guessChannelLayout(source) {
   const parameters =  await getVideoParameters(source);
@@ -183,7 +183,7 @@ export async function guessChannelLayout(source) {
 }
 
 /**
- * Perform a first pass for audio normalisation and return the audio filter string
+ * Perform a first pass for audio normalization and return the audio filter string
  * @param {string} source
  * @param {[]} parameters
  * @return {Promise<string>}
@@ -194,7 +194,7 @@ export async function getNormalizeParameters(source, parameters = ['-map', '0:1'
   const parsed = JSON.parse(stderr.split('\n').slice(-13).join('\n'));
 
   return [
-    'loadnorm=linear=true',
+    'loudnorm=linear=true',
     `measured_I=${parsed['input_i']}`,
     `measured_LRA=${parsed['input_lra']}`,
     `measured_tp=${parsed['input_tp']}`,
