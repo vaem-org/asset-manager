@@ -20,7 +20,7 @@ import express from 'express';
 import _ from 'lodash';
 import request from 'request';
 import m3u8 from 'm3u8';
-import fs from 'fs';
+import fs from 'fs-extra';
 import cookieParser from 'cookie-parser';
 import cloudfrontSign from 'aws-cloudfront-sign';
 import path from 'path';
@@ -32,6 +32,36 @@ import {Asset} from '../model/asset';
 import {api, catchExceptions} from '../util/express-helpers';
 import {renderIndex} from '../util/render-index';
 import {checkIp} from '../util/auth';
+
+/**
+ * Parse an m3u8 stream
+ * @param {Stream} stream
+ * @return {Promise<any>}
+ */
+const parseM3U = stream => new Promise((accept, reject) => {
+  const parser = m3u8.createStream();
+
+  let error = null;
+
+  stream.pipe(parser);
+
+  parser.on('error', err => {
+    if (error) {
+      return;
+    }
+    error = true;
+    reject(err);
+    parser.end();
+  });
+
+  parser.on('m3u', m3u => {
+    if (error) {
+      return;
+    }
+
+    accept(m3u);
+  });
+});
 
 export default app => {
   const router = new express.Router({});
@@ -112,11 +142,11 @@ export default app => {
     '/streams/:sid/:assetId/subtitles/:language.m3u8',
     '/streams/:sid/:assetId.:bitrate.m3u8',
     '/streams/:sid/:assetId.m3u8'
-  ], cors(), checkAuth, catchExceptions(async (req, res, next) => {
+  ], cors(), checkAuth, catchExceptions(async (req, res) => {
     const asset = await Asset.findById(req.params.assetId);
 
-    const base =
-      req.base + '/player/streams/'
+    let base =
+      `${req.base}/player/streams/`
     ;
 
     let uri;
@@ -142,102 +172,86 @@ export default app => {
 
     const cloudfrontSignUrl = uri => `${app.config.cloudfront.base}${uri}?${querystring.stringify(signedCookies)}`;
 
-    const parser = m3u8.createStream();
+    let m3u;
 
     if (config.cloudfront) {
-      request({
+      m3u = await parseM3U(request({
         url: cloudfrontSignUrl(uri)
-      }).pipe(parser);
+      }));
     }
     else {
       const m3u8File = `${app.config.output}/${req.params.assetId}/${req.params.assetId}${req.params.bitrate ? '.' + req.params.bitrate : ''}.m3u8`;
 
-      fs.accessSync(m3u8File);
-      fs
-        .createReadStream(m3u8File)
-        .pipe(parser)
-      ;
+      if (!(await fs.pathExists(m3u8File))) {
+        return res.status(404).end();
+      }
+
+      m3u = await parseM3U(
+        fs.createReadStream(m3u8File)
+      );
     }
 
-    let error = false;
+    const addSubtitles =
+      (req.query.subtitles ||
+        (req.headers['user-agent'] || '').search(/AppleTV/) !== -1) &&
+      Object.keys(asset.subtitles || {}).length > 0
+    ;
 
-    parser.on('error', err => {
-      if (error) {
-        return;
-      }
-      error = true;
-      console.log(err);
-      next(new Error('Unable to parse m3u8'));
-      parser.end();
-    });
+    if (addSubtitles) {
+      m3u.addMediaItem({
+        type: 'SUBTITLES',
+        'group-id': 'subs',
+        name: 'Nederlands',
+        default: 'YES',
+        forced: 'NO',
+        autoselect: 'YES',
+        language: 'nl',
+        uri: `${req.params.assetId}/subtitles/nl.m3u8`
+      });
+    }
 
-    parser.on('m3u', m3u => {
-      if (error) {
-        return;
-      }
-
-      const addSubtitles =
-        (req.query.subtitles ||
-          (req.headers['user-agent'] || '').search(/AppleTV/) !== -1) &&
-        Object.keys(asset.subtitles || {}).length > 0
-      ;
-
-      if (addSubtitles) {
-        m3u.addMediaItem({
-          type: 'SUBTITLES',
-          'group-id': 'subs',
-          name: 'Nederlands',
-          default: 'YES',
-          forced: 'NO',
-          autoselect: 'YES',
-          language: 'nl',
-          uri: `${req.params.assetId}/subtitles/nl.m3u8`
-        });
-      }
-
-      if (addSubtitles) {
-        m3u.items.StreamItem.forEach(stream => {
-          stream.set('subtitles', 'subs');
-        });
-      }
-
-      if (m3u.properties['EXT-X-KEY']) {
-        // update key url
-        m3u.properties['EXT-X-KEY'] = [
-          'METHOD=AES-128',
-          `URI="${req.params.assetId}.key"`,
-          `IV=0x${asset.hls_enc_iv}`
-        ].join(',');
-      }
-
-      let base = `${req.params.assetId}/`;
-
-      if (req.params.language) {
-        base += 'subtitles/';
-        m3u.set('playlistType', 'VOD');
-      }
-
-      // Prevent "unknown cc" for Apple players
+    if (addSubtitles) {
       m3u.items.StreamItem.forEach(stream => {
-        stream.attributes.attributes['closed-captions'] = 'NONE';
+        stream.set('subtitles', 'subs');
       });
+    }
 
-      m3u.items.PlaylistItem.forEach(stream => {
-        if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
-          stream.set('uri',
-            config.cloudfront ?
-              cloudfrontSignUrl(
-                `/${base}${stream.get('uri')}`,
-              ) :
-              base + stream.get('uri')
-          );
-        }
-      });
+    if (m3u.properties['EXT-X-KEY']) {
+      // update key url
+      m3u.properties['EXT-X-KEY'] = [
+        'METHOD=AES-128',
+        `URI="${req.params.assetId}.key"`,
+        `IV=0x${asset.hls_enc_iv}`
+      ].join(',');
+    }
 
-      res.header('Content-Type', 'application/vnd.apple.mpegurl');
+    base = `${req.params.assetId}/`;
 
-      res.end(m3u.toString());
+    if (req.params.language) {
+      base += 'subtitles/';
+      m3u.set('playlistType', 'VOD');
+    }
+
+    // Prevent "unknown cc" for Apple players
+    m3u.items.StreamItem.forEach(stream => {
+      stream.attributes.attributes['closed-captions'] = 'NONE';
     });
+
+    m3u.items.PlaylistItem.forEach(stream => {
+      if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
+        stream.set('uri',
+          config.cloudfront ?
+            cloudfrontSignUrl(
+              `/${base}${stream.get('uri')}`,
+            ) :
+            base + stream.get('uri')
+        );
+      }
+    });
+
+    res.header('Content-Type', 'application/vnd.apple.mpegurl');
+
+    res.end(m3u.toString());
   }));
 
   router.use('/streams/:sid', express.static(config.output, {
