@@ -105,7 +105,7 @@ export default app => {
     res.setHeader('expires', moment().add(7, 'days').toISOString());
     res.setHeader('cache-control', 'private,max-age=604800');
 
-    res.send(new Buffer(item.hls_enc_key, 'hex'));
+    res.send(Buffer.from(item.hls_enc_key, 'hex'));
   }));
 
   router.get([

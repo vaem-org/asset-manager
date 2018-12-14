@@ -387,7 +387,7 @@ export default app => {
       return next();
     }
 
-    return res.send(new Buffer(source.asset.hls_enc_key, 'hex'));
+    return res.send(Buffer.from(source.asset.hls_enc_key, 'hex'));
   });
 
   router.post('/start-job', json, api(async req => {
