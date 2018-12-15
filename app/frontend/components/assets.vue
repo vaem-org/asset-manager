@@ -34,7 +34,6 @@
         </td>
         <td>{{ props.item.state }}</td>
         <td>{{ props.item.bitrates.length }}/{{ props.item.jobs.length }}</td>
-        <td>{{ props | get('item.distributor.name') }}</td>
         <td class="no-wrap">{{ props.item.createdAt | dateFormat }}</td>
         <td>{{ props | get('item.videoParameters.duration') | durationFormat }}</td>
         <td>{{ props.item.subtitles ? 'Yes' : 'No'}}</td>
@@ -63,7 +62,6 @@
           </v-card-title>
           <v-card-text>
             <v-text-field label="Title" v-model="editItem.title"/>
-            <distributor-selector v-model="editItem.distributor"/>
             <v-combobox label="Labels" v-model="editItem.labels" multiple chips deletable-chips :items="labels"/>
           </v-card-text>
           <v-card-actions>
@@ -108,25 +106,6 @@
         </div>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="distributorDialog" max-width="500px">
-      <v-card>
-        <v-card-title>
-          <span>Set distributor for selected items</span>
-        </v-card-title>
-        <v-form @submit.prevent="setDistributor">
-          <v-card-text>
-            <distributor-selector
-                v-model="selectedDistributor"
-            />
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer/>
-            <v-btn @click="distributorDialog=false">Cancel</v-btn>
-            <v-btn type="submit" color="primary">Save</v-btn>
-          </v-card-actions>
-        </v-form>
-      </v-card>
-    </v-dialog>
     <v-dialog v-model="infoDialog" max-width="80%">
       <v-card>
         <v-card-text>
@@ -148,12 +127,11 @@
 
   import Items from './ui/items';
   import Player from './player';
-  import DistributorSelector from './ui/distributor-selector';
   import {languages} from '@/defaults';
 
   export default {
     name: 'Assets',
-    components: {Player, Items, DistributorSelector},
+    components: {Player, Items},
     computed: {
       filterLabels() {
         return this.labels.map(label => ({text: label, value: label}))
@@ -180,14 +158,6 @@
             enabled: atMostOneAndProcessed
           },
           {text: 'Queue missing bitrates', action: this.addMissingBitrates, contextOnly: true},
-          {text: 'Set distributor', action: this.setDistributor, multiple: true},
-          ...languages.map(language => ({
-            text: `Upload subtitles (${language})`,
-            action: this.uploadSubtitles(language),
-            file: true,
-            contextOnly: true,
-            enabled: atMostOneAndProcessed
-          })),
           ...languages.map(language => ({
             text: `Download subtitles (${language})`,
             action: this.downloadSubtitles(language),
@@ -206,7 +176,6 @@
           {text: 'Labels', value: 'labels'},
           {text: 'State', value: 'state'},
           {text: 'Completed', value: '', sortable: false},
-          {text: 'Distributor', value: 'distributor.name'},
           {text: 'Date', value: 'createdAt'},
           {text: 'Duration', value: 'videoParameters.duration'},
           {text: 'Subtitles', value: 'subtitles'}
@@ -222,7 +191,6 @@
           weeksValid: 2
         },
         shareUrl: false,
-        distributorDialog: false,
         selectedDistributor: null,
 
         contextItem: null,
@@ -275,22 +243,6 @@
       },
       copyShareUrl() {
         setClipboard(this.shareUrl);
-      },
-
-      async setDistributor() {
-        if (this.distributorDialog) {
-          // perform set
-          await api.post('set-distributor', {
-            ids: _.map(this.$refs.items.selected, '_id'),
-            distributor: this.selectedDistributor
-          });
-          this.distributorDialog = false;
-          this.refresh();
-        }
-        else {
-          this.selectedDistributor = null;
-          this.distributorDialog = true;
-        }
       },
 
       showInfo() {

@@ -171,7 +171,8 @@ module.exports = {
         res.setHeader('content-type', 'text/css');
         res.end('');
       })
-    }
+    },
+    public: 'wouter.molengraft.com:443'
   },
 
   mode: env

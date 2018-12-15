@@ -39,7 +39,6 @@ const schema = new mongoose.Schema({
   source: String,
   audio: String,
   subtitles: {},
-  distributor: {type: mongoose.Schema.Types.ObjectId, ref: 'Distributor'},
   hls_enc_key: String,
   hls_enc_iv: String,
   deleted: Boolean

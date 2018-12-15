@@ -74,7 +74,6 @@ export default app => {
         .sort({[req.body.sortBy]: req.body.descending ? -1 : 1})
         .limit(req.body.rowsPerPage)
         .skip((req.body.page - 1) * req.body.rowsPerPage)
-        .populate('distributor')
       ,
       totalItems: await Asset.countDocuments(where)
     }
@@ -162,19 +161,9 @@ export default app => {
     })}`;
   }));
 
-  router.post('/set-distributor', json, api(async req => {
-    return Asset.update({_id: {$in: req.body.ids}}, {
-      $set: {
-        distributor: req.body.distributor
-      }
-    }, {multi: true});
-  }));
-
   router.post('/items/:id', json, api(async req => {
     const asset = await Asset.findById(req.params.id);
-    asset.set(_.extend({}, req.body, {
-      distributor: req.body.distributor || null
-    }));
+    asset.set(req.body);
     await asset.save();
   }));
 
