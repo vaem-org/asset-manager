@@ -88,11 +88,12 @@
             this.player.removeRemoteTextTrack(track);
           }
 
-          const item = this.assetId ? await api.get(`/player/${this.assetId}/item`) : null;
+          const item = await api.get(`/player/${this.assetId || this.item._id}/item`);
 
+          console.log(item);
           this.player.src({
             type: 'application/x-mpegURL',
-            src: item ? item.streamUrl : await api.get(`/assets/items/${this.item._id}/stream-url`)
+            src: item.streamUrl
           });
 
           const subtitles = (item || this.item || {}).subtitles;

@@ -31,7 +31,7 @@ import querystring from 'querystring';
 import {Asset} from '../model/asset';
 import {api, catchExceptions} from '../util/express-helpers';
 import {renderIndex} from '../util/render-index';
-import {checkIp} from '../util/auth';
+import {computeSignature} from '../util/asset-signer';
 
 /**
  * Parse an m3u8 stream
@@ -94,23 +94,22 @@ export default app => {
 
   // check authentication of stream
   const checkAuth = (req, res, next) => {
-    if (checkIp(app.config, req.ip) || req.session.passport || req.session.basicAuthenticated || app.config.publicStreams) {
+    if (app.config.publicStreams) {
       return next();
     }
 
-    app.sessionStore.get(req.params.sid, (err, session) => {
-      if (_.get(session, 'passport')) {
-        return next();
-      }
+    // timestamp should be before now
+    if (req.params.timestamp < Date.now()) {
+      return res.status(403).end();
+    }
 
-      const assetId = _.get(session, 'authenticated[2]');
-      if (!assetId || assetId !== req.params.assetId) {
-        res.statusCode = 403;
-        return res.end();
-      }
+    // validate signature
+    const signature = computeSignature(req.params.assetId || req.url.split('/')[1], req.params.timestamp, req.ip);
+    if (signature !== req.params.signature) {
+      return res.status(403).end();
+    }
 
-      next();
-    });
+    next();
   };
 
   router.get('/:assetId/item', api(async req => {
@@ -120,13 +119,16 @@ export default app => {
       throw 'Not found';
     }
 
+    const timestamp = moment().add(8, 'hours').valueOf();
+    const signature = computeSignature(req.params.assetId, timestamp, req.ip);
+
     return {
-      streamUrl: `/player/streams/${req.session.id}/${req.params.assetId}.m3u8`,
+      streamUrl: `/player/streams/${timestamp}/${signature}/${req.params.assetId}.m3u8`,
       subtitles: item.subtitles
     }
   }));
 
-  router.get(['/streams/:sid/:assetId.key'], cors(), checkAuth, catchExceptions(async (req, res, next) => {
+  router.get(['/streams/:timestamp/:signature/:assetId.key'], cors(), checkAuth, catchExceptions(async (req, res, next) => {
     const item = await Asset.findById(req.params.assetId);
     if (!item) {
       return next();
@@ -139,9 +141,9 @@ export default app => {
   }));
 
   router.get([
-    '/streams/:sid/:assetId/subtitles/:language.m3u8',
-    '/streams/:sid/:assetId.:bitrate.m3u8',
-    '/streams/:sid/:assetId.m3u8'
+    '/streams/:timestamp/:signature/:assetId/subtitles/:language.m3u8',
+    '/streams/:timestamp/:signature/:assetId.:bitrate.m3u8',
+    '/streams/:timestamp/:signature/:assetId.m3u8'
   ], cors(), checkAuth, catchExceptions(async (req, res) => {
     const asset = await Asset.findById(req.params.assetId);
 
@@ -254,7 +256,7 @@ export default app => {
     res.end(m3u.toString());
   }));
 
-  router.use('/streams/:sid', express.static(config.output, {
+  router.use('/streams/:timestamp/:signature', checkAuth, express.static(config.output, {
     maxAge: 7 * 24 * 3600 * 1000
   }));
 

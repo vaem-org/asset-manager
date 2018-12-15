@@ -73,10 +73,6 @@ export default app => {
 
   router.get('/items/:id', api(async req => Asset.findById(req.params.id)));
 
-  router.get('/items/:id/stream-url', api(async req => {
-    return `/player/streams/${req.session.id}/${req.params.id}.m3u8`;
-  }));
-
   app.get('/items/:id/subtitles', (req, res) => {
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${req.params.id}.nl.vtt"`);
