@@ -43,14 +43,6 @@ export default app => {
 
   router.get('/', renderIndex('main'));
 
-  // for backwards compatibility
-  app.get('/assets.json', catchExceptions(async (req, res) => {
-    res.json({
-      rows: await Asset.find().select(['title', 'labels', 'videoParameters.duration', 'deleted']),
-      total: await Asset.countDocuments()
-    })
-  }));
-
   router.post('/items', json, api(async req => {
     const where = {
       deleted: {$ne: true}

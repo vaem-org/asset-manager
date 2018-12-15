@@ -88,28 +88,6 @@ Asset.schema.pre('save', function (next) {
   next();
 });
 
-Asset.schema.post('save', () => {
-  console.log('Saving asset');
-  if (!config.s3) {
-    return;
-  }
-
-  // store necessary information for frontend on S3
-  (async () => {
-    const assets = await Asset.find().select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title']);
-
-    const map = _.mapValues(_.keyBy(assets, '_id'), value => _.omit(value.toObject(), '_id'));
-
-    await s3Util.s3.putObject({
-      Bucket: config.s3.bucket,
-      Key: 'assets.json',
-      Body: JSON.stringify(map)
-    }).promise();
-
-    console.log('assets.json uploaded to s3');
-  })().catch(e => console.error(e));
-});
-
 Asset.schema.post('remove', item => {
   item.removeFiles();
 });
