@@ -128,6 +128,16 @@ export default app => {
     }
   }));
 
+  router.get('/:timestamp/:signature/:assetId/subtitles', checkAuth, api(async req => {
+    const item = await Asset.findById(req.params.assetId);
+
+    if (!item) {
+      throw 'Not found';
+    }
+
+    return item.subtitles;
+  }));
+
   router.get(['/streams/:timestamp/:signature/:assetId.key'], cors(), checkAuth, catchExceptions(async (req, res, next) => {
     const item = await Asset.findById(req.params.assetId);
     if (!item) {
@@ -266,4 +276,6 @@ export default app => {
     res.locals.prefix = '/shared';
     return next();
   }, router);
+
+  app.use('/embed/:timestamp/:signature', router);
 }

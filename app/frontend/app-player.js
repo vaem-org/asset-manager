@@ -45,6 +45,15 @@ const routes = [
       assetId: route.params.assetId,
       fullscreen: true
     })
+  },
+  {
+    path: '/embed/:timestamp/:signature/:assetId',
+    component: Player,
+    props: route => ({
+      useDialog: false,
+      assetId: route.params.assetId,
+      fullscreen: true
+    })
   }
 ];
 

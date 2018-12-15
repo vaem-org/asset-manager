@@ -111,7 +111,7 @@ run(1, () => {
         return next();
       }
 
-      if (/^\/(check|auth|player\/subtitles|__webpack|player\/streams)/.exec(req.url)) {
+      if (/^\/(embed\/\d+\/|player\/\d+\/|check|auth|player\/subtitles|__webpack|player\/streams)/.exec(req.url)) {
         return next();
       }
 

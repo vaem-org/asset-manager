@@ -88,9 +88,19 @@
             this.player.removeRemoteTextTrack(track);
           }
 
-          const item = await api.get(`/player/${this.assetId || this.item._id}/item`);
+          let item;
 
-          console.log(item);
+          if (this.$route.params.timestamp) {
+            const {timestamp, signature} = this.$route.params;
+
+            item = {
+              streamUrl: `/player/streams/${timestamp}/${signature}/${this.assetId}.m3u8`,
+              subtitles: await api.get(`/player/${timestamp}/${signature}/${this.assetId}/subtitles`)
+            }
+          } else {
+            item = await api.get(`/player/${this.assetId || this.item._id}/item`);
+          }
+
           this.player.src({
             type: 'application/x-mpegURL',
             src: item.streamUrl
