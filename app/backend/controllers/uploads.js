@@ -90,7 +90,7 @@ export default app => {
       entries.push(file);
     }
 
-    await File.remove({
+    await File.deleteMany({
       name: {$not: {$in: files}}
     });
 
@@ -128,7 +128,7 @@ export default app => {
       }
     }
 
-    await File.remove({_id: {$in: req.body}});
+    await File.deleteMany({_id: {$in: req.body}});
   }));
 
   router.put('/', catchExceptions(async (req, res) => {
@@ -216,7 +216,7 @@ export default app => {
 
   router.post('/items/:id/assign-to/:language/:assetId', fetchItem, api(async req => {
     return subtitles.convert(
-      `${app.config.outputBase || req.base}/player/streams/${req.session.id}`,
+      `${app.config.outputBase || req.base}/player/streams/-/-`,
       req.params.assetId,
       `${app.config.source}/${req.item.name}`,
       req.params.language);
@@ -235,7 +235,7 @@ export default app => {
       );
     }
 
-    await File.remove({_id: {$in: req.body}});
+    await File.deleteMany({_id: {$in: req.body}});
 
     io.emit('removed', {ids: req.body});
   }))

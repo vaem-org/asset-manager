@@ -94,7 +94,7 @@ export default app => {
 
   // check authentication of stream
   const checkAuth = (req, res, next) => {
-    if (app.config.publicStreams) {
+    if (app.config.publicStreams || req.ip === '127.0.0.1') {
       return next();
     }
 

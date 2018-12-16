@@ -93,7 +93,7 @@ export default app => {
     const output = fs.createWriteStream(sourceFile);
     req.on('end', async () => {
       try {
-        await subtitleConvert(`${app.config.outputBase || req.base}/player/streams/${req.session.id}`, req.params.id, sourceFile, lang);
+        await subtitleConvert(`${app.config.outputBase || req.base}/player/streams/-/-`, req.params.id, sourceFile, lang);
         await fs.unlink(sourceFile);
         res.json({result: true});
       }

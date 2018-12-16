@@ -35,7 +35,7 @@ const run = (cmd, args) => new Promise((accept, reject) => {
       accept();
     }
     else {
-      reject(`Command "${cmd}" failed.`);
+      reject(`Command "${cmd} ${args.map(value => `"${value}"`).join(' ')}" failed.`);
     }
   });
 });
