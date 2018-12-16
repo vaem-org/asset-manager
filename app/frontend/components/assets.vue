@@ -159,6 +159,13 @@
           },
           {text: 'Queue missing bitrates', action: this.addMissingBitrates, contextOnly: true},
           ...languages.map(language => ({
+            text: `Upload subtitles (${language})`,
+            action: this.uploadSubtitles(language),
+            file: true,
+            contextOnly: true,
+            enabled: atMostOneAndProcessed
+          })),
+          ...languages.map(language => ({
             text: `Download subtitles (${language})`,
             action: this.downloadSubtitles(language),
             contextOnly: true,
