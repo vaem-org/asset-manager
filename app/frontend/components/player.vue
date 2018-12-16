@@ -18,7 +18,7 @@
 
 <template>
   <div>
-    <v-dialog v-model="dialog" max-width="600px" v-if="useDialog">
+    <v-dialog v-model="dialog" max-width="1024px" v-if="useDialog">
       <v-card>
         <v-responsive>
           <div class="player-container">
