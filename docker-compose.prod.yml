@@ -14,6 +14,7 @@ services:
       NODE_ENV: production
       ALLOW_IP: "172."
       SOURCE_BASE: http://app:1234/source/
+      SIGNATURE_SECRET: 'my signature secret'
     volumes:
       - var:/app/var
 

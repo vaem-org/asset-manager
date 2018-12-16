@@ -216,7 +216,7 @@ export default app => {
 
   router.post('/items/:id/assign-to/:language/:assetId', fetchItem, api(async req => {
     return subtitles.convert(
-      `${app.config.outputBase || req.base}/player/streams/-/-`,
+      `http://localhost:${app.config.port}/player/streams/-/-`,
       req.params.assetId,
       `${app.config.source}/${req.item.name}`,
       req.params.language);
