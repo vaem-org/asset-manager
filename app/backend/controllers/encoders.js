@@ -306,12 +306,18 @@ export default app => {
             const stream = _.find(_.get(data, 'ffprobe.streams', []), {codec_type: 'video'});
 
             if (stream) {
-              const aspect = _.get(stream, 'display_aspect_ratio', '').split(':');
+              const aspect = _.get(stream, 'display_aspect_ratio', '')
+                .split(':')
+                .map(value => parseInt(value))
+              ;
 
               source.asset.streams.push({
                 filename: path.basename(data.filename),
                 bandwidth: parseInt(job.options.maxrate) * 1024,
-                resolution: Math.max(stream.width, Math.floor(stream.height / parseInt(aspect[1]) * parseInt(aspect[0]))) + 'x' + stream.height,
+                resolution:
+                  aspect.length > 0 ? Math.max(stream.width, Math.floor(stream.height / parseInt(aspect[1]) * parseInt(aspect[0]))) + 'x' + stream.height :
+                  `${stream.width}x${stream.height}`
+                ,
                 codec: 'avc1.640029'
               });
             }

@@ -33,7 +33,7 @@ const masterPlaylist = async assetId => {
 
   let masterPlaylist = [
     '#EXTM3U',
-    '#EXT-X-VERSION:7'
+    '#EXT-X-VERSION:3'
   ].concat(
     asset.audioStreams.map(entry => `#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="${entry.bitrate}",CHANNELS="${entry.bitrate.indexOf('ac3') !== -1 ? 6 : 2}",NAME="audio",AUTOSELECT=YES, DEFAULT=YES,URI="${entry.filename}"`)
   );

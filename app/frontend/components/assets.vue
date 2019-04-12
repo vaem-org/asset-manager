@@ -263,7 +263,7 @@
 
       copyUrl() {
         setClipboard(
-          `${location.origin}/player/streams/-/${this.$refs.items.selected[0]._id}.m3u8`
+          `${location.origin}/player/streams/-/-/${this.$refs.items.selected[0]._id}.m3u8`
         );
       },
 
