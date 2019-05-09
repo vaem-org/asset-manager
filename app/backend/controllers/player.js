@@ -245,9 +245,9 @@ export default app => {
     }
 
     // Prevent "unknown cc" for Apple players
-    m3u.items.StreamItem.forEach(stream => {
-      stream.attributes.attributes['closed-captions'] = 'NONE';
-    });
+    // m3u.items.StreamItem.forEach(stream => {
+    //   stream.attributes.attributes['closed-captions'] = 'NONE';
+    // });
 
     m3u.items.PlaylistItem.forEach(stream => {
       if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
