@@ -22,7 +22,7 @@ const config = require('./config');
 const env = process.env.NODE_ENV || 'development';
 
 const ManifestPlugin = require('webpack-manifest-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
@@ -124,7 +124,7 @@ module.exports = {
     new VueLoaderPlugin(),
     new DotEnvPlugin(),
     ...(env === 'production' ? [
-    new CleanWebpackPlugin([outputPath], {root: config.root}),
+    new CleanWebpackPlugin(),
     new MiniCssExtractPlugin(),
     new UglifyJsPlugin({
       uglifyOptions:
