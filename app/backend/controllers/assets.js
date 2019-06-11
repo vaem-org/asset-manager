@@ -71,6 +71,9 @@ export default app => {
     }
   }));
 
+  const ts = require('./assets/_id.ts');
+  router.use('/items', ts.router);
+
   router.get('/items/:id', api(async req => Asset.findById(req.params.id)));
 
   app.get('/items/:id/subtitles', (req, res) => {

@@ -244,7 +244,7 @@ export default app => {
       m3u.set('playlistType', 'VOD');
     }
 
-    // Prevent "unknown cc" for Apple players
+    // // Prevent "unknown cc" for Apple players
     // m3u.items.StreamItem.forEach(stream => {
     //   stream.attributes.attributes['closed-captions'] = 'NONE';
     // });

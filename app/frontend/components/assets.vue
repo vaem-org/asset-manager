@@ -151,6 +151,10 @@
             action: this.preview,
             enabled: atMostOneAndProcessed
           },
+          {
+            text: 'Download',
+            action: this.download
+          },
           {text: 'Edit', action: this.edit},
           {
             text: 'Share',
@@ -293,6 +297,10 @@
 
       async addMissingBitrates() {
         await api.post('/encoders/start-job', {assetId: this.$refs.items.selected[0]._id});
+      },
+
+      download() {
+        location.href = `items/${this.$refs.items.selected[0]._id}.ts`
       }
     },
 
