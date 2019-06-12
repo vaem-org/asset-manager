@@ -68,6 +68,7 @@ schema.methods.removeFiles = function () {
         console.log('Unable to delete objects from S3', err);
       })
   }
+  // TODO Remove files from BunnyCDN
 
   fs.remove(`${config.output}/${this._id}`)
     .catch(err => {

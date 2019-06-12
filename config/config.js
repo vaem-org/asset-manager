@@ -69,6 +69,9 @@ module.exports = merge({
 
   bunnyCDN: process.env.BUNNYCDN_AUTHENTICATIONKEY ? {
     authenticationKey: process.env.BUNNYCDN_AUTHENTICATIONKEY,
-    hostname: process.env.BUNNYCDN_HOSTNAME
+    hostname: process.env.BUNNYCDN_HOSTNAME,
+    username: process.env.BUNNYCDN_USERNAME,
+    password: process.env.BUNNYCDN_PASSWORD,
+    storageZoneName: process.env.BUNNYCDN_STORAGEZONENAME
   } : null
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);

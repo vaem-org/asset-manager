@@ -26,6 +26,7 @@ import {Asset} from '../model/asset';
 import {s3} from '../util/s3';
 
 import config from '../../../config/config';
+import {bunnycdnStorage} from './bunnycdn';
 
 const outputDir = `${config.root}/var/subtitles`;
 
@@ -107,6 +108,11 @@ const convert = async (base, assetId, sourceFile, lang) => {
     }, err => {
       console.error('Unable to upload vtt to S3', err);
     });
+  } else if (bunnycdnStorage) {
+    bunnycdnStorage.put(`${assetId}/subtitles/${lang}.vtt`, fs.createReadStream(destination))
+      .catch(e => {
+        console.error('Unable to upload vtt to BunnyCDN', e);
+      })
   }
 
   const item = await Asset.findById(assetId);

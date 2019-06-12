@@ -21,6 +21,7 @@ import path from 'path';
 import {Asset} from '../model/asset';
 import config from '../../../config/config';
 import {s3} from '../util/s3';
+import {bunnycdnStorage} from './bunnycdn';
 
 const masterPlaylist = async assetId => {
   const asset = await Asset.findById(assetId);
@@ -56,6 +57,9 @@ const masterPlaylist = async assetId => {
       Key: `${basename}/${basename}.m3u8`,
       Body: masterPlaylist.join('\n')
     }).promise();
+  }
+  else if (bunnycdnStorage) {
+    await bunnycdnStorage.put(`${basename}/${basename}.m3u8`, masterPlaylist.join('\n'));
   }
   else {
     await fs.writeFile(`${config.output}/${basename}/${basename}.m3u8`, masterPlaylist.join('\n'));

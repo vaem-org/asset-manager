@@ -21,6 +21,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import {catchExceptions} from '../util/express-helpers';
 import {s3} from '../util/s3';
+import {bunnycdnStorage} from '../util/bunnycdn';
 
 export default app => {
   const upload = destination => catchExceptions(async (req, res, next) => {
@@ -53,8 +54,19 @@ export default app => {
         res.end();
       });
     });
-  }
-  else {
+  } else if (bunnycdnStorage) {
+    app.use('/output', catchExceptions(async (req, res) => {
+      console.log(`Uploading to BunnyCDN: ${req.path.substr(1)}`);
+
+      try {
+        await bunnycdnStorage.put(req.path.substr(1), req);
+      } catch (e) {
+        console.error(e);
+      }
+
+      res.end();
+    }));
+  } else {
     app.use('/output', upload(app.config.output));
   }
 
