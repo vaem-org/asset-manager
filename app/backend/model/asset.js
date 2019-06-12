@@ -23,6 +23,7 @@ import _ from 'lodash';
 import config from '../../../config/config';
 
 import * as s3Util from '../util/s3';
+import {bunnycdnStorage} from '../util/bunnycdn';
 
 const schema = new mongoose.Schema({
   updatedAt: {type: Date, default: Date.now},
@@ -67,8 +68,12 @@ schema.methods.removeFiles = function () {
       .catch(err => {
         console.log('Unable to delete objects from S3', err);
       })
+  } else if (bunnycdnStorage) {
+    bunnycdnStorage.delete(`${this._id}/`)
+      .catch(err => {
+        console.log('Unable to delete objects from BunnyCDN storage', err);
+      })
   }
-  // TODO Remove files from BunnyCDN
 
   fs.remove(`${config.output}/${this._id}`)
     .catch(err => {
