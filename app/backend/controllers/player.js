@@ -32,6 +32,7 @@ import {Asset} from '../model/asset';
 import {api, catchExceptions} from '../util/express-helpers';
 import {renderIndex} from '../util/render-index';
 import {computeSignature} from '../util/asset-signer';
+import {getSignedUrl} from '../util/bunnycdn';
 
 /**
  * Parse an m3u8 stream
@@ -163,9 +164,26 @@ export default app => {
 
     let uri;
 
+    const signedCookies = config.cloudfront ? _.mapKeys(
+      cloudfrontSignCookies(path.dirname(uri)),
+      (value, key) => key.replace(/^CloudFront-/, '')
+    ) : {};
+
+    /**
+     * @type {function}
+     */
+    let signUrl = null;
+
+    if (config.cloudFront) {
+      signUrl = uri => `${app.config.cloudfront.base}${uri}?${querystring.stringify(signedCookies)}`;
+    } else if (config.bunnyCDN) {
+      const expires = Math.floor(Date.now()/1000) + 8*3600;
+      signUrl = uri => getSignedUrl(uri, expires)
+    }
+
     if (!req.params.language) {
       uri = [
-        config.cloudfront ? '/' : base,
+        signUrl ? '/' : base,
         req.params.assetId,
         '/',
         req.params.assetId,
@@ -174,21 +192,14 @@ export default app => {
       ].join('');
     }
     else {
-      uri = `${config.cloudfront ? '/' : base}${req.params.assetId}/subtitles/${req.params.language}.m3u8`;
+      uri = `${signUrl ? '/' : base}${req.params.assetId}/subtitles/${req.params.language}.m3u8`;
     }
-
-    const signedCookies = config.cloudfront ? _.mapKeys(
-      cloudfrontSignCookies(path.dirname(uri)),
-      (value, key) => key.replace(/^CloudFront-/, '')
-    ) : {};
-
-    const cloudfrontSignUrl = uri => `${app.config.cloudfront.base}${uri}?${querystring.stringify(signedCookies)}`;
 
     let m3u;
 
-    if (config.cloudfront) {
+    if (signUrl) {
       m3u = await parseM3U(request({
-        url: cloudfrontSignUrl(uri)
+        url: signUrl(uri)
       }));
     }
     else {
@@ -252,8 +263,8 @@ export default app => {
     m3u.items.PlaylistItem.forEach(stream => {
       if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
         stream.set('uri',
-          config.cloudfront ?
-            cloudfrontSignUrl(
+          signUrl ?
+            signUrl(
               `/${base}${stream.get('uri')}`,
             ) :
             base + stream.get('uri')

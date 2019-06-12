@@ -65,5 +65,10 @@ module.exports = merge({
   protocol: process.env.PROTOCOL,
 
   sourceBase: process.env.SOURCE_BASE,
-  publicStreams: process.env.PUBLIC_STREAMS
+  publicStreams: process.env.PUBLIC_STREAMS,
+
+  bunnyCDN: process.env.BUNNYCDN_AUTHENTICATIONKEY ? {
+    authenticationKey: process.env.BUNNYCDN_AUTHENTICATIONKEY,
+    hostname: process.env.BUNNYCDN_HOSTNAME
+  } : null
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);
