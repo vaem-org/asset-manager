@@ -164,17 +164,14 @@ export default app => {
 
     let uri;
 
-    const signedCookies = config.cloudfront ? _.mapKeys(
-      cloudfrontSignCookies(path.dirname(uri)),
-      (value, key) => key.replace(/^CloudFront-/, '')
-    ) : {};
+    let signedCookies;
 
     /**
      * @type {function}
      */
     let signUrl = null;
 
-    if (config.cloudFront) {
+    if (config.cloudfront) {
       signUrl = uri => `${app.config.cloudfront.base}${uri}?${querystring.stringify(signedCookies)}`;
     } else if (config.bunnyCDN) {
       const expires = Math.floor(Date.now()/1000) + 8*3600;
@@ -194,6 +191,11 @@ export default app => {
     else {
       uri = `${signUrl ? '/' : base}${req.params.assetId}/subtitles/${req.params.language}.m3u8`;
     }
+
+    signedCookies = config.cloudfront ? _.mapKeys(
+      cloudfrontSignCookies(path.dirname(uri)),
+      (value, key) => key.replace(/^CloudFront-/, '')
+    ) : {};
 
     let m3u;
 

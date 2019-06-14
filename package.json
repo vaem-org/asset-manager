@@ -88,6 +88,7 @@
     "whatwg-fetch": "^3.0.0"
   },
   "devDependencies": {
+    "cli-progress": "^2.1.1",
     "concurrently": "^4.0.1",
     "nodemon": "^1.19.1",
     "webpack-dev-server": "^3.7.1",
