@@ -70,15 +70,17 @@ async function copyAsset(assetId) {
   const bar = new Bar();
 
   bar.start(keys.length, 0);
-  for(let key of keys) {
-    const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
+  for(let batch of _.chunk(keys, 4)) {
+    await Promise.all(batch.map(async key => {
+      const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
 
-    const response = await axios.get(cloudfrontUrl, {
-      responseType: 'stream'
-    });
+      const response = await axios.get(cloudfrontUrl, {
+        responseType: 'stream'
+      });
 
-    await bunnycdnStorage.put(key, response.data);
-    bar.update(++count);
+      await bunnycdnStorage.put(key, response.data);
+      bar.update(++count);
+    }));
   }
 
   asset.labels = [...asset.labels, 'migrated'];
