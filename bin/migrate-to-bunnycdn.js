@@ -70,8 +70,8 @@ async function copyAsset(assetId) {
   const bar = new Bar();
 
   bar.start(keys.length, 0);
-  for(let batch of _.chunk(keys, 4)) {
-    await Promise.all(batch.map(async key => {
+  await Promise.all(_.chunk(keys, Math.round(keys.length/8)),map(async batch => {
+    for(let key of batch) {
       const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
 
       const response = await axios.get(cloudfrontUrl, {
@@ -80,8 +80,8 @@ async function copyAsset(assetId) {
 
       await bunnycdnStorage.put(key, response.data);
       bar.update(++count);
-    }));
-  }
+    }
+  }));
 
   asset.labels = [...asset.labels, 'migrated'];
   await asset.save();
@@ -93,7 +93,7 @@ async function copyAsset(assetId) {
   await mongoose.connect(config.mongo, {
     useNewUrlParser: true
   });
-  await copyAsset('5cffebb6d27c8f000e1a7f7c');
+  await copyAsset('5d150221f80718000d7cc473');
   await mongoose.disconnect();
 })().catch(e => {
   console.error(e);

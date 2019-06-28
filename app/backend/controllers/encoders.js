@@ -309,6 +309,7 @@ export default app => {
               const aspect = _.get(stream, 'display_aspect_ratio', '')
                 .split(':')
                 .map(value => parseInt(value))
+                .filter(value => value)
               ;
 
               source.asset.streams.push({
