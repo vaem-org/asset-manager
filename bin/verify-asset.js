@@ -18,16 +18,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import moment from 'moment';
 import {authorizationHeaders} from '../app/backend/util/source';
+import {computeSignature} from "../app/backend/util/asset-signer";
 
-const _ = require('lodash');
-const mongoose = require('mongoose');
-const childProcess = require('child_process');
-const util = require('util');
+import _ from 'lodash';
+import mongoose from 'mongoose';
+import childProcess from 'child_process';
+import util from 'util';
 
-const config = require('../config/config');
-const {Asset} = require('../app/backend/model/asset');
-const s3 = require('../app/backend/util/s3');
+import config from '../config/config';
+
+import {Asset} from '../app/backend/model/asset';
+import s3 from '../app/backend/util/s3';
 
 const execFile = util.promisify(childProcess.execFile);
 const getDuration = async source => {
@@ -44,7 +47,9 @@ const getDuration = async source => {
 };
 
 (async () => {
-  await mongoose.connect(config.mongo);
+  await mongoose.connect(config.mongo, {
+    useNewUrlParser: true
+  });
 
   const assetId = process.argv[2];
   const asset = await Asset.findById(assetId);
@@ -58,45 +63,48 @@ const getDuration = async source => {
     process.exit(1);
   }
 
-  console.info('Verifying file count');
-  // verify file counts on s3
-  const objects = (await s3.listAllObjects({
-    Prefix: `${assetId}/`,
-    Bucket: config.s3.bucket
-  })).filter(object => /\.ts$/.exec(object.Key));
-
-  const counts = _.countBy(objects, object => object.Key.split('.')[1]);
-
-  const max = _.max(_.values(counts));
-
-  const faulty = _.keys(_.omit(counts, 'm3u8')).filter(bitrate => Math.abs(counts[bitrate] - max) >= 5);
-  if (faulty.length > 0) {
-    console.error(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
-  }
-  asset.bitrates = _.difference(asset.bitrates, faulty);
-
-  // const good = [];
-  // // verify durations of all bitrates
-  // for(let bitrate of asset.bitrates)
-  // {
-  // 	if (bitrate === '1k')
-  // 	{
-  // 		good.push(bitrate);
-  // 		return;
-  // 	}
+  // console.info('Verifying file count');
+  // // verify file counts on s3
+  // const objects = (await s3.listAllObjects({
+  //   Prefix: `${assetId}/`,
+  //   Bucket: config.s3.bucket
+  // })).filter(object => /\.ts$/.exec(object.Key));
   //
-  // 	console.info(`Checking duration for ${bitrate}`);
-  // 	const duration = await getDuration(`http://localhost:${config.port}/player/streams/${assetId}/${assetId}.${bitrate}.m3u8`);
-  // 	if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2)
-  // 	{
-  // 		console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
-  // 	}
-  // 	else
-  // 	{
-  // 		good.push(bitrate);
-  // 	}
+  // const counts = _.countBy(objects, object => object.Key.split('.')[1]);
+  //
+  // const max = _.max(_.values(counts));
+  //
+  // const faulty = _.keys(_.omit(counts, 'm3u8')).filter(bitrate => Math.abs(counts[bitrate] - max) >= 5);
+  // if (faulty.length > 0) {
+  //   console.error(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
   // }
-  // asset.bitrates = good;
+  // asset.bitrates = _.difference(asset.bitrates, faulty);
+
+  const good = [];
+  // verify durations of all bitrates
+  for(let bitrate of asset.bitrates)
+  {
+  	if (bitrate === '1k')
+  	{
+  		good.push(bitrate);
+  		return;
+  	}
+
+    const timestamp = moment().add(8, 'hours').valueOf();
+    const signature = computeSignature(assetId, timestamp, '10.1.0.122');
+    const videoUrl = `http://10.1.0.122:1234/player/streams/${timestamp}/${signature}/${assetId}.${bitrate}.m3u8`;
+  	console.info(`Checking duration for ${bitrate}`);
+  	const duration = await getDuration(videoUrl);
+  	if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2)
+  	{
+  		console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
+  	}
+  	else
+  	{
+  		good.push(bitrate);
+  	}
+  }
+  asset.bitrates = good;
 
   await asset.save();
 

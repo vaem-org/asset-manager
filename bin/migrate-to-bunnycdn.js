@@ -70,7 +70,7 @@ async function copyAsset(assetId) {
   const bar = new Bar();
 
   bar.start(keys.length, 0);
-  await Promise.all(_.chunk(keys, Math.round(keys.length/8)),map(async batch => {
+  await Promise.all(_.chunk(keys, Math.round(keys.length/8)).map(async batch => {
     for(let key of batch) {
       const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
 
