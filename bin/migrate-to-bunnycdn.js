@@ -90,9 +90,10 @@ async function copyAsset(assetId) {
       response.data.pipe(output);
 
       await (new Promise((accept, reject) => {
-        response.data.on('end', accept);
+        output.on('end', accept);
         output.on('error', reject);
         response.data.on('error', reject);
+        output.on('error', reject);
       }));
 
       await bunnycdnStorage.put(key, fs.createReadStream(localFilename));

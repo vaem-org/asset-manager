@@ -18,14 +18,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const mongoose = require('mongoose');
-
-const config = require('../config/config');
-
-const masterPlaylist = require('../app/backend/util/master-playlist');
+import config from '../config/config';
+import mongoose from 'mongoose';
+import masterPlaylist from '../app/backend/util/master-playlist';
 
 (async () => {
-  await mongoose.connect(config.mongo);
+  await mongoose.connect(config.mongo, {
+    useNewUrlParser: true
+  });
 
   await masterPlaylist(process.argv[2]);
 

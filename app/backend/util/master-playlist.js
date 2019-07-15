@@ -61,7 +61,8 @@ const masterPlaylist = async assetId => {
   else if (bunnycdnStorage) {
     await bunnycdnStorage.put(`${basename}/${basename}.m3u8`, masterPlaylist.join('\n'));
   }
-  else {
+
+  if (!s3) {
     await fs.writeFile(`${config.output}/${basename}/${basename}.m3u8`, masterPlaylist.join('\n'));
   }
 };
