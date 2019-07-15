@@ -28,7 +28,9 @@ import {bunnycdnStorage} from '../app/backend/util/bunnycdn';
 import {listAllObjects} from '../app/backend/util/s3';
 import cloudfrontSign from 'aws-cloudfront-sign';
 import moment from 'moment';
-import querystring from "querystring";
+import querystring from 'querystring';
+import fs from 'fs';
+import fse from 'fs-extra';
 import {Bar} from 'cli-progress';
 import {Asset} from '../app/backend/model/asset';
 
@@ -70,6 +72,9 @@ async function copyAsset(assetId) {
   const bar = new Bar();
 
   bar.start(keys.length, 0);
+
+  await fse.ensureDir(`${config.root}/var/output/${assetId}/subtitles`);
+
   await Promise.all(_.chunk(keys, Math.round(keys.length/8)).map(async batch => {
     for(let key of batch) {
       const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
@@ -78,7 +83,19 @@ async function copyAsset(assetId) {
         responseType: 'stream'
       });
 
-      await bunnycdnStorage.put(key, response.data);
+      const localFilename = `${config.root}/var/output/${key}`;
+
+      const output = fs.createWriteStream(localFilename);
+
+      response.data.pipe(output);
+
+      await (new Promise((accept, reject) => {
+        response.data.on('end', accept);
+        output.on('error', reject);
+        response.data.on('error', reject);
+      }));
+
+      await bunnycdnStorage.put(key, fs.createReadStream(localFilename));
       bar.update(++count);
     }
   }));
@@ -93,7 +110,7 @@ async function copyAsset(assetId) {
   await mongoose.connect(config.mongo, {
     useNewUrlParser: true
   });
-  await copyAsset('5d150221f80718000d7cc473');
+  await copyAsset('5d15026af80718000d7cc476');
   await mongoose.disconnect();
 })().catch(e => {
   console.error(e);

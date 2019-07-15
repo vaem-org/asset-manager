@@ -24,6 +24,17 @@ import {s3} from '../util/s3';
 import {bunnycdnStorage} from '../util/bunnycdn';
 
 export default app => {
+  const ensured = new Set();
+
+  const ensureDir = async dirname => {
+    if (ensured.has(dirname)) {
+      return;
+    }
+
+    await fs.ensureDir(dirname);
+    ensured.add(dirname);
+  };
+
   const upload = destination => catchExceptions(async (req, res, next) => {
     if (req.method !== 'PUT') {
       return next();
@@ -31,7 +42,7 @@ export default app => {
 
     const output = path.join(destination, decodeURIComponent(req.path));
 
-    await fs.ensureDir(path.dirname(output));
+    await ensureDir(path.dirname(output));
 
     req
       .on('end', () => res.end())
@@ -58,8 +69,19 @@ export default app => {
     app.use('/output', catchExceptions(async (req, res) => {
       console.log(`Uploading to BunnyCDN: ${req.path.substr(1)}`);
 
+      const output = path.join(app.config.output, decodeURIComponent(req.path));
+
+      await ensureDir(path.dirname(output));
+      req
+          .pipe(fs.createWriteStream(output));
+
+      await (new Promise((accept, reject) => {
+        req.on('end', accept);
+        req.on('error', reject);
+      }));
+
       try {
-        await bunnycdnStorage.put(req.path.substr(1), req);
+        await bunnycdnStorage.put(req.path.substr(1), fs.createReadStream(output));
       } catch (e) {
         console.error(e);
       }
