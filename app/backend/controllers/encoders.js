@@ -29,6 +29,7 @@ import * as settings from '../model/settings';
 import {File} from '../model/file';
 import {Asset} from '../model/asset';
 import masterPlaylist from '../util/master-playlist';
+import {URL} from 'url';
 
 const getAudioJobs = async (asset, file, source) => {
   const jobs = [];
@@ -563,6 +564,12 @@ export default app => {
   router.delete('/jobs/:index', api(async req => {
     queue.splice(req.params.index, 1);
     browserIO.emit('queue-update', queue.length);
+  }));
+
+  router.get('/docker', api(async req => {
+    const url = new URL(req.query.origin);
+
+    return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${url.protocol}//admin:${app.config.auth.password}@${url.host} vaem/encoder`;
   }));
 
   if (app.config.source) {

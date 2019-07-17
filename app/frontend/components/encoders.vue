@@ -26,6 +26,7 @@
             Queue
           </v-btn>
         </v-badge>
+        <v-btn outline color="primary" @click="copyDockerCommand">Copy docker command</v-btn>
       </div>
       <v-data-table :headers="headers" hide-actions :items="items" :loading="loading">
         <template slot="items" slot-scope="props">
@@ -87,8 +88,10 @@
   import io from 'socket.io-client';
   import {basename} from 'path';
   import {camelCase as _camelCase, values as _values, get as _get} from 'lodash';
+  import {stringify} from 'querystring';
 
   import api from '@/util/api';
+  import setClipboard from '@/util/set-clipboard';
 
   export default {
     name: 'Encoders',
@@ -138,6 +141,12 @@
 
       async updatePriority(encoder) {
         await api.post(`encoders/${encoder.id}/priority`, {priority: encoder.info.priority});
+      },
+
+      async copyDockerCommand() {
+        setClipboard(await api.get(`docker?${stringify({
+          origin: location.origin
+        })}`));
       }
     },
 

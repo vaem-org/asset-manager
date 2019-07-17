@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export default text => {
+export default function setClipboard(text) {
   const div = document.createElement('div');
   Object.assign(div.style, {
     opacity: 0,
@@ -34,8 +34,7 @@ export default text => {
     range = document.body.createTextRange();
     range.moveToElementText(div);
     range.select();
-  }
-  else if (window.getSelection) {
+  } else if (window.getSelection) {
     range = document.createRange();
     range.selectNode(div);
     window.getSelection().removeAllRanges();
@@ -46,4 +45,4 @@ export default text => {
   setTimeout(function () {
     body.removeChild(div);
   }, 0);
-};
+}
