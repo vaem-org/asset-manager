@@ -33,10 +33,11 @@ import fs from 'fs';
 import fse from 'fs-extra';
 import {Bar} from 'cli-progress';
 import {Asset} from '../app/backend/model/asset';
+import {EventEmitter} from "events";
 
 async function copyAsset(assetId) {
   const asset = await Asset.findById(assetId);
-  if (asset.labels.indexOf('migrated') !== -1) {
+  if (asset.labels.indexOf('bunnycdn') !== -1) {
     return;
   }
 
@@ -68,40 +69,94 @@ async function copyAsset(assetId) {
     existing
   );
 
-  let count = 0;
-  const bar = new Bar();
+  const bar = new Bar({
+    format: 'progress [{bar}] {percentage}% | {value}/{total} (downloaded: {downloaded})'
+  });
 
-  bar.start(keys.length, 0);
+  bar.start(keys.length, 0, {
+    downloaded: 0
+  });
+
+  const total = keys.length;
 
   await fse.ensureDir(`${config.root}/var/output/${assetId}/subtitles`);
 
-  await Promise.all(_.chunk(keys, Math.round(keys.length/8)).map(async batch => {
-    for(let key of batch) {
-      const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
+  let uploaders = 0;
+  const uploadQueue = [];
 
-      const response = await axios.get(cloudfrontUrl, {
-        responseType: 'stream'
+  const events = new EventEmitter();
+
+  const downloadNext = async () => {
+    if (keys.length === 0) {
+      return;
+    }
+
+    const key = keys.shift();
+
+    const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
+
+    const response = await axios.get(cloudfrontUrl, {
+      responseType: 'stream'
+    });
+
+    const localFilename = `${config.root}/var/output/${key}`;
+
+    const output = fs.createWriteStream(localFilename);
+
+    response.data.pipe(output);
+    response.data.on('end', () => {
+      bar.update(done, {
+        downloaded: total - keys.length
       });
 
-      const localFilename = `${config.root}/var/output/${key}`;
+      uploadQueue.push({key, localFilename});
+      downloadNext()
+          .catch(e => events.emit('error', e));
 
-      const output = fs.createWriteStream(localFilename);
+      if (uploaders < 8) {
+        uploadNext();
+      }
+    });
 
-      response.data.pipe(output);
+    response.data.on('error', e => events.emit('error', e));
+  };
 
-      await (new Promise((accept, reject) => {
-        output.on('end', accept);
-        output.on('error', reject);
-        response.data.on('error', reject);
-        output.on('error', reject);
-      }));
-
-      await bunnycdnStorage.put(key, fs.createReadStream(localFilename));
-      bar.update(++count);
+  let done = 0;
+  const uploadNext = () => {
+    if (uploadQueue.length === 0) {
+      return;
     }
+
+    uploaders++;
+
+    const {key, localFilename} = uploadQueue.shift();
+
+    bunnycdnStorage.put(key, fs.createReadStream(localFilename))
+        .then(() => {
+
+          uploaders--;
+          done++;
+          bar.update(done);
+          uploadNext();
+          if (done === total) {
+            events.emit('done');
+          }
+        })
+        .catch(e => events.emit('error', e))
+  };
+
+  // start 8 download workers
+  for(let i=0; i<8; i++) {
+    downloadNext()
+        .catch(e => events.emit('error', e));
+  }
+
+  await (new Promise((accept, reject) => {
+    events.on('done', accept);
+    events.on('error', reject);
   }));
 
-  asset.labels = [...asset.labels, 'migrated'];
+  asset.labels = [...asset.labels, 'bunnycdn'];
   await asset.save();
 
   bar.stop();
@@ -111,7 +166,7 @@ async function copyAsset(assetId) {
   await mongoose.connect(config.mongo, {
     useNewUrlParser: true
   });
-  await copyAsset('5d15026af80718000d7cc476');
+  await copyAsset('5d2c72a2dd5c39000ddba128' || '5d1114a9f80718000d7cc458');
   await mongoose.disconnect();
 })().catch(e => {
   console.error(e);
