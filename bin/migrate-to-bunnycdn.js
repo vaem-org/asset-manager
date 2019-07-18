@@ -131,18 +131,21 @@ async function copyAsset(assetId) {
 
     const {key, localFilename} = uploadQueue.shift();
 
-    bunnycdnStorage.put(key, fs.createReadStream(localFilename))
-        .then(() => {
+    Promise.all([
+        () => bunnycdnStorage.put(key, fs.createReadStream(localFilename)),
+        new Promise(accept => setTimeout(accept, 500))
+    ])
+      .then(() => {
 
-          uploaders--;
-          done++;
-          bar.update(done);
-          uploadNext();
-          if (done === total) {
-            events.emit('done');
-          }
-        })
-        .catch(e => events.emit('error', e))
+        uploaders--;
+        done++;
+        bar.update(done);
+        uploadNext();
+        if (done === total) {
+          events.emit('done');
+        }
+      })
+      .catch(e => events.emit('error', e))
   };
 
   // start 8 download workers

@@ -58,7 +58,7 @@
       <v-btn icon small :to="{path:'/encoders/'}"><v-icon small>storage</v-icon></v-btn>
       <span>Asset manager</span>
       <v-spacer/>
-      <span>&copy; {{ year }}</span>
+      <span class="mr-2">&copy; {{ year }}</span>
     </v-footer>
   </v-app>
 </template>
