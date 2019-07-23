@@ -38,8 +38,7 @@ import {EventEmitter} from "events";
 const concurrentDownloads = 8;
 const concurrentUploads = 4;
 
-async function copyAsset(assetId) {
-  const asset = await Asset.findById(assetId);
+async function copyAsset(asset) {
   if (asset.labels.indexOf('bunnycdn') !== -1) {
     return;
   }
@@ -188,7 +187,24 @@ async function copyAsset(assetId) {
   await mongoose.connect(config.mongo, {
     useNewUrlParser: true
   });
-  await copyAsset(process.argv[2]);
+
+  const query = {
+    labels: {$nin: ['bunnycdn']}
+  };
+
+  const count = await Asset.countDocuments(query);
+  const assets = Asset.find(query).cursor();
+
+  let doc;
+  let i = 1;
+  while((doc = await assets.next())) {
+    console.log(`Copying ${asset.title} (${i} of ${count})`);
+
+    await copyAsset(doc);
+    i++;
+  }
+
+  // await copyAsset(process.argv[2]);
   await mongoose.disconnect();
 })().catch(e => {
   console.error(e);
