@@ -35,6 +35,9 @@ import {Bar} from 'cli-progress';
 import {Asset} from '../app/backend/model/asset';
 import {EventEmitter} from "events";
 
+const concurrentDownloads = 8;
+const concurrentUploads = 4;
+
 async function copyAsset(assetId) {
   const asset = await Asset.findById(assetId);
   if (asset.labels.indexOf('bunnycdn') !== -1) {
@@ -94,31 +97,50 @@ async function copyAsset(assetId) {
     const key = keys.shift();
 
     const cloudfrontUrl = `${config.cloudfront.base}/${key}?${querystring.stringify(signedCookies)}`;
-
-    const response = await axios.get(cloudfrontUrl, {
-      responseType: 'stream'
-    });
-
     const localFilename = `${config.root}/var/output/${key}`;
 
-    const output = fs.createWriteStream(localFilename);
+    let exists = false;
+    try {
+      await fs.promises.access(localFilename);
+      exists = true;
+    } catch (e) {
+      // file does not exist
+    }
 
-    response.data.pipe(output);
-    response.data.on('end', () => {
+    const downloadDone = () => {
       bar.update(done, {
         downloaded: total - keys.length
       });
 
       uploadQueue.push({key, localFilename});
       downloadNext()
-          .catch(e => events.emit('error', e));
+      .catch(e => events.emit('error', e));
 
-      if (uploaders < 8) {
+      if (uploaders < concurrentUploads) {
         uploadNext();
       }
+    };
+
+    if (exists) {
+      downloadDone();
+      return;
+    }
+
+    const response = await axios.get(cloudfrontUrl, {
+      responseType: 'stream'
     });
 
-    response.data.on('error', e => events.emit('error', e));
+    const output = fs.createWriteStream(localFilename);
+
+    response.data.pipe(output);
+    response.data.on('end', downloadDone);
+
+    response.data.on('error', e => {
+      fs.unlink(localFilename, () => {
+        console.error(`Unable to remove ${localFilename} after download error`);
+      });
+      events.emit('error', e)
+    });
   };
 
   let done = 0;
@@ -131,10 +153,7 @@ async function copyAsset(assetId) {
 
     const {key, localFilename} = uploadQueue.shift();
 
-    Promise.all([
-        () => bunnycdnStorage.put(key, fs.createReadStream(localFilename)),
-        new Promise(accept => setTimeout(accept, 500))
-    ])
+    bunnycdnStorage.put(key, fs.createReadStream(localFilename))
       .then(() => {
 
         uploaders--;
@@ -148,8 +167,8 @@ async function copyAsset(assetId) {
       .catch(e => events.emit('error', e))
   };
 
-  // start 8 download workers
-  for(let i=0; i<8; i++) {
+  // start download workers
+  for(let i=0; i<concurrentDownloads; i++) {
     downloadNext()
         .catch(e => events.emit('error', e));
   }
@@ -169,7 +188,7 @@ async function copyAsset(assetId) {
   await mongoose.connect(config.mongo, {
     useNewUrlParser: true
   });
-  await copyAsset('5d2c72a2dd5c39000ddba128' || '5d1114a9f80718000d7cc458');
+  await copyAsset(process.argv[2]);
   await mongoose.disconnect();
 })().catch(e => {
   console.error(e);
