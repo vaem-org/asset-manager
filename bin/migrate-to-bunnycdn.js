@@ -188,12 +188,20 @@ async function copyAsset(asset) {
     useNewUrlParser: true
   });
 
+  if (process.argv[2] && !mongoose.Types.ObjectId.isValid(process.argv[2])) {
+    throw `Invalid id: ${process.argv[2]}`;
+  }
+
   const query = {
-    labels: {$nin: ['bunnycdn']}
+    labels: {$nin: ['bunnycdn']},
+    ...(process.argv[2] ? {_id: process.argv[2]} : {})
   };
 
   const count = await Asset.countDocuments(query);
   const assets = Asset.find(query).cursor();
+
+  console.log({count});
+  return await mongoose.disconnect();
 
   let doc;
   let i = 1;
@@ -204,7 +212,6 @@ async function copyAsset(asset) {
     i++;
   }
 
-  // await copyAsset(process.argv[2]);
   await mongoose.disconnect();
 })().catch(e => {
   console.error(e);

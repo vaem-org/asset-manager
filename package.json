@@ -8,7 +8,8 @@
     "start": "babel-node app/backend/app.js",
     "dev": "concurrently 'webpack-dev-server --hot --config config/webpack.config.js' 'nodemon --exec babel-node -w ./config -w ./app app/backend/app.js'",
     "build": "NODE_ENV=production webpack --config config/webpack.config.js",
-    "postinstall": "if [ $STACK ]; then npm run build; fi"
+    "postinstall": "if [ $STACK ]; then npm run build; fi",
+    "migrate-to-bunnycdn": "babel-node bin/migrate-to-bunnycdn.js"
   },
   "author": "Wouter van de Molengraft",
   "license": "UNLICENSED",
