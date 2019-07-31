@@ -200,9 +200,6 @@ async function copyAsset(asset) {
   const count = await Asset.countDocuments(query);
   const assets = Asset.find(query).cursor();
 
-  console.log({count});
-  return await mongoose.disconnect();
-
   let doc;
   let i = 1;
   while((doc = await assets.next())) {
