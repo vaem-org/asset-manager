@@ -198,12 +198,15 @@ async function copyAsset(asset) {
   };
 
   const count = await Asset.countDocuments(query);
-  const assets = Asset.find(query).cursor();
+  const assets = Asset
+    .find(query)
+    .sort([['createdAt', -1]])
+    .cursor();
 
   let doc;
   let i = 1;
   while((doc = await assets.next())) {
-    console.log(`Copying ${asset.title} (${i} of ${count})`);
+    console.log(`Copying ${doc.title} (${i} of ${count})`);
 
     await copyAsset(doc);
     i++;
