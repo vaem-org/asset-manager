@@ -38,6 +38,17 @@ import {EventEmitter} from "events";
 const concurrentDownloads = 8;
 const concurrentUploads = 4;
 
+async function setRemoteLabels(asset) {
+  await axios.post(`${process.env.REMOTE_BASE}/assets/items/${asset._id}`, {
+    labels: asset.labels
+  }, {
+    auth: {
+      username: 'admin',
+      password: process.env.REMOTE_PASSWORD
+    }
+  });
+}
+
 async function copyAsset(asset) {
   if (asset.labels.indexOf('bunnycdn') !== -1) {
     return;
@@ -178,6 +189,7 @@ async function copyAsset(asset) {
   }));
 
   asset.labels = [...asset.labels, 'bunnycdn'];
+  await setRemoteLabels(asset);
   await asset.save();
 
   bar.stop();
