@@ -24,7 +24,7 @@ import crypto from 'crypto';
 import fixKeys from '../util/fix-keys';
 import {getSeekable, getSource, getVideoParameters, guessChannelLayout} from '../util/source';
 import {renderIndex} from '../util/render-index';
-import {api} from '../util/express-helpers';
+import { api, catchExceptions } from '../util/express-helpers';
 import * as settings from '../model/settings';
 import {File} from '../model/file';
 import {Asset} from '../model/asset';
@@ -229,6 +229,12 @@ export default app => {
     }
   };
 
+  const getUrl = (req, relative) => {
+    const parsed = new URL(req.base);
+    const auth = app.config.auth;
+    return `${parsed.protocol}//${auth.username}:${auth.password}@${parsed.host}${relative}`;
+  };
+
   /**
    * Get the class of the encoder (using the cpu info)
    * @param {{}} encoder the object describing the encoder
@@ -374,29 +380,29 @@ export default app => {
 
   router.get('/queue', api(async () => queue));
 
-  app.get('/keyinfo', (req, res, next) => {
-    const source = sources[req.query.source];
+  app.get('/keyinfo/:assetId', catchExceptions(async (req, res, next) => {
+    const asset = await Asset.findById(req.params.assetId);
 
-    if (!source) {
+    if (!asset) {
       return next();
     }
 
     return res.send([
       'file.key',
-      `${app.config.outputBase || req.base}/keyinfo/file.key?source=${encodeURIComponent(req.query.source)}`,
-      source.asset.hls_enc_iv
+      getUrl(req, `/keyinfo/${req.params.assetId}/file.key`),
+      asset.hls_enc_iv
     ].join('\n'));
-  });
+  }));
 
-  app.get('/keyinfo/file.key', (req, res, next) => {
-    const source = sources[req.query.source];
+  app.get('/keyinfo/:assetId/file.key', catchExceptions(async (req, res, next) => {
+    const asset = await Asset.findById(req.params.assetId);
 
-    if (!source) {
+    if (!asset) {
       return next();
     }
 
-    return res.send(Buffer.from(source.asset.hls_enc_key, 'hex'));
-  });
+    return res.send(Buffer.from(asset.hls_enc_key, 'hex'));
+  }));
 
   router.post('/start-job', json, api(async req => {
     const file = req.body.fileId ? await File.findById(req.body.fileId) : null;
@@ -480,7 +486,7 @@ export default app => {
                 width: width,
                 m3u8: `/output/${basename}/${basename}.${options.maxrate}.m3u8`,
                 segmentOptions: app.config.hlsEnc ? {
-                  'hls_key_info_file': `${app.config.outputBase || req.base}/keyinfo?source=${encodeURIComponent(source)}`
+                  'hls_key_info_file': getUrl(req, `/keyinfo/${asset._id}`)
                 } : {},
                 hlsEncKey: app.config.hlsEnc ? asset.hls_enc_key : false
               })));
@@ -492,6 +498,12 @@ export default app => {
     // check if extra audio tracks need to be added
     const audioJobs = await getAudioJobs(asset, file, source);
 
+    const segmentOptions = {};
+
+    if (app.config.hlsEnc) {
+      segmentOptions.hls_key_info_file = getUrl(req, `/keyinfo/${asset._id}`);
+    }
+
     audioJobs.forEach(job => {
       if (asset.bitrates.indexOf(job.bitrate) !== -1) {
         return;
@@ -499,13 +511,12 @@ export default app => {
 
       todo.unshift({
         source,
+        segmentOptions,
+
         bitrate: job.bitrate,
         options: job.options,
         codec: job.codec,
         m3u8: `/output/${basename}/${basename}.${job.bitrate}.m3u8`,
-        segmentOptions: app.config.hlsEnc ? {
-          'hls_key_info_file': `${app.config.outputBase || req.base}/keyinfo?source=${encodeURIComponent(source)}`
-        } : {},
         hlsEncKey: app.config.hlsEnc ? asset.hls_enc_key : false
       });
     });

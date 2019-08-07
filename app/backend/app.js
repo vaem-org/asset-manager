@@ -28,7 +28,6 @@ import compression from 'compression';
 import throng from 'throng';
 import session from 'express-session';
 import connectMemcached from 'connect-memcached';
-import * as authUtil from './util/auth';
 import url from 'url';
 import {sync as glob} from 'glob';
 import os from 'os';
@@ -107,10 +106,6 @@ run(1, () => {
 
   if (config.auth || config.googleAuth) {
     app.use((req, res, next) => {
-      if (authUtil.checkIp(app.config, req.ip)) {
-        return next();
-      }
-
       if (/^\/(embed\/\d+\/|player\/\d+\/|check|auth|player\/subtitles|__webpack|player\/streams)/.exec(req.url)) {
         return next();
       }
