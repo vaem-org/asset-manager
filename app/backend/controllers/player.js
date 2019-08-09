@@ -18,7 +18,7 @@
 
 import express from 'express';
 import _ from 'lodash';
-import request from 'request';
+import axios from 'axios';
 import m3u8 from 'm3u8';
 import fs from 'fs-extra';
 import cookieParser from 'cookie-parser';
@@ -45,6 +45,11 @@ const parseM3U = stream => new Promise((accept, reject) => {
   let error = null;
 
   stream.pipe(parser);
+
+  stream.on('error', err => {
+    error = true;
+    reject(err);
+  });
 
   parser.on('error', err => {
     if (error) {
@@ -200,9 +205,16 @@ export default app => {
     let m3u;
 
     if (signUrl) {
-      m3u = await parseM3U(request({
-        url: signUrl(uri)
-      }));
+      try {
+        m3u = await parseM3U(
+          (await axios.get(signUrl(uri), {
+            responseType: 'stream'
+          })).data
+        );
+      }
+      catch (e) {
+        throw `Unable to get ${signUrl(uri)}: ${e.toString()}`;
+      }
     }
     else {
       const m3u8File = `${app.config.output}/${req.params.assetId}/${req.params.assetId}${req.params.bitrate ? '.' + req.params.bitrate : ''}.m3u8`;

@@ -67,6 +67,8 @@ module.exports = merge({
   sourceBase: process.env.SOURCE_BASE,
   publicStreams: process.env.PUBLIC_STREAMS,
 
+  base: process.env.BASE,
+
   bunnyCDN: process.env.BUNNYCDN_AUTHENTICATIONKEY ? {
     authenticationKey: process.env.BUNNYCDN_AUTHENTICATIONKEY,
     hostname: process.env.BUNNYCDN_HOSTNAME,

@@ -72,18 +72,41 @@ export default app => {
       const output = path.join(app.config.output, decodeURIComponent(req.path));
 
       await ensureDir(path.dirname(output));
-      req
+
+      let upload = true;
+
+      if (!output.endsWith('.m3u8')) {
+        req
           .pipe(fs.createWriteStream(output));
 
-      await (new Promise((accept, reject) => {
-        req.on('end', accept);
-        req.on('error', reject);
-      }));
+        await (new Promise((accept, reject) => {
+          req.on('end', accept);
+          req.on('error', reject);
+        }));
+      } else {
+        const buffers = [];
+        req.on('data', buffer => buffers.push(buffer));
 
-      try {
-        await bunnycdnStorage.put(req.path.substr(1), fs.createReadStream(output));
-      } catch (e) {
-        console.error(e);
+        await (new Promise((accept, reject) => {
+          req.on('end', accept);
+          req.on('error', reject);
+        }));
+
+        const content = Buffer.concat(buffers).toString();
+        if (content.indexOf('#EXT-X-ENDLIST') !== -1) {
+          await fs.writeFile(output, content);
+        } else {
+          upload = false;
+        }
+      }
+
+      if (upload) {
+        try {
+          await bunnycdnStorage.put(req.path.substr(1), fs.createReadStream(output));
+        }
+        catch (e) {
+          console.error(e);
+        }
       }
 
       res.end();

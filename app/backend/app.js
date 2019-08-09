@@ -147,7 +147,7 @@ run(1, () => {
   }
 
   app.use((req, res, next) => {
-    req.base = `${config.protocol || req.protocol}://${req.get('host')}`;
+    req.base = config.base || `${config.protocol || req.protocol}://${req.get('host')}`;
     next();
   });
 
