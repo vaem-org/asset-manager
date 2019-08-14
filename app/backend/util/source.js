@@ -21,6 +21,7 @@ import _ from 'lodash';
 import util from 'util';
 import config from '../../../config/config';
 import getParams from './get-params';
+import { URL } from 'url';
 
 const execFile = util.promisify(child_process.execFile);
 /**
@@ -43,11 +44,17 @@ export function getSource(req, source) {
     return source;
   }
 
-  return (config.sourceBase || (`${req.protocol}://${req.get('host')}/source/`)) +
+  let sourceBase = null;
+  if (config.sourceBase) {
+    const parsed = new URL(config.sourceBase);
+    parsed.username = config.auth.username;
+    parsed.password = config.auth.password;
+    sourceBase = parsed.toString();
+  }
+
+  return (sourceBase || (`${req.protocol}://${config.auth.username}:${config.auth.password}@${req.get('host')}/source/`)) +
     source.split('/').map(encodeURIComponent).join('/');
 }
-
-export const authorizationHeaders = `Authorization: Basic ${Buffer.from(`${config.auth.username}:${config.auth.password}`).toString('base64')}`;
 
 /**
  * Get video parameters
@@ -73,7 +80,6 @@ export async function getVideoParameters(source, audioStreams = null) {
     show_format: true,
     show_streams: true,
     seekable: getSeekable(source),
-    headers: authorizationHeaders,
   }).concat([source]));
 
   const sourceParameters = JSON.parse(stdout);

@@ -16,28 +16,37 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const catchExceptions = fn => async (req, res, next) => {
-  try {
-    await fn(req, res, next);
-  }
-  catch (e) {
-    console.error(e);
-    next(new Error(e.constructor.name === 'Object' ? JSON.stringify(e) : e));
-  }
-};
+import _ from 'lodash';
 
-const api = fn => async (req, res, next) => {
-  try {
-    res.json({
-      result: await fn(req, res, next)
-    });
-  }
-  catch (e) {
-    console.error(e);
-    res.json({
-      error: e.constructor.name === 'Object' ? e : e.toString()
-    });
-  }
-};
+/**
+ * Wrap an async function into middleware
+ * @param fn
+ * @return {Function}
+ */
+export function api(fn) {
+  return (req, res) => {
+    fn(req, res)
+    .then(result => res.json({result}))
+    .catch(exception => {
+      res.status(exception.status || 500).json({
+        error: _.isPlainObject(exception) ? exception : exception.toString()
+      });
+      console.error(exception);
+    })
+  };
+}
 
-export {catchExceptions, api};
+/**
+ * Wrap an async function into middleware
+ * @param fn
+ * @return {Function}
+ */
+export function catchExceptions(fn) {
+  return (req, res, next) => {
+    fn(req, res, next)
+    .catch(exception => {
+      res.status(exception.status || 500).json(_.isPlainObject(exception) ? exception : exception.toString());
+      console.error(exception);
+    });
+  };
+}

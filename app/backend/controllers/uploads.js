@@ -20,9 +20,7 @@ import fs from 'fs-extra';
 import express from 'express';
 import _ from 'lodash';
 import * as sourceUtil from '../util/source';
-import path from 'path';
-import glob from 'glob-promise';
-import send from 'send';
+import {join as pathJoin} from 'path';
 
 import {api, catchExceptions} from '../util/express-helpers';
 import {renderIndex} from '../util/render-index';
@@ -40,6 +38,8 @@ export default app => {
   app.use('/uploads', router);
 
   fs.ensureDirSync(app.config.source);
+
+  const fileSystem = app.config.sourceFileSystem;
 
   router.post('/items', json, api(async req => {
     let where = {};
@@ -64,23 +64,39 @@ export default app => {
     }
   }));
 
+  async function getFiles(root) {
+    const entries = await fileSystem.list(root);
+    let files = [];
+    for(let entry of entries) {
+      if (entry.isDirectory()) {
+        files = [...files, ...(await getFiles(pathJoin(root, entry.name)))];
+      } else {
+        files.push({
+          ...entry,
+          path: pathJoin(root, entry.name).substr(1)
+        })
+      }
+    }
+
+    return files;
+  }
+
   router.get('/', catchExceptions(async (req, res) => {
-    const files = await glob('**', {nodir: true, cwd: app.config.source});
+    const files = await getFiles('/');
+
     const entries = await File.find();
 
     const byName = _.keyBy(entries, 'name');
 
-    for (let name of files) {
-      const stat = await fs.stat(`${app.config.source}/${name}`);
-
-      let file = byName[name] || new File({
-        name: name,
+    for (let stat of files) {
+      let file = byName[stat.path] || new File({
+        name: stat.path,
         state: 'complete',
         size: stat.size,
         uploaded: stat.size
       });
 
-      if (byName[name]) {
+      if (byName[stat.path]) {
         file.set({
           size: stat.size,
           uploaded: stat.size
@@ -91,7 +107,7 @@ export default app => {
     }
 
     await File.deleteMany({
-      name: {$not: {$in: files}}
+      name: {$not: {$in: files.map(file => file.name)}}
     });
 
     renderIndex('main')(req, res);
@@ -121,7 +137,7 @@ export default app => {
     const items = await File.find({_id: {$in: req.body}});
     for (let item of items) {
       try {
-        await fs.unlink(`${app.config.source}/${item.name}`);
+        await fileSystem.delete(`/${item.name}`);
       }
       catch (e) {
         console.info(`Unable to remove ${item.name}`);
@@ -157,6 +173,10 @@ export default app => {
       });
     };
 
+    const output = await fileSystem.write(req.query.name, {
+      start: offset,
+      append: offset !== 0
+    });
     req
       .on('data', data => {
         numBytes += data.length;
@@ -165,10 +185,7 @@ export default app => {
       })
       .on('close', handleClose)
       .on('end', handleClose)
-      .pipe(fs.createWriteStream(`${app.config.source}/${req.query.name}`, {
-        start: offset,
-        flags: offset === 0 ? 'w' : 'r+'
-      }));
+      .pipe(output.stream);
   }));
 
   const fetchItem = catchExceptions(async (req, res, next) => {
@@ -176,11 +193,16 @@ export default app => {
     next(req.item ? null : 'route');
   });
 
-  router.get('/items/:id/download', fetchItem, (req, res) => {
+  router.get('/items/:id/download', fetchItem, catchExceptions(async (req, res) => {
     res.setHeader('content-disposition', `attachment; filename="${req.item.name}"`);
-    send(req, `${app.config.source}/${req.item.name}`)
-      .pipe(res);
-  });
+    const redirect = await fileSystem.getSignedUrl(req.item.name);
+    if (redirect) {
+      res.redirect(redirect);
+    } else {
+      const input = await fileSystem.read(req.item.name);
+      input.stream.pipe(res);
+    }
+  }));
 
   router.get('/items/:id/streams', fetchItem, api(async req => {
     const source = sourceUtil.getSource(req, req.item.name);
@@ -221,22 +243,4 @@ export default app => {
       `${app.config.source}/${req.item.name}`,
       req.params.language);
   }));
-
-  router.post('/archive', json, api(async req => {
-    await fs.ensureDir(app.config.archive);
-    const items = await File.find({_id: {$in: req.body}});
-
-    for (let item of items) {
-      await fs.ensureDir(path.dirname(`${app.config.archive}/${item.name}`));
-
-      await fs.rename(
-        `${app.config.source}/${item.name}`,
-        `${app.config.archive}/${item.name}`
-      );
-    }
-
-    await File.deleteMany({_id: {$in: req.body}});
-
-    io.emit('removed', {ids: req.body});
-  }))
 }

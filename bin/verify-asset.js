@@ -19,7 +19,6 @@
  */
 
 import moment from 'moment';
-import {authorizationHeaders} from '../app/backend/util/source';
 import {computeSignature} from "../app/backend/util/asset-signer";
 
 import _ from 'lodash';

@@ -17,6 +17,8 @@
  */
 require('dotenv').config();
 
+const {FileSystem, AzureFileSystem} = require('@vaem/filesystem');
+
 const fs = require('fs');
 
 const root = fs.realpathSync(`${__dirname}/..`);
@@ -28,6 +30,7 @@ const merge = (object, files) => {
   return object;
 };
 
+const source = `${root}/var/uploads`;
 module.exports = merge({
   port,
   host: '0.0.0.0',
@@ -60,11 +63,11 @@ module.exports = merge({
 
   output: `${root}/var/output`,
   tmp: `${root}/var/tmp`,
-  source: `${root}/var/uploads`,
+  source,
   archive: `${root}/var/archive`,
   protocol: process.env.PROTOCOL,
 
-  sourceBase: process.env.SOURCE_BASE,
+  sourceBase: `${process.env.BASE}/source/`,
   publicStreams: process.env.PUBLIC_STREAMS,
 
   base: process.env.BASE,
@@ -75,5 +78,14 @@ module.exports = merge({
     username: process.env.BUNNYCDN_USERNAME,
     password: process.env.BUNNYCDN_PASSWORD,
     storageZoneName: process.env.BUNNYCDN_STORAGEZONENAME
-  } : null
+  } : null,
+
+  sourceFileSystem: process.env.AZURE_ACCOUNT ? new AzureFileSystem({
+    azureAccount: process.env.AZURE_ACCOUNT,
+    azureKey: process.env.AZURE_KEY,
+    azureContainer: process.env.AZURE_CONTAINER
+  }) : new FileSystem(null, {
+    root: source,
+    cwd: '/'
+  })
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);

@@ -30,6 +30,7 @@ import {File} from '../model/file';
 import {Asset} from '../model/asset';
 import masterPlaylist from '../util/master-playlist';
 import {URL} from 'url';
+import rangeParser from 'range-parser';
 
 const getAudioJobs = async (asset, file, source) => {
   const jobs = [];
@@ -583,9 +584,33 @@ export default app => {
     return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${url.protocol}//admin:${app.config.auth.password}@${url.host} vaem/encoder`;
   }));
 
-  if (app.config.source) {
-    app.use('/source', express.static(app.config.source));
-  }
+  app.use('/source', catchExceptions(async (req, res) => {
+    const redirect = await app.config.sourceFileSystem.getSignedUrl(req.url);
+    if (redirect) {
+      res.redirect(redirect);
+    } else {
+      // parse ranges
+      const stat = await app.config.sourceFileSystem.get(req.url);
+      const ranges = rangeParser(stat.size, req.headers.range);
+
+      if (ranges === -1) {
+        res.status(416);
+        return res.end();
+      }
+
+      if (req.headers.range && ranges.length === 1) {
+        res
+          .status(206)
+          .setHeader('Content-Range', `bytes ${ranges[0].start}-${ranges[0].end}/${ranges[0].end-ranges[0].start+1}`)
+      }
+
+      const input = await app.config.sourceFileSystem.read(req.url, {
+        start: ranges.length === 1 ? ranges[0].start : 0
+      });
+
+      input.stream.pipe(res);
+    }
+  }));
 
   browserIO.on('connection', socket => {
     socket.on('disconnect', () => {

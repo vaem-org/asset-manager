@@ -22,7 +22,6 @@ import fs from 'fs-extra';
 import util from 'util';
 import config from '../../../config/config';
 import {Asset} from '../model/asset';
-import {authorizationHeaders} from './source';
 
 const execFile = util.promisify(child_process.execFile);
 
@@ -53,7 +52,6 @@ const segmentVtt = async (base, assetId, lang) => {
     '-print_format', 'json',
     '-show_frames',
     '-read_intervals', '%+#1',
-    '-headers', authorizationHeaders,
     source
   ], {maxBuffer: 10 * 1024 * 1024});
 

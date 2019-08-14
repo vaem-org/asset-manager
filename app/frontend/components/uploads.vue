@@ -193,11 +193,6 @@
             enabled: this.oneOf('video')
           },
           {
-            text: 'Archive',
-            action: this.archive,
-            multiple: true
-          },
-          {
             text: 'Remove',
             action: this.remove,
             multiple: true,
