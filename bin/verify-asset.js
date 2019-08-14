@@ -29,14 +29,12 @@ import util from 'util';
 import config from '../config/config';
 
 import {Asset} from '../app/backend/model/asset';
-import s3 from '../app/backend/util/s3';
 
 const execFile = util.promisify(childProcess.execFile);
 const getDuration = async source => {
   const {stdout} = await execFile('ffprobe', [
     '-print_format', 'json',
     '-show_format',
-    '-headers', authorizationHeaders,
     source
   ]);
 

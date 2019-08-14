@@ -159,7 +159,8 @@ export default app => {
       state: 'uploading'
     }, {
       upsert: true,
-      new: true
+      new: true,
+      useFindAndModify: false
     });
 
     const handleClose = () => {
