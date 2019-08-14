@@ -591,17 +591,22 @@ export default app => {
     } else {
       // parse ranges
       const stat = await app.config.sourceFileSystem.get(req.url);
-      const ranges = rangeParser(stat.size, req.headers.range);
+      const ranges = req.headers.range ? rangeParser(stat.size, req.headers.range) : [];
 
       if (ranges === -1) {
         res.status(416);
         return res.end();
       }
 
+      res.setHeader('Content-Type', 'binary/octet-stream');
+      res.setHeader('Accept-Ranges', 'bytes');
       if (req.headers.range && ranges.length === 1) {
-        res
-          .status(206)
-          .setHeader('Content-Range', `bytes ${ranges[0].start}-${ranges[0].end}/${ranges[0].end-ranges[0].start+1}`)
+        res.status(206);
+
+        res.setHeader('Content-Range', `bytes ${ranges[0].start}-${ranges[0].end}/${stat.size}`);
+        res.setHeader('Content-Length', ranges[0].end-ranges[0].start+1);
+      } else {
+        res.setHeader('Content-Length', stat.size);
       }
 
       const input = await app.config.sourceFileSystem.read(req.url, {
