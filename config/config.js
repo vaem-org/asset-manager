@@ -87,5 +87,17 @@ module.exports = merge({
   }) : new FileSystem(null, {
     root: source,
     cwd: '/'
-  })
+  }),
+
+  azureInstances: {
+    resourceGroup: process.env.AZURE_RESOURCE_GROUP,
+    clientId: process.env.AZURE_CLIENT_ID,
+    secret: process.env.AZURE_SECRET,
+    tenantId: process.env.AZURE_TENANT_ID,
+    imageRegistry: {
+      username: process.env.AZURE_IMAGE_REGISTRY_USERNAME,
+      password: process.env.AZURE_IMAGE_REGISTRY_PASSWORD,
+      server: process.env.AZURE_IMAGE_REGISTRY_SERVER
+    }
+  }
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);

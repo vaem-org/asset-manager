@@ -17,6 +17,8 @@
     "node": ">=9.3.0"
   },
   "dependencies": {
+    "@azure/arm-containerinstance": "^5.4.0",
+    "@azure/ms-rest-nodeauth": "^3.0.1",
     "@babel/core": "^7.5.5",
     "@babel/node": "^7.5.5",
     "@babel/plugin-transform-runtime": "^7.5.5",
@@ -62,6 +64,7 @@
     "passport-google-oauth": "^2.0.0",
     "postcss-loader": "^3.0.0",
     "qs": "^6.7.0",
+    "range-parser": "^1.2.1",
     "request": "^2.69.0",
     "request-promise": "^4.2.4",
     "resolve-url-loader": "^3.1.0",
@@ -86,8 +89,7 @@
     "webpack": "^4.37.0",
     "webpack-cli": "^3.3.6",
     "webpack-manifest-plugin": "^2.0.4",
-    "whatwg-fetch": "^3.0.0",
-    "range-parser": "latest"
+    "whatwg-fetch": "^3.0.0"
   },
   "devDependencies": {
     "cli-progress": "^2.1.1",
