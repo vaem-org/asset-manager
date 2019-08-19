@@ -90,14 +90,10 @@ module.exports = merge({
   }),
 
   azureInstances: {
+    image: 'vaem/encoder',
     resourceGroup: process.env.AZURE_RESOURCE_GROUP,
     clientId: process.env.AZURE_CLIENT_ID,
     secret: process.env.AZURE_SECRET,
-    tenantId: process.env.AZURE_TENANT_ID,
-    imageRegistry: {
-      username: process.env.AZURE_IMAGE_REGISTRY_USERNAME,
-      password: process.env.AZURE_IMAGE_REGISTRY_PASSWORD,
-      server: process.env.AZURE_IMAGE_REGISTRY_SERVER
-    }
+    tenantId: process.env.AZURE_TENANT_ID
   }
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);

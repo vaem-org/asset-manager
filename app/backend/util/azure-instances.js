@@ -17,6 +17,7 @@
  */
 
 import config from '~config';
+import {range} from 'lodash';
 
 import {URL} from 'url';
 import {ContainerInstanceManagementClient} from '@azure/arm-containerinstance';
@@ -27,7 +28,13 @@ import {loginWithServicePrincipalSecretWithAuthResponse} from '@azure/ms-rest-no
  */
 let client;
 
-export async function createEncoders(numCpus=1) {
+/**
+ * Create encoders
+ * @param {Number} numCpus the number of cpus per instance
+ * @param {Number} numInstances the number of instances to create
+ * @returns {Promise<void>}
+ */
+export async function createEncoders({numCpus=1, numInstances=1}) {
   if (!client) {
     throw 'Not initialized';
   }
@@ -40,29 +47,25 @@ export async function createEncoders(numCpus=1) {
     config.azureInstances.resourceGroup,
     'encoder',
     {
-      containers: [
+      containers: range(numInstances).map(index => (
         {
-          image: 'vaemregistry.azurecr.io/encoder:latest',
+          image: config.azureInstances.image,
           environmentVariables: [
             {
               name: 'ASSETMANAGER_URL',
               secureValue: url.toString()
             }
           ],
-          name: 'encoder1',
+          name: `encoder${index}`,
           resources: {
             requests: {
               cpu: numCpus,
               memoryInGB: 1
             }
           }
-        }
-      ],
+        })),
       osType: 'Linux',
-      location: 'West Europe',
-      imageRegistryCredentials: [
-        config.azureInstances.imageRegistry
-      ]
+      location: 'West Europe'
     }
   )
 }
