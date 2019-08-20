@@ -55,6 +55,8 @@ const config = merge({
 
   hlsEnc: true,
 
+  jwtSecret: process.env.JWT_SECRET,
+
   env: process.env.NODE_ENV || 'development',
 
   mongo: process.env.MONGO_URL || 'mongodb://localhost/asset-manager',

@@ -16,7 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import config from '~config';
 import _ from 'lodash';
+import jwt from 'jsonwebtoken';
 
 /**
  * Wrap an async function into middleware
@@ -49,4 +51,36 @@ export function catchExceptions(fn) {
       console.error(exception);
     });
   };
+}
+
+const getToken = req => {
+  let token = req.headers['authorization'];
+  if (token.startsWith('Bearer ')) {
+    token = token.substr(7);
+  }
+  req._token = token;
+  return jwt.verify(token, config.jwtSecret);
+};
+
+/**
+ * Verify JWT token middleware
+ * @param req
+ * @param res
+ * @param next
+ */
+export function verify(req, res, next) {
+  if (req.token) {
+    return next();
+  }
+
+  try {
+    req.token = getToken(req);
+  } catch (e) {
+    return res.status(401).json({
+      status: 401,
+      message: e.name === 'TokenExpiredError' ? 'TokenExpiredError' : 'Unauthorized'
+    });
+  }
+
+  next();
 }
