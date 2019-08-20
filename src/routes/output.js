@@ -18,12 +18,10 @@
 
 import config from '~config';
 
-import fs from 'fs-extra';
 import path from 'path';
 import { Router } from 'express';
 import { catchExceptions } from '~/util/express-helpers';
-import { s3 } from '~/util/s3';
-import { bunnycdnStorage } from '~/util/bunnycdn';
+import { Readable } from 'stream';
 
 const ensured = new Set();
 
@@ -40,84 +38,40 @@ const ensureDir = async dirname => {
   ensured.add(dirname);
 };
 
-const upload = destination => catchExceptions(async (req, res, next) => {
+router.use( catchExceptions(async (req, res, next) => {
   if (req.method !== 'PUT') {
     return next();
   }
 
-  const output = path.join(destination, decodeURIComponent(req.path));
+  const output = decodeURIComponent(req.path);
 
   await ensureDir(path.dirname(output));
 
-  req
-  .on('end', () => res.end())
-  .pipe(fs.createWriteStream(output));
-});
-
-if (s3) {
-  router.use((req, res) => {
-    console.log(`Uploading to s3: ${req.path.substr(1)}`);
-
-    s3.upload({
-      Bucket: config.s3.bucket,
-      Key: req.path.substr(1),
-      Body: req
-    }, function (err) {
-      if (err) {
-        console.log(err);
-      }
-      res.statusCode = err ? 500 : 200;
+  if (output.endsWith('.m3u8')) {
+    const buffers = [];
+    req.on('data',  buffer => buffers.concat(buffer));
+    req.on('error', error => {
+      console.error(error);
       res.end();
     });
-  });
-} else if (bunnycdnStorage) {
-  router.use(catchExceptions(async (req, res) => {
-    console.log(`Uploading to BunnyCDN: ${req.path.substr(1)}`);
-
-    const output = path.join(config.output, decodeURIComponent(req.path));
-
-    await ensureDir(path.dirname(output));
-
-    let upload = true;
-
-    if (!output.endsWith('.m3u8')) {
-      req
-      .pipe(fs.createWriteStream(output));
-
-      await (new Promise((accept, reject) => {
-        req.on('end', accept);
-        req.on('error', reject);
-      }));
-    } else {
-      const buffers = [];
-      req.on('data', buffer => buffers.push(buffer));
-
-      await (new Promise((accept, reject) => {
-        req.on('end', accept);
-        req.on('error', reject);
-      }));
-
+    req.on('end', () => {
+      res.end();
       const content = Buffer.concat(buffers).toString();
       if (content.indexOf('#EXT-X-ENDLIST') !== -1) {
-        await fs.writeFile(output, content);
-      } else {
-        upload = false;
+        fileSystem.write(output)
+        .then(({stream}) => {
+          const source = new Readable();
+          source.pipe(stream);
+          stream.push(content);
+          stream.push(null);
+        });
       }
-    }
-
-    if (upload) {
-      try {
-        await bunnycdnStorage.put(req.path.substr(1), fs.createReadStream(output));
-      }
-      catch (e) {
-        console.error(e);
-      }
-    }
-
-    res.end();
-  }));
-} else {
-  router.use(upload(config.output));
-}
+    });
+  } else {
+    req
+    .on('end', () => res.end())
+    .pipe((await fileSystem.write(output)).stream);
+  }
+}));
 
 export default router;
