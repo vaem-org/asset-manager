@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import config from '~config';
+
 import moment from 'moment';
 import { computeSignature } from '~/util/asset-signer';
 
@@ -26,11 +28,7 @@ import mongoose from 'mongoose';
 import { execFile as _execFile } from 'child_process';
 import { promisify } from 'util';
 
-import config from '~config';
-
 import { Asset } from '~/model/asset';
-import { listAllObjects } from '~/util/s3';
-import { bunnyCDNStorage } from '~/util/bunnycdn';
 
 const execFile = promisify(_execFile);
 const getDuration = async source => {
@@ -65,23 +63,12 @@ const getDuration = async source => {
 
   console.info('Verifying file count');
 
-  let counts;
-  if (config.s3) {
-    // verify file counts on s3
-    const objects = (await listAllObjects({
-      Prefix: `${assetId}/`,
-      Bucket: config.s3.bucket
-    })).filter(object => /\.ts$/.exec(object.Key));
-
-    counts = _.countBy(objects, object => object.Key.split('.')[1]);
-  } else if (config.bunnyCDN) {
-    const objects = (await bunnyCDNStorage.get(`${assetId}/`)).data;
-    counts = _.countBy(objects, object => object.ObjectName.split('.')[1]);
-  }
+  const entries = await config.destinationFileSystem.list(`/${assetId}`);
+  const counts = _.countBy(entries, ({name}) => name.split('.')[1]);
 
   const max = _.max(_.values(counts));
 
-  const faulty = _.keys(_.omit(counts, 'm3u8'))
+  const faulty = _.keys(_.omit(counts, ['m3u8', 'undefined']))
   .filter(bitrate => Math.abs(counts[bitrate] - max) >= 5);
   if (faulty.length > 0) {
     console.error(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
@@ -98,7 +85,7 @@ const getDuration = async source => {
 
     const timestamp = moment().add(8, 'hours').valueOf();
     const signature = computeSignature(assetId, timestamp, '10.1.0.122');
-    const videoUrl = `${config.base}/player/streams/${timestamp}/${signature}/${assetId}.${bitrate}.m3u8`;
+    const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${assetId}.${bitrate}.m3u8`;
     console.info(`Checking duration for ${bitrate}`);
     const duration = await getDuration(videoUrl);
     if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2) {

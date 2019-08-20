@@ -29,12 +29,14 @@ const ensured = new Set();
 
 const router = new Router();
 
+const fileSystem = config.destinationFileSystem;
+
 const ensureDir = async dirname => {
   if (ensured.has(dirname)) {
     return;
   }
 
-  await fs.ensureDir(dirname);
+  await fileSystem.ensureDir(dirname);
   ensured.add(dirname);
 };
 

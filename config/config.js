@@ -17,7 +17,7 @@
  */
 require('dotenv').config();
 
-const { FileSystem, AzureFileSystem, S3FileSystem } = require('@vaem/filesystem');
+const { fileSystemFromURL } = require('@vaem/filesystem');
 
 const fs = require('fs');
 
@@ -72,6 +72,9 @@ const config = merge({
 
   base: process.env.BASE,
 
+  destinationFileSystem: fileSystemFromURL(process.env.DESTINATION_FS || `file://${root}/var/output`),
+  sourceFileSystem: fileSystemFromURL(process.env.SOURCE_FS || `file://${source}`),
+
   bunnyCDN: process.env.BUNNYCDN_AUTHENTICATIONKEY ? {
     authenticationKey: process.env.BUNNYCDN_AUTHENTICATIONKEY,
     hostname: process.env.BUNNYCDN_HOSTNAME,
@@ -79,15 +82,6 @@ const config = merge({
     password: process.env.BUNNYCDN_PASSWORD,
     storageZoneName: process.env.BUNNYCDN_STORAGEZONENAME
   } : null,
-
-  sourceFileSystem: process.env.AZURE_ACCOUNT ? new AzureFileSystem({
-    azureAccount: process.env.AZURE_ACCOUNT,
-    azureKey: process.env.AZURE_KEY,
-    azureContainer: process.env.AZURE_CONTAINER
-  }) : new FileSystem(null, {
-    root: source,
-    cwd: '/'
-  }),
 
   azureInstances: {
     image: 'vaem/encoder',

@@ -17,6 +17,7 @@
  */
 
 import config from '~config';
+import woothee from 'woothee';
 import { Stream } from 'stream';
 import { Router, static as expressStatic } from 'express';
 import _ from 'lodash';
@@ -82,10 +83,6 @@ const cloudfrontSignCookies = path => cloudfrontSign.getSignedCookies(
 
 
 router.use('/subtitles', cors(), expressStatic(`${config.root}/var/subtitles`));
-
-router.use(cors(), expressStatic(config.output, {
-  maxAge: 7 * 24 * 3600 * 1000
-}));
 
 // check authentication of stream
 const checkAuth = (req, res, next) => {
@@ -261,10 +258,17 @@ router.get([
     m3u.set('playlistType', 'VOD');
   }
 
-  // // Prevent "unknown cc" for Apple players
-  // m3u.items.StreamItem.forEach(stream => {
-  //   stream.attributes.attributes['closed-captions'] = 'NONE';
-  // });
+  // Prevent "unknown cc" for Apple players
+  const browser = woothee.parse(req.headers['user-agent']);
+  try {
+    if (browser.name !== 'Safari' || semver.satisfies(browser.os_version, '>=10.13.0')) {
+      m3u.items.StreamItem.forEach(stream => {
+        stream.attributes.attributes['closed-captions'] = 'NONE';
+      });
+    }
+  } catch (e) {
+    // skip
+  }
 
   m3u.items.PlaylistItem.forEach(stream => {
     if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
