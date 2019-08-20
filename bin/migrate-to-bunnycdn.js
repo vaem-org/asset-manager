@@ -24,15 +24,15 @@ import config from '~config';
 import axios from 'axios';
 
 import mongoose from 'mongoose';
-import {bunnycdnStorage} from '../app/backend/util/bunnycdn';
-import {listAllObjects} from '../app/backend/util/s3';
+import {bunnycdnStorage} from '../src/util/bunnycdn';
+import {listAllObjects} from '../src/util/s3';
 import cloudfrontSign from 'aws-cloudfront-sign';
 import moment from 'moment';
 import querystring from 'querystring';
 import fs from 'fs';
 import fse from 'fs-extra';
 import {Bar} from 'cli-progress';
-import {Asset} from '../app/backend/model/asset';
+import {Asset} from '../src/model/asset';
 import {EventEmitter} from "events";
 
 const concurrentDownloads = 8;

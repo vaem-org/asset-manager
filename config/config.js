@@ -17,7 +17,7 @@
  */
 require('dotenv').config();
 
-const {FileSystem, AzureFileSystem} = require('@vaem/filesystem');
+const { FileSystem, AzureFileSystem, S3FileSystem } = require('@vaem/filesystem');
 
 const fs = require('fs');
 
@@ -31,7 +31,7 @@ const merge = (object, files) => {
 };
 
 const source = `${root}/var/uploads`;
-module.exports = merge({
+const config = merge({
   port,
   host: '0.0.0.0',
 
@@ -97,3 +97,5 @@ module.exports = merge({
     tenantId: process.env.AZURE_TENANT_ID
   }
 }, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);
+
+export default config;

@@ -19,20 +19,22 @@
  */
 
 import moment from 'moment';
-import {computeSignature} from "../app/backend/util/asset-signer";
+import { computeSignature } from '~/util/asset-signer';
 
 import _ from 'lodash';
 import mongoose from 'mongoose';
-import childProcess from 'child_process';
-import util from 'util';
+import { execFile as _execFile } from 'child_process';
+import { promisify } from 'util';
 
-import config from '../config/config';
+import config from '~config';
 
-import {Asset} from '../app/backend/model/asset';
+import { Asset } from '~/model/asset';
+import { listAllObjects } from '~/util/s3';
+import { bunnyCDNStorage } from '~/util/bunnycdn';
 
-const execFile = util.promisify(childProcess.execFile);
+const execFile = promisify(_execFile);
 const getDuration = async source => {
-  const {stdout} = await execFile('ffprobe', [
+  const { stdout } = await execFile('ffprobe', [
     '-print_format', 'json',
     '-show_format',
     source
@@ -56,50 +58,54 @@ const getDuration = async source => {
   }
 
   if (asset.bitrates.length !== asset.jobs.length) {
-    console.error(`Not all jobs are completed: ${_.difference(_.map(asset.jobs, 'maxrate'), asset.bitrates).join(', ')} are missing`);
+    console.error(`Not all jobs are completed: ${_.difference(_.map(asset.jobs, 'maxrate'),
+      asset.bitrates).join(', ')} are missing`);
     process.exit(1);
   }
 
-  // console.info('Verifying file count');
-  // // verify file counts on s3
-  // const objects = (await s3.listAllObjects({
-  //   Prefix: `${assetId}/`,
-  //   Bucket: config.s3.bucket
-  // })).filter(object => /\.ts$/.exec(object.Key));
-  //
-  // const counts = _.countBy(objects, object => object.Key.split('.')[1]);
-  //
-  // const max = _.max(_.values(counts));
-  //
-  // const faulty = _.keys(_.omit(counts, 'm3u8')).filter(bitrate => Math.abs(counts[bitrate] - max) >= 5);
-  // if (faulty.length > 0) {
-  //   console.error(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
-  // }
-  // asset.bitrates = _.difference(asset.bitrates, faulty);
+  console.info('Verifying file count');
+
+  let counts;
+  if (config.s3) {
+    // verify file counts on s3
+    const objects = (await listAllObjects({
+      Prefix: `${assetId}/`,
+      Bucket: config.s3.bucket
+    })).filter(object => /\.ts$/.exec(object.Key));
+
+    counts = _.countBy(objects, object => object.Key.split('.')[1]);
+  } else if (config.bunnyCDN) {
+    const objects = (await bunnyCDNStorage.get(`${assetId}/`)).data;
+    counts = _.countBy(objects, object => object.ObjectName.split('.')[1]);
+  }
+
+  const max = _.max(_.values(counts));
+
+  const faulty = _.keys(_.omit(counts, 'm3u8'))
+  .filter(bitrate => Math.abs(counts[bitrate] - max) >= 5);
+  if (faulty.length > 0) {
+    console.error(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
+  }
+  asset.bitrates = _.difference(asset.bitrates, faulty);
 
   const good = [];
   // verify durations of all bitrates
-  for(let bitrate of asset.bitrates)
-  {
-  	if (bitrate === '1k')
-  	{
-  		good.push(bitrate);
-  		return;
-  	}
+  for (let bitrate of asset.bitrates) {
+    if (bitrate === '1k') {
+      good.push(bitrate);
+      return;
+    }
 
     const timestamp = moment().add(8, 'hours').valueOf();
     const signature = computeSignature(assetId, timestamp, '10.1.0.122');
-    const videoUrl = `http://10.1.0.122:1234/player/streams/${timestamp}/${signature}/${assetId}.${bitrate}.m3u8`;
-  	console.info(`Checking duration for ${bitrate}`);
-  	const duration = await getDuration(videoUrl);
-  	if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2)
-  	{
-  		console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
-  	}
-  	else
-  	{
-  		good.push(bitrate);
-  	}
+    const videoUrl = `${config.base}/player/streams/${timestamp}/${signature}/${assetId}.${bitrate}.m3u8`;
+    console.info(`Checking duration for ${bitrate}`);
+    const duration = await getDuration(videoUrl);
+    if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2) {
+      console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
+    } else {
+      good.push(bitrate);
+    }
   }
   asset.bitrates = good;
 

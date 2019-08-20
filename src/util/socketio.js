@@ -16,18 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const resolve = require("path").resolve;
+import express from 'express';
+import io from 'socket.io';
+import { Server } from 'http';
+
+export const app = express();
+
+export const server = new Server(app);
 
 /**
- * Dummy webpack config for Jetbrains IDEs
- * @type {{resolve: {alias: {'@': string}}}}
+ * @var
+ * @type {io}
  */
-module.exports = {
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "src"),
-      "~": resolve(__dirname, "src"),
-      "~config": resolve(__dirname, "config/config.js")
-    }
-  }
-};
+export const socketio = io(server);

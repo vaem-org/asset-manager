@@ -1,11 +1,19 @@
 {
-  "presets": ["@babel/preset-env"],
+  "presets": [
+    [
+      "@babel/env", {
+        "targets": {
+          "node": "current"
+        }
+      }
+    ]
+  ],
   "plugins": [
     ["module-resolver", {
       "alias": {
-        "~": "./app/backend",
-        "@": "./app/backend",
-        "~config": "./config/config"
+        "@": "./src",
+        "~": "./src",
+        "~config": "./config/config.js"
       }
     }]
   ]

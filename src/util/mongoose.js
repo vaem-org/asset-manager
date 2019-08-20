@@ -16,18 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const resolve = require("path").resolve;
+import mongoose from 'mongoose';
 
-/**
- * Dummy webpack config for Jetbrains IDEs
- * @type {{resolve: {alias: {'@': string}}}}
- */
-module.exports = {
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "src"),
-      "~": resolve(__dirname, "src"),
-      "~config": resolve(__dirname, "config/config.js")
-    }
-  }
-};
+export async function initMongoose() {
+  mongoose.set('useFindAndModify', false);
+  await mongoose.connect(process.env.MONGO_URL || 'mongodb://localhost/asset-manager', {
+    useNewUrlParser: true,
+    useCreateIndex: true
+  });
+}
