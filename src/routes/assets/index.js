@@ -25,7 +25,7 @@ import { Router, json, static as expressStatic } from 'express';
 import sharp from 'sharp';
 
 import * as fileType from '~/util/file-type';
-import { api, catchExceptions } from '~/util/express-helpers';
+import { api, catchExceptions, verify } from '~/util/express-helpers';
 import { createThumbnail } from '~/util/ffmpeg-thumbnail';
 
 import { Asset } from '~/model/asset';
@@ -35,28 +35,30 @@ const simpleEncryptor = require('simple-encryptor')(config.encryptor);
 
 const router = new Router({});
 
-router.post('/', json(), api(async req => {
+router.use(verify);
+
+router.get('/', json(), api(async req => {
   const where = {
     deleted: { $ne: true }
   };
 
-  if (req.body.query && req.body.query.match(/^[0-9a-fA-F]{24}$/)) {
-    where._id = req.body.query;
-  } else if (req.body.query) {
+  if (req.query.q && req.query.q.match(/^[0-9a-fA-F]{24}$/)) {
+    where._id = req.query.q;
+  } else if (req.query.q) {
     where.title = {
-      $regex: req.body.query,
+      $regex: req.query.q,
       $options: 'i'
     };
   }
 
-  _.assign(where, _.pickBy(req.body.filters || {}));
+  _.assign(where, _.pickBy(req.query.filters || {}));
 
   return {
     items: await Asset
     .find(where)
-    .sort({ [req.body.sortBy]: req.body.descending ? -1 : 1 })
-    .limit(req.body.rowsPerPage)
-    .skip((req.body.page - 1) * req.body.rowsPerPage)
+    .sort({ [req.query.sortBy]: req.query.descending ? -1 : 1 })
+    .limit(req.query.rowsPerPage)
+    .skip((req.query.page - 1) * req.query.rowsPerPage)
     ,
     totalItems: await Asset.countDocuments(where)
   }

@@ -20,12 +20,13 @@ import config from '~config';
 import { Router } from 'express';
 import fs from 'fs-extra';
 import s3 from '~/util/s3';
+import { verify } from '@/util/express-helpers';
 
 const router = new Router();
 
 const root = config.output;
 
-router.use((req, res) => {
+router.use(verify, (req, res) => {
   const path = req.path.split('/');
 
   let output = (s3.s3 ? '' : root + '/') + path.slice(2).join('/');

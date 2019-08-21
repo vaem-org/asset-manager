@@ -20,12 +20,14 @@ import config from '~config';
 
 import path from 'path';
 import { Router } from 'express';
-import { catchExceptions } from '~/util/express-helpers';
+import { catchExceptions, verify } from '~/util/express-helpers';
 import { Readable } from 'stream';
 
 const ensured = new Set();
 
 const router = new Router();
+
+router.use(verify);
 
 const fileSystem = config.destinationFileSystem;
 

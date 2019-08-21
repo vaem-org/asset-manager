@@ -18,11 +18,11 @@
 
 import rangeParser from 'range-parser';
 import { Router } from 'express';
-import { catchExceptions } from '~/util/express-helpers';
+import { catchExceptions, verify } from '~/util/express-helpers';
 
 const router = new Router();
 
-router.use(catchExceptions(async (req, res) => {
+router.use(verify, catchExceptions(async (req, res) => {
   const redirect = await config.sourceFileSystem.getSignedUrl(req.url);
   if (redirect) {
     res.redirect(redirect);

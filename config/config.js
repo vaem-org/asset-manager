@@ -35,9 +35,9 @@ const config = merge({
   port,
   host: '0.0.0.0',
 
-  devserver: `http://localhost:${port + 1}/`,
-
   root,
+
+  jwtSecret: process.env.JWT_SECRET,
 
   auth: {
     username: 'admin',

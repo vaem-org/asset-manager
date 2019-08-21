@@ -24,7 +24,7 @@ import { Router, json } from 'express';
 import crypto from 'crypto';
 import fixKeys from '~/util/fix-keys';
 import { getSeekable, getSource, getVideoParameters, guessChannelLayout } from '~/util/source';
-import { api, catchExceptions } from '~/util/express-helpers';
+import { api, catchExceptions, verify } from '~/util/express-helpers';
 import * as settings from '~/model/settings';
 import { File } from '~/model/file';
 import { Asset } from '~/model/asset';
@@ -112,6 +112,8 @@ const encoderIO = socketio.of('/encoder', null);
 const browserIO = socketio.of('/encoders', null);
 
 const router = new Router({});
+
+router.use(verify);
 
 const encoders = {};
 const sockets = {};

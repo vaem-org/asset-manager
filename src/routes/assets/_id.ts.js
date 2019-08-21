@@ -1,4 +1,4 @@
-import { catchExceptions } from '~/util/express-helpers';
+import { catchExceptions, verify } from '~/util/express-helpers';
 import { spawn } from 'child_process';
 import { Router } from 'express';
 import { computeSignature } from '~/util/asset-signer';
@@ -9,7 +9,7 @@ import slug from 'slug';
 
 const router = new Router();
 
-router.get('/:id.ts', catchExceptions(async (req, res) => {
+router.get('/:id.ts', verify, catchExceptions(async (req, res) => {
   const asset = await Asset.findById(req.params.id);
   const videoStream = _.maxBy(asset.streams, 'bandwidth');
   const audioStream = asset.audioStreams.find(item => item.bitrate === 'aac-128k');

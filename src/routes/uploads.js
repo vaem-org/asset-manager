@@ -22,7 +22,7 @@ import _ from 'lodash';
 import * as sourceUtil from '~/util/source';
 import { join as pathJoin } from 'path';
 
-import { api, catchExceptions } from '~/util/express-helpers';
+import { api, catchExceptions, verify } from '~/util/express-helpers';
 import { File } from '~/model/file';
 import { Asset } from '~/model/asset';
 import * as subtitles from '~/util/subtitles';
@@ -33,6 +33,8 @@ import { socketio } from '~/util/socketio';
 const io = socketio.of('/uploads', null);
 
 const router = new Router({});
+
+router.use(verify);
 
 fs.ensureDirSync(config.source);
 
