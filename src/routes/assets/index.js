@@ -152,18 +152,6 @@ router.post('/:id', json(), api(async req => {
   await asset.save();
 }));
 
-/** TODO: move to separate file
- app.get('/api/assets/:id', api(async req => {
-  const item = await Asset.findById(req.params.id);
-
-  if (!item) {
-    throw 'Not found';
-  }
-
-  return item;
-}));
- **/
-
 const thumbnails = `${config.root}/var/thumbnails`;
 fs.ensureDir(thumbnails).catch(e => console.error(e));
 
@@ -174,7 +162,7 @@ router.use('/thumbnails', expressStatic(thumbnails, {
 router.get([
   '/thumbnails/:assetId.(jpg|png)',
   '/thumbnails/:time/:assetId.(jpg|png)'
-], catchExceptions(async (req, res) => {
+], catchExceptions(async (req, res, next) => {
   const item = await Asset.findById(req.params.assetId);
   if (!item) {
     console.log('Item not found');

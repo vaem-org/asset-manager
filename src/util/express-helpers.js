@@ -70,7 +70,7 @@ const getToken = req => {
  * @param next
  */
 export function verify(req, res, next) {
-  if (req.token) {
+  if (req.token || process.env.SKIP_AUTH) {
     return next();
   }
 

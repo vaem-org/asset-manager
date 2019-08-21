@@ -17,87 +17,45 @@
  */
 
 import config from '~config';
+import { Readable } from 'stream';
 import { Router } from 'express';
-import fs from 'fs-extra';
-import s3 from '~/util/s3';
-import { verify } from '@/util/express-helpers';
+import { catchExceptions, verify } from '@/util/express-helpers';
 
 const router = new Router();
 
-const root = config.output;
-
-router.use(verify, (req, res) => {
+router.use(verify, catchExceptions(async (req, res) => {
   const path = req.path.split('/');
 
-  let output = (s3.s3 ? '' : root + '/') + path.slice(2).join('/');
+  let output = '/' + path.slice(2).join('/');
 
   const buffers = [];
 
-  if (req.path.search(/\.vtt$/) !== -1) {
-    console.log(req.path);
+  await (new Promise((accept, reject) => {
     req
     .on('data', data => buffers.push(data))
-    .on('end', () => {
-      const pkt_pts = path[1];
+    .on('error', reject)
+    .on('end', accept)
+    ;
+  }));
 
-      const data = Buffer.concat(buffers).toString().replace(
-        /WEBVTT/g, 'WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:' + pkt_pts + ',LOCAL:00:00:00.000');
+  let data = null;
 
-      if (!s3.s3) {
-        fs.writeFile(output, data).catch(err => {
-          console.log('Unable to write file', err);
-        });
-      } else {
-        s3.s3.putObject({
-          Bucket: config.s3.bucket,
-          Key: output,
-          Body: data
-        }, err => {
-          if (err) {
-            console.log('Unable to write to file', err);
-          }
-        })
-      }
+  if (req.path.search(/\.vtt$/) !== -1) {
+    const pkt_pts = path[1];
 
-      res.end();
-    })
+    data = Buffer.concat(buffers).toString().replace(
+      /WEBVTT/g, 'WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:' + pkt_pts + ',LOCAL:00:00:00.000');
   } else if (req.path.search(/\._vtt\.m3u8$/) !== -1) {
-    output = output.replace(/\._vtt\.m3u8$/, '.m3u8');
-
-    req
-    .on('data', buffer => buffers.push(buffer))
-    .on('end', () => {
-      const data = Buffer.concat(buffers);
-
-      if (data.toString().indexOf('#EXT-X-ENDLIST') === -1) {
-        // ignore incomplete playlists
-        return res.end();
-      }
-
-      if (!s3.s3) {
-        fs.writeFile(output, data).catch(() => {
-          console.log(`Unable to write ${output}`);
-        });
-      } else {
-        s3.s3.putObject({
-          Bucket: config.s3.bucket,
-          Key: output,
-          Body: data
-        }, err => {
-          if (err) {
-            console.log('Unable to upload file to s3', err);
-          }
-        });
-      }
-
-      res.end();
-    });
-  } else {
-    // ignore the rest
-    req.on('data', () => {
-    });
-    req.on('end', () => {
-      res.end();
-    });
+    data = Buffer.concat(buffers);
   }
-});
+
+  if (data) {
+    const { stream } = await config.destinationFileSystem.write(output);
+    const source = new Readable();
+    source.push(data);
+    source.push(null);
+    source.pipe(stream);
+  }
+
+  res.end();
+}));

@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 import config from '~config';
 import fs from 'fs-extra';
 import { Router, json } from 'express';
@@ -40,29 +41,6 @@ fs.ensureDirSync(config.source);
 
 const fileSystem = config.sourceFileSystem;
 
-router.post('/items', json(), api(async req => {
-  let where = {};
-
-  if (req.body.query) {
-    where = {
-      name: {
-        $regex: req.body.query,
-        $options: 'i'
-      }
-    };
-  }
-
-  return {
-    items: await File
-    .find(where)
-    .sort({ [req.body.sortBy]: req.body.descending ? -1 : 1 })
-    .limit(req.body.rowsPerPage)
-    .skip((req.body.page - 1) * req.body.rowsPerPage)
-    ,
-    totalItems: await File.countDocuments(where)
-  }
-}));
-
 async function getFiles(root) {
   const entries = await fileSystem.list(root);
   let files = [];
@@ -80,7 +58,7 @@ async function getFiles(root) {
   return files;
 }
 
-router.post('/refresh', api(async (req) => {
+router.get('/', api(async req => {
   const files = await getFiles('/');
 
   const entries = await File.find();
@@ -108,6 +86,27 @@ router.post('/refresh', api(async (req) => {
   await File.deleteMany({
     name: { $not: { $in: files.map(file => file.name) } }
   });
+
+  let where = {};
+
+  if (req.query.q) {
+    where = {
+      name: {
+        $regex: req.query.q,
+        $options: 'i'
+      }
+    };
+  }
+
+  return {
+    items: await File
+    .find(where)
+    .sort({ [req.query.sortBy]: req.query.descending ? -1 : 1 })
+    .limit(req.query.rowsPerPage)
+    .skip((req.query.page - 1) * req.query.rowsPerPage)
+    ,
+    totalItems: await File.countDocuments(where)
+  }
 }));
 
 router.post('/prepare', json(), api(async req => {
@@ -191,7 +190,7 @@ const fetchItem = catchExceptions(async (req, res, next) => {
   next(req.item ? null : 'route');
 });
 
-router.get('/items/:id/download', fetchItem, catchExceptions(async (req, res) => {
+router.get('/:id/download', fetchItem, catchExceptions(async (req, res) => {
   res.setHeader('content-disposition', `attachment; filename="${req.item.name}"`);
   const redirect = await fileSystem.getSignedUrl(req.item.name);
   if (redirect) {
@@ -202,7 +201,7 @@ router.get('/items/:id/download', fetchItem, catchExceptions(async (req, res) =>
   }
 }));
 
-router.get('/items/:id/streams', fetchItem, api(async req => {
+router.get('/:id/streams', fetchItem, api(async req => {
   const source = sourceUtil.getSource(req, req.item.name);
   const videoParameters = await sourceUtil.getVideoParameters(
     source
@@ -215,12 +214,12 @@ router.get('/items/:id/streams', fetchItem, api(async req => {
   };
 }));
 
-router.post('/items/:id/audio-streams', fetchItem, json(), api(async req => {
+router.post('/:id/audio-streams', fetchItem, json(), api(async req => {
   req.item.audioStreams = req.body;
   await req.item.save();
 }));
 
-router.get('/items/:id/loudnorm', fetchItem, api(async req => {
+router.get('/:id/loudnorm', fetchItem, api(async req => {
   const source = sourceUtil.getSource(req, req.item.name);
 
   const { stereo } = req.item.audioStreams || await sourceUtil.guessChannelLayout(source);
@@ -236,7 +235,7 @@ router.get('/items/:id/loudnorm', fetchItem, api(async req => {
 router.get('/assets',
   api(async () => Asset.find({ state: 'processed' }).select('title').sort({ createdAt: -1 })));
 
-router.post('/items/:id/assign-to/:language/:assetId', fetchItem, api(async req => {
+router.post('/:id/assign-to/:language/:assetId', fetchItem, api(async req => {
   return subtitles.convert(
     `http://localhost:${config.port}/player/streams/-/-`,
     req.params.assetId,
