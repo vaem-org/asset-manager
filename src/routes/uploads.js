@@ -30,6 +30,7 @@ import * as subtitles from '~/util/subtitles';
 import { guessChannelLayout } from '~/util/source';
 import { getNormalizeParameters } from '~/util/source';
 import { socketio } from '~/util/socketio';
+import { listDocuments } from '@/util/list-documents';
 
 const io = socketio.of('/uploads', null);
 
@@ -87,26 +88,12 @@ router.get('/', api(async req => {
     name: { $not: { $in: files.map(file => file.name) } }
   });
 
-  let where = {};
-
-  if (req.query.q) {
-    where = {
-      name: {
-        $regex: req.query.q,
-        $options: 'i'
-      }
-    };
-  }
-
-  return {
-    items: await File
-    .find(where)
-    .sort({ [req.query.sortBy]: req.query.descending ? -1 : 1 })
-    .limit(req.query.rowsPerPage)
-    .skip((req.query.page - 1) * req.query.rowsPerPage)
-    ,
-    totalItems: await File.countDocuments(where)
-  }
+  return listDocuments(req, File, req.query.q ? {
+    name: {
+      $regex: req.query.q,
+      $options: 'i'
+    }
+  } : {});
 }));
 
 router.post('/prepare', json(), api(async req => {

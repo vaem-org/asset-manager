@@ -18,26 +18,21 @@
 
 import config from '~config';
 import fs from 'fs-extra';
-import querystring from 'querystring';
 import _ from 'lodash';
-import moment from 'moment';
 import { Router, json, static as expressStatic } from 'express';
 import sharp from 'sharp';
 
-import * as fileType from '~/util/file-type';
 import { api, catchExceptions, verify } from '~/util/express-helpers';
 import { createThumbnail } from '~/util/ffmpeg-thumbnail';
 
 import { Asset } from '~/model/asset';
-import { convert as subtitleConvert } from '~/util/subtitles';
-
-const simpleEncryptor = require('simple-encryptor')(config.encryptor);
+import { listDocuments } from '~/util/list-documents';
 
 const router = new Router({});
 
 router.use(verify);
 
-router.get('/', json(), api(async req => {
+router.get('/', api(async req => {
   const where = {
     deleted: { $ne: true }
   };
@@ -53,63 +48,7 @@ router.get('/', json(), api(async req => {
 
   _.assign(where, _.pickBy(req.query.filters || {}));
 
-  return {
-    items: await Asset
-    .find(where)
-    .sort({ [req.query.sortBy]: req.query.descending ? -1 : 1 })
-    .limit(req.query.rowsPerPage)
-    .skip((req.query.page - 1) * req.query.rowsPerPage)
-    ,
-    totalItems: await Asset.countDocuments(where)
-  }
-}));
-
-router.get('/:id', api(async req => Asset.findById(req.params.id)));
-
-router.get('/:id/subtitles', (req, res) => {
-  res.setHeader('Content-Type', 'application/octet-stream');
-  res.setHeader('Content-Disposition', `attachment; filename="${req.params.id}.nl.vtt"`);
-  fs.createReadStream(`${config.root}/var/subtitles/${req.params.id}.nl.vtt`)
-  .pipe(res);
-});
-
-router.put('/:id/subtitles/:language', (req, res) => {
-  const ext = req.query.name.replace(/^.*\.([^.]+)$/, '$1');
-  if (!fileType.isSubtitle(req.query.name)) {
-    return res.json(false);
-  }
-
-  fs.ensureDirSync(`${config.root}/var/tmp`);
-  const lang = req.params.language;
-  const sourceFile = `${config.root}/var/tmp/${req.params.id}.${lang}.${ext}`;
-
-  const output = fs.createWriteStream(sourceFile);
-  req.on('end', async () => {
-    try {
-      await subtitleConvert(`http://localhost:${config.port}/player/streams/-/-`,
-        req.params.id,
-        sourceFile,
-        lang);
-      await fs.unlink(sourceFile);
-      res.json({ result: true });
-    }
-    catch (e) {
-      res.json({ error: e });
-    }
-  }).pipe(output);
-});
-
-router.get('/:id/subtitles/:language', catchExceptions(async (req, res, next) => {
-  const asset = await Asset.findById(req.params.id);
-
-  if (!asset || !asset.subtitles) {
-    return next();
-  }
-
-  res.setHeader('content-disposition',
-    `attachment; filename="${req.params.id}.${req.params.language}.vtt"`);
-  fs.createReadStream(`${config.root}/var/subtitles/${req.params.id}.${req.params.language}.vtt`)
-  .pipe(res);
+  return listDocuments(req, Asset, where);
 }));
 
 router.get('/labels', api(async () => Asset.getLabels()));
@@ -134,22 +73,6 @@ router.post('/remove', json(), api(async req => {
   }
 
   return true;
-}));
-
-router.post('/:id/share-url', json(), api(async req => {
-  return `${req.base}/auth/?${querystring.stringify({
-    auth: simpleEncryptor.encrypt([
-      moment().add(parseInt(req.body.weeksValid), 'weeks').valueOf(),
-      req.body.password,
-      req.params.id
-    ])
-  })}`;
-}));
-
-router.post('/:id', json(), api(async req => {
-  const asset = await Asset.findById(req.params.id);
-  asset.set(req.body);
-  await asset.save();
 }));
 
 const thumbnails = `${config.root}/var/thumbnails`;
