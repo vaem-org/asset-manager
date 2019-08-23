@@ -372,7 +372,7 @@ encoderIO.on('connection', function (socket) {
   });
 });
 
-router.get('/items', api(async () => encoders));
+router.get('/', api(async () => encoders));
 
 router.get('/queue', api(async () => queue));
 
@@ -549,7 +549,7 @@ router.post('/start-job', json(), api(async req => {
 
 router.post('/update', api(async () => encoderIO.emit('update')));
 
-router.post('/encoders/:id/priority', json(), api(async req => {
+router.post('/:id/priority', json(), api(async req => {
   if (!encoders[req.params.id]) {
     throw 'Encoder not found';
   }
@@ -575,9 +575,7 @@ router.delete('/jobs/:index', api(async req => {
 }));
 
 router.get('/docker', api(async req => {
-  const url = new URL(req.query.origin);
-
-  return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${url.protocol}//admin:${config.auth.password}@${url.host} vaem/encoder`;
+  return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${req.protocol}//admin:${config.auth.password}@${req.get('host')} vaem/encoder`;
 }));
 
 browserIO.on('connection', socket => {

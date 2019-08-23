@@ -30,7 +30,7 @@ const simpleEncryptor = require('simple-encryptor')(config.encryptor);
 
 router.use(verify);
 
-router.post('/share-url', json(), api(async req => {
+router.post('/', json(), api(async req => {
   return `${req.base}/auth/?${querystring.stringify({
     auth: simpleEncryptor.encrypt([
       moment().add(parseInt(req.body.weeksValid), 'weeks').valueOf(),

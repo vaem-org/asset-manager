@@ -16,9 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import config from '~config';
 import { Router } from 'express';
 import fs from 'fs-extra';
-import config from '../../../../config/config';
+import jwt from 'jsonwebtoken';
 import * as fileType from '@/util/file-type';
 import { convert as subtitleConvert } from '@/util/subtitles';
 import { api, catchExceptions, verify } from '@/util/express-helpers';
@@ -29,6 +30,32 @@ const router = new Router({
 });
 
 router.use(verify);
+
+router.get('/:language', catchExceptions(async (req, res, next) => {
+  try {
+    jwt.verify(req.query.token, config.jwtSecret);
+  }
+  catch (e) {
+    throw {
+      status: 401
+    }
+  }
+  const asset = await Asset.findById(req.params.id);
+
+  if (!asset || !asset.subtitles) {
+    return next();
+  }
+
+  const path = `${config.root}/var/subtitles/${req.params.id}.${req.params.language}.vtt`;
+  if (!await fs.exists(path)) {
+    return next();
+  }
+
+  res.setHeader('content-disposition',
+    `attachment; filename="${req.params.id}.${req.params.language}.vtt"`);
+  fs.createReadStream(path)
+  .pipe(res);
+}));
 
 router.get('/', catchExceptions(async (req, res) => {
   const path = `${config.root}/var/subtitles/${req.params.id}.nl.vtt`;
@@ -47,8 +74,8 @@ router.get('/', catchExceptions(async (req, res) => {
 }));
 
 router.put('/:language', api(async (req) => {
-  const ext = req.query.name.replace(/^.*\.([^.]+)$/, '$1');
-  if (!fileType.isSubtitle(req.query.name)) {
+  const ext = req.query.name && req.query.name.replace(/^.*\.([^.]+)$/, '$1');
+  if (!req.query.name || !fileType.isSubtitle(req.query.name)) {
     throw {
       status: 500,
       message: 'Invalid filename'
@@ -71,24 +98,6 @@ router.put('/:language', api(async (req) => {
     sourceFile,
     lang);
   await fs.unlink(sourceFile);
-}));
-
-router.get('/:language', catchExceptions(async (req, res, next) => {
-  const asset = await Asset.findById(req.params.id);
-
-  if (!asset || !asset.subtitles) {
-    return next();
-  }
-
-  const path = `${config.root}/var/subtitles/${req.params.id}.${req.params.language}.vtt`;
-  if (!await fs.exists(path)) {
-    return next();
-  }
-
-  res.setHeader('content-disposition',
-    `attachment; filename="${req.params.id}.${req.params.language}.vtt"`);
-  fs.createReadStream(path)
-  .pipe(res);
 }));
 
 export default router;

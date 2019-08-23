@@ -117,7 +117,7 @@ router.get('/:assetId/item', api(async req => {
   const signature = computeSignature(req.params.assetId, timestamp, req.ip);
 
   return {
-    streamUrl: `/player/${timestamp}/${signature}/${req.params.assetId}.m3u8`,
+    streamUrl: `/streams/${timestamp}/${signature}/${req.params.assetId}.m3u8`,
     subtitles: item.subtitles
   }
 }));
@@ -155,7 +155,7 @@ router.get([
   const asset = await Asset.findById(req.params.assetId);
 
   let base =
-    `${req.base}/player/`
+    `${req.base}/streams/`
   ;
 
   let uri;
