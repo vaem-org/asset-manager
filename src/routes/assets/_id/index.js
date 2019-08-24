@@ -39,7 +39,24 @@ router.get('/', validId, api(async (req) => Asset.findById(req.params.id)));
 
 router.post('/', validId, json(), api(async req => {
   const asset = await Asset.findById(req.params.id);
+  if (!asset) {
+    throw {
+      status: 404
+    }
+  }
   asset.set(req.body);
+  await asset.save();
+}));
+
+router.delete('/', validId, api(async req => {
+  const asset = await Asset.findById(req.params.id);
+  if (!asset) {
+    throw {
+      status: 404
+    }
+  }
+
+  asset.removeFiles();
   await asset.save();
 }));
 

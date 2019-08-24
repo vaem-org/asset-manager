@@ -16,17 +16,21 @@ export function computeSignature(source, validTo, ip='') {
  * Verify a url signature
  * @param {Request} req
  * @param {String} source
+ * @param {String} ip
  * @returns {boolean}
  */
-export function verifySignature(req, source=null) {
+export function verifySignature(req, source=null, ip='') {
   // timestamp should be before now
   if (req.params.timestamp < Date.now()) {
     return false;
   }
 
   // validate signature
-  const signature = computeSignature(source || req.url,
-    req.params.timestamp);
+  const signature = computeSignature(
+    source || req.url,
+    req.params.timestamp,
+    ip
+  );
 
   return signature === req.params.signature;
 }

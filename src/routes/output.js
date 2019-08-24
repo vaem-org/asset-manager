@@ -22,12 +22,11 @@ import path from 'path';
 import { Router } from 'express';
 import { catchExceptions, verify } from '~/util/express-helpers';
 import { Readable } from 'stream';
+import { verifySignature } from '@/util/url-signer';
 
 const ensured = new Set();
 
 const router = new Router();
-
-router.use(verify);
 
 const fileSystem = config.destinationFileSystem;
 
@@ -40,33 +39,35 @@ const ensureDir = async dirname => {
   ensured.add(dirname);
 };
 
-router.use( catchExceptions(async (req, res, next) => {
+router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, next) => {
   if (req.method !== 'PUT') {
     return next();
   }
 
-  const output = decodeURIComponent(req.path);
+  if (!verifySignature(req, `/${req.params.assetId}`)) {
+    return res.status(403).end();
+  }
+
+  const output = `/${req.params.assetId}${decodeURIComponent(req.path)}`;
 
   await ensureDir(path.dirname(output));
 
   if (output.endsWith('.m3u8')) {
     const buffers = [];
-    req.on('data',  buffer => buffers.concat(buffer));
+    req.on('data',  buffer => buffers.push(buffer));
     req.on('error', error => {
       console.error(error);
       res.end();
     });
-    req.on('end', () => {
+    req.on('end', async () => {
       res.end();
       const content = Buffer.concat(buffers).toString();
       if (content.indexOf('#EXT-X-ENDLIST') !== -1) {
-        fileSystem.write(output)
-        .then(({stream}) => {
-          const source = new Readable();
-          source.pipe(stream);
-          stream.push(content);
-          stream.push(null);
-        });
+        const {stream} = await fileSystem.write(output);
+        const source = new Readable();
+        source.pipe(stream);
+        source.push(content);
+        source.push(null);
       }
     });
   } else {

@@ -23,11 +23,9 @@ import { Router, static as expressStatic } from 'express';
 import _ from 'lodash';
 import axios from 'axios';
 import m3u8 from 'm3u8';
-import fs from 'fs-extra';
 import cloudfrontSign from 'aws-cloudfront-sign';
 import path from 'path';
 import moment from 'moment';
-import cors from 'cors';
 
 import querystring from 'querystring';
 import { Asset } from '~/model/asset';
@@ -82,7 +80,7 @@ const cloudfrontSignCookies = path => cloudfrontSign.getSignedCookies(
 );
 
 
-router.use('/subtitles', cors(), expressStatic(`${config.root}/var/subtitles`));
+router.use('/subtitles', expressStatic(`${config.root}/var/subtitles`));
 
 // check authentication of stream
 const checkAuth = (req, res, next) => {
@@ -90,7 +88,7 @@ const checkAuth = (req, res, next) => {
     return next();
   }
 
-  if (!verifySignature(req, req.params.assetId || req.url.split('/')[1])) {
+  if (!verifySignature(req, req.params.assetId || req.url.split('/')[1], req.ip)) {
     return res.status(403).end();
   }
 
@@ -124,7 +122,6 @@ router.get('/:timestamp/:signature/:assetId/subtitles', checkAuth, api(async req
 }));
 
 router.get(['/:timestamp/:signature/:assetId.key'],
-  cors(),
   checkAuth,
   catchExceptions(async (req, res, next) => {
     const item = await Asset.findById(req.params.assetId);
@@ -142,7 +139,7 @@ router.get([
   '/:timestamp/:signature/:assetId/subtitles/:language.m3u8',
   '/:timestamp/:signature/:assetId.:bitrate.m3u8',
   '/:timestamp/:signature/:assetId.m3u8'
-], cors(), checkAuth, catchExceptions(async (req, res) => {
+], checkAuth, catchExceptions(async (req, res) => {
   const asset = await Asset.findById(req.params.assetId);
 
   let base =
@@ -197,14 +194,17 @@ router.get([
       throw `Unable to get ${signUrl(uri)}: ${e.toString()}`;
     }
   } else {
-    const m3u8File = `${config.output}/${req.params.assetId}/${req.params.assetId}${req.params.bitrate ? '.' + req.params.bitrate : ''}.m3u8`;
+    const m3u8File = `/${req.params.assetId}/${req.params.assetId}${req.params.bitrate ? '.' + req.params.bitrate : ''}.m3u8`;
 
-    if (!(await fs.pathExists(m3u8File))) {
+    try {
+      await config.destinationFileSystem.get(m3u8File);
+    }
+    catch (e) {
       return res.status(404).end();
     }
 
     m3u = await parseM3U(
-      fs.createReadStream(m3u8File)
+      (await config.destinationFileSystem.read(m3u8File)).stream
     );
   }
 

@@ -426,6 +426,8 @@ router.post('/start-job', json(), api(async req => {
 
   const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 4*3600)}`;
 
+  const outputBase = `/output${getSignedUrl(`/${asset._id}`, 4*3600)}`;
+
   // prepare the jobs array
   _.each(config.profiles, (profiles, width) => {
     width = parseInt(width);
@@ -454,7 +456,7 @@ router.post('/start-job', json(), api(async req => {
           ),
           videoParameters,
           width: width,
-          m3u8: `/output/${basename}/${basename}.${options.maxrate}.m3u8`,
+          m3u8: `${outputBase}/${basename}.${options.maxrate}.m3u8`,
           segmentOptions: config.hlsEnc ? {
             'hls_key_info_file': hlsKeyInfoFile
           } : {},
@@ -486,7 +488,7 @@ router.post('/start-job', json(), api(async req => {
       bitrate: job.bitrate,
       options: job.options,
       codec: job.codec,
-      m3u8: `/output/${basename}/${basename}.${job.bitrate}.m3u8`,
+      m3u8: `${outputBase}/${basename}.${job.bitrate}.m3u8`,
       hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
     });
   });
