@@ -17,7 +17,7 @@
  */
 
 import config from '~config';
-import request from 'request';
+import axios from 'axios';
 import _ from 'lodash';
 import path from 'path';
 import { Router, json } from 'express';
@@ -29,7 +29,6 @@ import * as settings from '@/model/settings';
 import { File } from '@/model/file';
 import { Asset } from '@/model/asset';
 import masterPlaylist from '@/util/master-playlist';
-import { URL } from 'url';
 import { socketio } from '@/util/socketio';
 import { getSignedUrl } from '@/util/url-signer';
 
@@ -209,12 +208,8 @@ const sourceDone = async source => {
     });
 
     if (config.slackHook) {
-      request({
-        url: config.slackHook,
-        method: 'POST',
-        json: {
-          text: `Transcoding asset complete: "${sources[source].asset.title}"`
-        }
+      axios.post(config.slackHook, {
+        text: `Transcoding asset complete: "${sources[source].asset.title}"`
       });
     }
 

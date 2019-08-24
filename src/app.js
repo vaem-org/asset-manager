@@ -18,8 +18,6 @@
 
 import 'dotenv/config';
 
-import { Server } from 'http';
-import express from 'express';
 import glob from 'glob';
 import path from 'path';
 import cors from 'cors';
@@ -30,11 +28,6 @@ app.use(cors({
   origin: true,
   credentials: true
 }));
-
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
 
 app.set('trust proxy', true);
 
