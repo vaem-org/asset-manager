@@ -32,7 +32,7 @@ import cors from 'cors';
 import querystring from 'querystring';
 import { Asset } from '~/model/asset';
 import { api, catchExceptions } from '~/util/express-helpers';
-import { computeSignature } from '~/util/asset-signer';
+import {computeSignature, verifySignature} from '@/util/url-signer';
 import { getSignedUrl } from '~/util/bunnycdn';
 
 /**
@@ -90,16 +90,7 @@ const checkAuth = (req, res, next) => {
     return next();
   }
 
-  // timestamp should be before now
-  if (req.params.timestamp < Date.now()) {
-    return res.status(403).end();
-  }
-
-  // validate signature
-  const signature = computeSignature(req.params.assetId || req.url.split('/')[1],
-    req.params.timestamp,
-    req.ip);
-  if (signature !== req.params.signature) {
+  if (!verifySignature(req, req.params.assetId || req.url.split('/')[1])) {
     return res.status(403).end();
   }
 

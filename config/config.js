@@ -47,27 +47,15 @@ const config = merge({
 
   profiles: require(`${__dirname}/profiles.json`),
 
-  // simple encryptor key for share urls
-  encryptor: {
-    key: process.env.SIMPLE_ENCRYPTOR_KEY,
-    hmac: false
-  },
-
   hlsEnc: true,
 
   env: process.env.NODE_ENV || 'development',
 
   mongo: process.env.MONGO_URL || 'mongodb://localhost/asset-manager',
 
-  memcached: process.env.MEMCACHED_URL,
-
   output: `${root}/var/output`,
-  tmp: `${root}/var/tmp`,
   source,
-  archive: `${root}/var/archive`,
-  protocol: process.env.PROTOCOL,
 
-  sourceBase: `${process.env.BASE}/source/`,
   publicStreams: process.env.PUBLIC_STREAMS,
 
   base: process.env.BASE,

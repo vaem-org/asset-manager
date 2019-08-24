@@ -20,7 +20,7 @@ import config from '~config';
 import { catchExceptions } from '@/util/express-helpers';
 import { spawn } from 'child_process';
 import { Router } from 'express';
-import { computeSignature } from '@/util/asset-signer';
+import { computeSignature } from '@/util/url-signer';
 import moment from 'moment';
 import { Asset } from '@/model/asset';
 import _ from 'lodash';

@@ -20,10 +20,12 @@ import config from '~config';
 import rangeParser from 'range-parser';
 import { Router } from 'express';
 import { catchExceptions, verify } from '~/util/express-helpers';
+import {computeSignature, verifySignature} from '@/util/url-signer';
 
 const router = new Router();
 
-router.use(verify, catchExceptions(async (req, res) => {
+const serve = catchExceptions(async (req, res) => {
+  console.log(req.url);
   const redirect = await config.sourceFileSystem.getSignedUrl(req.url);
   if (redirect) {
     res.redirect(redirect);
@@ -54,6 +56,17 @@ router.use(verify, catchExceptions(async (req, res) => {
 
     input.stream.pipe(res);
   }
-}));
+});
+
+router.use('/:timestamp/:signature', (req, res, next) => {
+  if (!verifySignature(req)) {
+    return res.status(403).end();
+  }
+
+  req.token = true;
+  next();
+}, serve);
+
+router.use(verify, serve);
 
 export default router;

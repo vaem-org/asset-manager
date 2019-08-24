@@ -9,8 +9,3 @@ services:
       - 27017:27017
     volumes:
       - data:/data/db
-
-  memcached:
-    image: memcached
-    ports:
-      - 11211:11211

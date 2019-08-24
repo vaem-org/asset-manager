@@ -22,15 +22,16 @@ import _ from 'lodash';
 import path from 'path';
 import { Router, json } from 'express';
 import crypto from 'crypto';
-import fixKeys from '~/util/fix-keys';
-import { getSeekable, getSource, getVideoParameters, guessChannelLayout } from '~/util/source';
-import { api, catchExceptions, verify } from '~/util/express-helpers';
-import * as settings from '~/model/settings';
-import { File } from '~/model/file';
-import { Asset } from '~/model/asset';
-import masterPlaylist from '~/util/master-playlist';
+import fixKeys from '@/util/fix-keys';
+import { getSeekable, getSource, getVideoParameters, guessChannelLayout } from '@/util/source';
+import { api, verify } from '@/util/express-helpers';
+import * as settings from '@/model/settings';
+import { File } from '@/model/file';
+import { Asset } from '@/model/asset';
+import masterPlaylist from '@/util/master-playlist';
 import { URL } from 'url';
-import { socketio } from '~/util/socketio';
+import { socketio } from '@/util/socketio';
+import { getSignedUrl } from '@/util/url-signer';
 
 const getAudioJobs = async (asset, file, source) => {
   const jobs = [];
@@ -109,7 +110,7 @@ const getAudioJobs = async (asset, file, source) => {
 };
 
 const encoderIO = socketio.of('/encoder', null);
-const browserIO = socketio.of('/encoders', null);
+const browserIO = socketio.of('/encoders-io', null);
 
 const router = new Router({});
 
@@ -226,12 +227,6 @@ const sourceDone = async source => {
   catch (e) {
     console.log(e);
   }
-};
-
-const getUrl = (req, relative) => {
-  const parsed = new URL(req.base);
-  const auth = config.auth;
-  return `${parsed.protocol}//${auth.username}:${auth.password}@${parsed.host}${relative}`;
 };
 
 /**
@@ -376,30 +371,6 @@ router.get('/', api(async () => encoders));
 
 router.get('/queue', api(async () => queue));
 
-router.get('/keyinfo/:assetId', catchExceptions(async (req, res, next) => {
-  const asset = await Asset.findById(req.params.assetId);
-
-  if (!asset) {
-    return next();
-  }
-
-  return res.send([
-    'file.key',
-    getUrl(req, `/keyinfo/${req.params.assetId}/file.key`),
-    asset.hls_enc_iv
-  ].join('\n'));
-}));
-
-router.get('/keyinfo/:assetId/file.key', catchExceptions(async (req, res, next) => {
-  const asset = await Asset.findById(req.params.assetId);
-
-  if (!asset) {
-    return next();
-  }
-
-  return res.send(Buffer.from(asset.hls_enc_key, 'hex'));
-}));
-
 router.post('/start-job', json(), api(async req => {
   const file = req.body.fileId ? await File.findById(req.body.fileId) : null;
 
@@ -408,7 +379,7 @@ router.post('/start-job', json(), api(async req => {
   }
 
   let todo = [];
-  let source = file ? getSource(req, file.name) : null;
+  let source = file ? getSource(file.name) : null;
 
   let videoParameters = file ? await getVideoParameters(source,
     _.get(file, 'audioStreams.length') ? file.audioStreams : null) : null;
@@ -424,7 +395,7 @@ router.post('/start-job', json(), api(async req => {
     if (!asset) {
       throw 'No asset';
     }
-    source = getSource(req, asset.source);
+    source = getSource(asset.source);
     audio = asset.audio;
 
     basename = path.basename(source);
@@ -452,6 +423,8 @@ router.post('/start-job', json(), api(async req => {
   if (rFrameRate.length === 2) {
     framerate = rFrameRate[0] / rFrameRate[1];
   }
+
+  const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 4*3600)}`;
 
   // prepare the jobs array
   _.each(config.profiles, (profiles, width) => {
@@ -483,7 +456,7 @@ router.post('/start-job', json(), api(async req => {
           width: width,
           m3u8: `/output/${basename}/${basename}.${options.maxrate}.m3u8`,
           segmentOptions: config.hlsEnc ? {
-            'hls_key_info_file': getUrl(req, `/keyinfo/${asset._id}`)
+            'hls_key_info_file': hlsKeyInfoFile
           } : {},
           hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
         })));
@@ -498,7 +471,7 @@ router.post('/start-job', json(), api(async req => {
   const segmentOptions = {};
 
   if (config.hlsEnc) {
-    segmentOptions.hls_key_info_file = getUrl(req, `/keyinfo/${asset._id}`);
+    segmentOptions.hls_key_info_file = hlsKeyInfoFile;
   }
 
   audioJobs.forEach(job => {

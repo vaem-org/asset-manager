@@ -26,7 +26,15 @@ import cors from 'cors';
 import { initMongoose } from '~/util/mongoose';
 import { server as socketIOServer, app } from './util/socketio';
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
 app.set('trust proxy', true);
 

@@ -22,6 +22,7 @@ import util from 'util';
 import config from '../../config/config';
 import getParams from './get-params';
 import { URL } from 'url';
+import { computeSignature, getSignedUrl } from '@/util/url-signer';
 
 const execFile = util.promisify(child_process.execFile);
 /**
@@ -36,24 +37,15 @@ export function getSeekable(source) {
 
 /**
  * Get an absolute path for given source
- * @param {{}} req
  * @param {string} source
  */
-export function getSource(req, source) {
+export function getSource(source) {
   if (/^https?:/.exec(source)) {
     return source;
   }
 
-  let sourceBase = null;
-  if (config.sourceBase) {
-    const parsed = new URL(config.sourceBase);
-    parsed.username = config.auth.username;
-    parsed.password = config.auth.password;
-    sourceBase = parsed.toString();
-  }
-
-  return (sourceBase || (`${req.protocol}://${config.auth.username}:${config.auth.password}@${req.get('host')}/source/`)) +
-    source.split('/').map(encodeURIComponent).join('/');
+  const url = '/' + source.split('/').map(encodeURIComponent).join('/');
+  return `${config.base}/source${getSignedUrl(url, 4*3600)}`;
 }
 
 /**

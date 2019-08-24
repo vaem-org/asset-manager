@@ -189,7 +189,7 @@ router.get('/:id/download', fetchItem, catchExceptions(async (req, res) => {
 }));
 
 router.get('/:id/streams', fetchItem, api(async req => {
-  const source = sourceUtil.getSource(req, req.item.name);
+  const source = sourceUtil.getSource(req.item.name);
   const videoParameters = await sourceUtil.getVideoParameters(
     source
   );
@@ -207,7 +207,7 @@ router.post('/:id/audio-streams', fetchItem, json(), api(async req => {
 }));
 
 router.get('/:id/loudnorm', fetchItem, api(async req => {
-  const source = sourceUtil.getSource(req, req.item.name);
+  const source = sourceUtil.getSource(req.item.name);
 
   const { stereo } = req.item.audioStreams || await sourceUtil.guessChannelLayout(source);
 

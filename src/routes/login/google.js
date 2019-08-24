@@ -37,12 +37,12 @@ router.use((req, res, next) => {
 });
 
 router.get('/', catchExceptions(async (req, res) => {
-  res.redirect( res.redirect(req.client.generateAuthUrl({
+  res.redirect(req.client.generateAuthUrl({
     scope: ['email', 'profile'],
     hd: cfg.hd,
     access_type: 'offline',
     prompt: 'consent'
-  })));
+  }));
 }));
 
 router.get('/callback', catchExceptions(async (req, res) => {

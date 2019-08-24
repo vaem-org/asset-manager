@@ -16,28 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import config from '~config';
 import { json, Router } from 'express';
 import { api, verify } from '@/util/express-helpers';
-import querystring from "querystring";
-import moment from 'moment';
-import config from '../../../../config/config';
 
 const router = new Router({
   mergeParams: true
 });
 
-const simpleEncryptor = require('simple-encryptor')(config.encryptor);
-
 router.use(verify);
 
 router.post('/', json(), api(async req => {
-  return `${req.base}/auth/?${querystring.stringify({
-    auth: simpleEncryptor.encrypt([
-      moment().add(parseInt(req.body.weeksValid), 'weeks').valueOf(),
-      req.body.password,
-      req.params.id
-    ])
-  })}`;
+  throw 'Not implemented yet';
 }));
 
 export default router;
