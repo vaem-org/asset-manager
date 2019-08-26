@@ -20,16 +20,11 @@ import config from '~config';
 import fs from 'fs-extra';
 import { Router, json } from 'express';
 import _ from 'lodash';
-import * as sourceUtil from '~/util/source';
-import { join as pathJoin } from 'path';
+import { join } from 'path';
 
-import { api, catchExceptions, verify } from '~/util/express-helpers';
-import { File } from '~/model/file';
-import { Asset } from '~/model/asset';
-import * as subtitles from '~/util/subtitles';
-import { guessChannelLayout } from '~/util/source';
-import { getNormalizeParameters } from '~/util/source';
-import { socketio } from '~/util/socketio';
+import { api, catchExceptions, verify } from '@/util/express-helpers';
+import { File } from '@/model/file';
+import { socketio } from '@/util/socketio';
 import { listDocuments } from '@/util/list-documents';
 
 const io = socketio.of('/uploads', null);
@@ -47,11 +42,11 @@ async function getFiles(root) {
   let files = [];
   for (let entry of entries) {
     if (entry.isDirectory()) {
-      files = [...files, ...(await getFiles(pathJoin(root, entry.name)))];
+      files = [...files, ...(await getFiles(join(root, entry.name)))];
     } else {
       files.push({
         ...entry,
-        path: pathJoin(root, entry.name).substr(1)
+        path: join(root, entry.name).substr(1)
       })
     }
   }
@@ -94,26 +89,6 @@ router.get('/', api(async req => {
       $options: 'i'
     }
   } : {});
-}));
-
-router.post('/prepare', json(), api(async req => {
-  const files = [];
-  const newFiles = [];
-  for (let file of req.body) {
-    let item = await File.findOne({ name: file.name });
-    if (!item) {
-      item = new File(file);
-      await item.save();
-      newFiles.push(item);
-    }
-    files.push(item.toObject());
-  }
-
-  if (newFiles.length > 0) {
-    io.emit('created', { files: newFiles });
-  }
-
-  return files;
 }));
 
 router.post('/remove', json(), api(async req => {
@@ -170,64 +145,6 @@ router.put('/', catchExceptions(async (req, res) => {
   .on('close', handleClose)
   .on('end', handleClose)
   .pipe(output.stream);
-}));
-
-const fetchItem = catchExceptions(async (req, res, next) => {
-  req.item = await File.findById(req.params.id);
-  next(req.item ? null : 'route');
-});
-
-router.get('/:id/download', fetchItem, catchExceptions(async (req, res) => {
-  res.setHeader('content-disposition', `attachment; filename="${req.item.name}"`);
-  const redirect = await fileSystem.getSignedUrl(req.item.name);
-  if (redirect) {
-    res.redirect(redirect);
-  } else {
-    const input = await fileSystem.read(req.item.name);
-    input.stream.pipe(res);
-  }
-}));
-
-router.get('/:id/streams', fetchItem, api(async req => {
-  const source = sourceUtil.getSource(req.item.name);
-  const videoParameters = await sourceUtil.getVideoParameters(
-    source
-  );
-
-  return {
-    streams: _.get(videoParameters, 'ffprobe.streams', []),
-    audioStreams: !_.isEmpty(req.item.audioStreams) ? req.item.audioStreams : await guessChannelLayout(
-      source)
-  };
-}));
-
-router.post('/:id/audio-streams', fetchItem, json(), api(async req => {
-  req.item.audioStreams = req.body;
-  await req.item.save();
-}));
-
-router.get('/:id/loudnorm', fetchItem, api(async req => {
-  const source = sourceUtil.getSource(req.item.name);
-
-  const { stereo } = req.item.audioStreams || await sourceUtil.guessChannelLayout(source);
-
-  return await getNormalizeParameters(
-    source,
-    stereo.length > 1 ?
-      ['-filter_complex', `[0:${stereo[0]}][0:${stereo[1]}]amerge=inputs=2[aout]`, '-map [aout]'] :
-      ['-map', `0:${stereo[0]}`]
-  );
-}));
-
-router.get('/assets',
-  api(async () => Asset.find({ state: 'processed' }).select('title').sort({ createdAt: -1 })));
-
-router.post('/:id/assign-to/:language/:assetId', fetchItem, api(async req => {
-  return subtitles.convert(
-    `http://localhost:${config.port}/player/streams/-/-`,
-    req.params.assetId,
-    `${config.source}/${req.item.name}`,
-    req.params.language);
 }));
 
 export default router;

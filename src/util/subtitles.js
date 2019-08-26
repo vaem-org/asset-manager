@@ -35,7 +35,7 @@ const run = (cmd, args) => new Promise((accept, reject) => {
     } else {
       reject(`Command "${cmd} ${args.map(value => `"${value}"`).join(' ')}" failed.`);
     }
-  });
+  }).on('error', reject);
 });
 
 const srtParse = util.promisify(captions.srt.parse).bind(captions.srt);
