@@ -18,7 +18,7 @@
 
 import config from '~config';
 import fs from 'fs-extra';
-import { Router, json } from 'express';
+import { Router } from 'express';
 import _ from 'lodash';
 import { join } from 'path';
 
@@ -100,15 +100,13 @@ router.put('/:name', catchExceptions(async (req, res) => {
 
   const name = decodeURIComponent(req.params.name);
 
-  const file = await File.findOneAndUpdate({ name }, {
-    name,
-    size: req.query.size,
-    state: 'uploading'
-  }, {
-    upsert: true,
-    new: true,
-    useFindAndModify: false
-  });
+  const file = await File.findOne({ name });
+
+  if (!file) {
+    throw {
+      status: 404
+    }
+  }
 
   const handleClose = () => {
     file.state = file.uploaded === file.size ? 'complete' : 'idle';
@@ -125,6 +123,10 @@ router.put('/:name', catchExceptions(async (req, res) => {
     start: offset,
     append: offset !== 0
   });
+
+  file.state = 'uploading';
+  await file.save();
+
   req
   .on('data', data => {
     numBytes += data.length;
