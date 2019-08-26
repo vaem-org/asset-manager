@@ -16,26 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import config from '~config';
+
 import fs from 'fs-extra';
 import childProcess from 'child_process';
 import captions from 'node-captions';
 import util from 'util';
 
 import segmentVtt from './segment-vtt';
-import {Asset} from '../model/asset';
-import {s3} from './s3';
-
-import config from '../../config/config';
-import {bunnycdnStorage} from './bunnycdn';
+import { Asset } from '~/model/asset';
 
 const outputDir = `${config.root}/var/subtitles`;
 
 const run = (cmd, args) => new Promise((accept, reject) => {
-  childProcess.spawn(cmd, args, {stdio: 'inherit'}).on('close', code => {
+  childProcess.spawn(cmd, args, { stdio: 'inherit' }).on('close', code => {
     if (code === 0) {
       accept();
-    }
-    else {
+    } else {
       reject(`Command "${cmd} ${args.map(value => `"${value}"`).join(' ')}" failed.`);
     }
   });
@@ -70,8 +67,7 @@ const convert = async (base, assetId, sourceFile, lang) => {
       sourceFile,
       srt
     ]);
-  }
-  else if (ext !== 'vtt' && ext !== 'srt') {
+  } else if (ext !== 'vtt' && ext !== 'srt') {
     // use subtitle-edit to convert to srt
     await run('xvfb-run', [
       '-a',
@@ -89,8 +85,7 @@ const convert = async (base, assetId, sourceFile, lang) => {
     console.log('Converting from subrip to webvtt');
     await convertSubrip(srt, destination);
     await fs.unlink(srt);
-  }
-  else {
+  } else {
     await fs.copy(vtt, destination, {
       overwrite: true
     });
@@ -99,28 +94,23 @@ const convert = async (base, assetId, sourceFile, lang) => {
   const data = await fs.readFile(destination);
   await fs.writeFile(destination, data.toString().replace(/{\\.*?}/g, ''));
 
-  if (config.s3) {
-    // upload vtt to s3
-    s3.putObject({
-      Bucket: config.s3.bucket,
-      Key: `${assetId}/subtitles/${lang}.vtt`,
-      Body: fs.createReadStream(destination)
-    }, err => {
-      console.error('Unable to upload vtt to S3', err);
-    });
-  } else if (bunnycdnStorage) {
-    bunnycdnStorage.put(`${assetId}/subtitles/${lang}.vtt`, fs.createReadStream(destination))
-      .catch(e => {
-        console.error('Unable to upload vtt to BunnyCDN', e);
-      })
-  }
+  const { stream } = await config.destinationFileSystem.write(
+    `${assetId}/subtitles/${lang}.vtt`
+  );
+
+  fs.createReadStream(destination)
+  .pipe(stream);
+
+  stream.on('error', error => {
+    console.error(`Unable to upload file to destination: ${error.toString()}`);
+  });
 
   const item = await Asset.findById(assetId);
-  item.subtitles = Object.assign(item.subtitles || {}, {[lang]: true});
+  item.subtitles = Object.assign(item.subtitles || {}, { [lang]: true });
   await item.save();
 
   await segmentVtt(base, assetId, lang);
   console.log('Segmenting VTT successful');
 };
 
-export {convert};
+export { convert };

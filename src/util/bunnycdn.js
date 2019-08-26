@@ -18,7 +18,6 @@
 
 import {createHash} from 'crypto';
 import config from '~config';
-import axios from 'axios';
 
 export function getSignedUrl(path, expires) {
   const digest = createHash('md5')
@@ -34,14 +33,3 @@ export function getSignedUrl(path, expires) {
 
   return `https://${config.bunnyCDN.hostname}.b-cdn.net${path}?token=${token}&expires=${expires}`;
 }
-
-/**
- * An axios instance for communicating with the storage api
- * @type {axios}
- */
-export const bunnycdnStorage = config.bunnyCDN ? axios.create({
-  baseURL: `https://storage.bunnycdn.com/${config.bunnyCDN.storageZoneName}/`,
-  headers: {
-    'AccessKey': config.bunnyCDN.password
-  }
-}) : null;

@@ -16,14 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import config from '~config';
+
 import mongoose from 'mongoose';
-import fs from 'fs-extra';
 import _ from 'lodash';
-
-import config from '../../config/config';
-
-import * as s3Util from '../util/s3';
-import {bunnycdnStorage} from '../util/bunnycdn';
 
 const schema = new mongoose.Schema({
   updatedAt: {type: Date, default: Date.now},
@@ -62,23 +58,8 @@ schema.methods.removeFiles = function () {
   // remove files
   console.log(`Removing files for asset ${this._id}`);
 
-  if (s3Util.s3) {
-    s3Util
-      .deleteAllObjects(`${this._id}/`)
-      .catch(err => {
-        console.log('Unable to delete objects from S3', err);
-      })
-  } else if (bunnycdnStorage) {
-    bunnycdnStorage.delete(`${this._id}/`)
-      .catch(err => {
-        console.log('Unable to delete objects from BunnyCDN storage', err);
-      })
-  }
-
-  fs.remove(`${config.output}/${this._id}`)
-    .catch(err => {
-      console.log('Unable to remove asset files', err);
-    });
+  config.destinationFileSystem.recursivelyDelete(this._id)
+  .catch(`Unable to delete files: ${err.toString()}`);
 
   this.deleted = true;
 };

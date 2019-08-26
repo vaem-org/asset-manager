@@ -20,8 +20,7 @@ import config from '~config';
 
 import path from 'path';
 import { Router } from 'express';
-import { catchExceptions, verify } from '~/util/express-helpers';
-import { Readable } from 'stream';
+import { catchExceptions } from '~/util/express-helpers';
 import { verifySignature } from '@/util/url-signer';
 
 const ensured = new Set();
@@ -63,11 +62,7 @@ router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, 
       res.end();
       const content = Buffer.concat(buffers).toString();
       if (content.indexOf('#EXT-X-ENDLIST') !== -1) {
-        const {stream} = await fileSystem.write(output);
-        const source = new Readable();
-        source.pipe(stream);
-        source.push(content);
-        source.push(null);
+        await fileSystem.writeFile(output, content);
       }
     });
   } else {

@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec babel-node -w .env -w ./config -w ./src src/app.js",
     "postinstall": "if [ $STACK ]; then npm run build; fi",
-    "migrate-to-bunnycdn": "babel-node bin/migrate-to-bunnycdn.js",
     "start": "node dist/app.js",
     "build": "babel src -d dist"
   },
@@ -23,7 +22,6 @@
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "aws-cloudfront-sign": "^2.2.0",
-    "aws-sdk": "^2.497.0",
     "axios": "^0.19.0",
     "babel-plugin-module-resolver": "^3.2.0",
     "basic-auth": "^2.0.0",
