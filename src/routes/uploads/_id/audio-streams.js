@@ -26,7 +26,7 @@ const router = new Router({
 
 router.use(verify);
 
-router.post('/audio-streams', json(), api(async req => {
+router.post('/', json(), api(async req => {
   const item = await File.findById(req.params.id);
   item.audioStreams = req.body;
   await item.save();

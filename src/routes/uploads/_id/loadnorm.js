@@ -28,7 +28,7 @@ const router = new Router({
 
 router.use(verify);
 
-router.get('/loudnorm', api(async req => {
+router.get('/', api(async req => {
   const item = await File.findById(req.params.id);
   const source = sourceUtil.getSource(item.name);
 

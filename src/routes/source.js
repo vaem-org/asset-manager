@@ -25,7 +25,6 @@ import {computeSignature, verifySignature} from '@/util/url-signer';
 const router = new Router();
 
 const serve = catchExceptions(async (req, res) => {
-  console.log(req.url);
   const redirect = await config.sourceFileSystem.getSignedUrl(req.url);
   if (redirect) {
     res.redirect(redirect);

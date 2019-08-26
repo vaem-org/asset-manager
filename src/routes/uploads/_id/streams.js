@@ -21,7 +21,7 @@ import { api, verify } from '@/util/express-helpers';
 import * as sourceUtil from '@/util/source';
 import _ from 'lodash';
 import { guessChannelLayout } from '@/util/source';
-import { Asset } from '@/model/asset';
+import { File } from '@/model/file';
 
 const router = new Router({
   mergeParams: true
@@ -29,8 +29,14 @@ const router = new Router({
 
 router.use(verify);
 
-router.get('/streams', api(async req => {
-  const item = await Asset.findById(req.params.id);
+router.get('/', api(async req => {
+  const item = await File.findById(req.params.id);
+  if (!item) {
+    throw {
+      status: 404
+    }
+  }
+
   const source = sourceUtil.getSource(item.name);
   const videoParameters = await sourceUtil.getVideoParameters(
     source
