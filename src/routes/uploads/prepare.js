@@ -35,7 +35,10 @@ router.post('/', json(), api(async req => {
   for (let file of req.body) {
     let item = await File.findOne({ name: file.name });
     if (!item) {
-      item = new File(file);
+      item = new File({
+        ...file,
+        state: 'prepared'
+      });
       await item.save();
       newFiles.push(item);
     }

@@ -20,7 +20,7 @@ import config from '~config';
 import rangeParser from 'range-parser';
 import { Router } from 'express';
 import { catchExceptions, verify } from '~/util/express-helpers';
-import {computeSignature, verifySignature} from '@/util/url-signer';
+import { verifySignature } from '@/util/url-signer';
 
 const router = new Router();
 

@@ -23,7 +23,7 @@ import * as fileType from '../util/file-type';
 const schema = new mongoose.Schema({
     name: {type: String, unique: true},
     size: {type: Number, default: 0},
-    state: {type: String, enum: ['idle', 'uploading', 'complete'], default: 'idle'},
+    state: {type: String, enum: ['prepared', 'idle', 'uploading', 'complete'], default: 'idle'},
     uploaded: {type: Number, default: 0},
     asset: {type: mongoose.Schema.Types.ObjectId, ref: 'Asset'},
     audioStreams: {type: Object}

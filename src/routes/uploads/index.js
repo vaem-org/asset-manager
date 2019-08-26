@@ -80,7 +80,8 @@ router.get('/', api(async req => {
   }
 
   await File.deleteMany({
-    name: { $not: { $in: files.map(file => file.name) } }
+    name: { $not: { $in: files.map(file => file.path) } },
+    state: { $ne: 'prepared' }
   });
 
   return listDocuments(req, File, req.query.q ? {
@@ -101,7 +102,7 @@ router.put('/:name', catchExceptions(async (req, res) => {
 
   const file = await File.findOneAndUpdate({ name }, {
     name,
-    size: req.headers['content-length'],
+    size: req.query.size,
     state: 'uploading'
   }, {
     upsert: true,
@@ -116,7 +117,7 @@ router.put('/:name', catchExceptions(async (req, res) => {
     io.emit('progress', file);
 
     return res.json({
-      result: file._id
+      id: file._id
     });
   };
 
