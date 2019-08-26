@@ -24,7 +24,11 @@ const router = new Router();
 
 router.use(verify);
 
-router.get('/assets',
-  api(async () => Asset.find({ state: 'processed' }).select('title').sort({ createdAt: -1 })));
+router.get('/',
+  api(async () => Asset
+    .find({ state: 'processed' })
+    .select('title')
+    .sort({ createdAt: -1 })
+  ));
 
 export default router;

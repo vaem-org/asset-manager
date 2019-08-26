@@ -17,26 +17,26 @@
  */
 
 import config from '~config';
-import { Router } from 'express';
-import { catchExceptions, validObjectId, verify } from '@/util/express-helpers';
+import { json, Router } from 'express';
+import { api, verify } from '@/util/express-helpers';
 import { File } from '@/model/file';
 
-const router = new Router({
-  mergeParams: true
-});
+const router = new Router();
 
 router.use(verify);
 
-router.get('/', validObjectId, catchExceptions(async (req, res) => {
-  const item = await File.findById(req.params.id);
-  res.setHeader('content-disposition', `attachment; filename="${item.name}"`);
-  const redirect = await config.sourceFileSystem.getSignedUrl(item.name);
-  if (redirect) {
-    res.redirect(redirect);
-  } else {
-    const input = await config.sourceFileSystem.read(item.name);
-    input.stream.pipe(res);
+router.post('/', json(), api(async req => {
+  const items = await File.find({ _id: { $in: req.body } });
+  for (let item of items) {
+    try {
+      await config.sourceFileSystem.delete(`/${item.name}`);
+    }
+    catch (e) {
+      console.info(`Unable to remove ${item.name}`);
+    }
   }
+
+  await File.deleteMany({ _id: { $in: req.body } });
 }));
 
 export default router;

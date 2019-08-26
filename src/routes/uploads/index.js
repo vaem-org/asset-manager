@@ -91,29 +91,17 @@ router.get('/', api(async req => {
   } : {});
 }));
 
-router.post('/remove', json(), api(async req => {
-  const items = await File.find({ _id: { $in: req.body } });
-  for (let item of items) {
-    try {
-      await fileSystem.delete(`/${item.name}`);
-    }
-    catch (e) {
-      console.info(`Unable to remove ${item.name}`);
-    }
-  }
-
-  await File.deleteMany({ _id: { $in: req.body } });
-}));
-
-router.put('/', catchExceptions(async (req, res) => {
+router.put('/:name', catchExceptions(async (req, res) => {
   let numBytes = 0;
   const offset = parseInt(req.query.offset) || 0;
 
   const throttledEmit = _.throttle(io.emit.bind(io), 250);
 
-  const file = await File.findOneAndUpdate({ name: req.query.name }, {
-    name: req.query.name,
-    size: req.query.size,
+  const name = decodeURIComponent(req.params.name);
+
+  const file = await File.findOneAndUpdate({ name }, {
+    name,
+    size: req.headers['content-length'],
     state: 'uploading'
   }, {
     upsert: true,
@@ -132,7 +120,7 @@ router.put('/', catchExceptions(async (req, res) => {
     });
   };
 
-  const output = await fileSystem.write(req.query.name, {
+  const output = await fileSystem.write(name, {
     start: offset,
     append: offset !== 0
   });

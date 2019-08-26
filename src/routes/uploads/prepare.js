@@ -29,7 +29,7 @@ router.use(verify);
 
 const io = socketio.of('/uploads', null);
 
-router.post('/prepare', json(), api(async req => {
+router.post('/', json(), api(async req => {
   const files = [];
   const newFiles = [];
   for (let file of req.body) {

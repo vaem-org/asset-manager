@@ -19,6 +19,7 @@
 import config from '~config';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
+import { Types } from 'mongoose';
 
 /**
  * Wrap an async function into middleware
@@ -105,4 +106,19 @@ export function decodeToken(req, res, next) {
   }
 
   next();
+}
+
+/**
+ * Middleware to check for valid object id
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+export function validObjectId(req, res, next) {
+  if (!Types.ObjectId.isValid(req.params.id)) {
+    return next('route');
+  } else {
+    return next();
+  }
 }
