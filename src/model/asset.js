@@ -18,10 +18,10 @@
 
 import config from '~config';
 
-import mongoose from 'mongoose';
+import { Schema, model } from 'mongoose';
 import _ from 'lodash';
 
-const schema = new mongoose.Schema({
+const schema = new Schema({
   updatedAt: {type: Date, default: Date.now},
   createdAt: {type: Date, default: Date.now},
   labels: [String],
@@ -34,6 +34,7 @@ const schema = new mongoose.Schema({
   videoParameters: {},
   jobs: [{}],
   source: String,
+  file: {type: Schema.Types.ObjectId, ref: 'File'},
   audio: String,
   subtitles: {},
   hls_enc_key: String,
@@ -59,12 +60,12 @@ schema.methods.removeFiles = function () {
   console.log(`Removing files for asset ${this._id}`);
 
   config.destinationFileSystem.recursivelyDelete(this._id)
-  .catch(`Unable to delete files: ${err.toString()}`);
+  .catch(err => `Unable to delete files: ${err.toString()}`);
 
   this.deleted = true;
 };
 
-const Asset = mongoose.model('Asset', schema);
+const Asset = model('Asset', schema);
 
 Asset.schema.pre('save', function (next) {
   if (this.isModified()) {

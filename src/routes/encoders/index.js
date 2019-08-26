@@ -385,12 +385,12 @@ router.post('/start-job', json(), api(async req => {
   let asset;
 
   if (req.body.assetId) {
-    asset = await Asset.findById(req.body.assetId);
+    asset = await Asset.findById(req.body.assetId).populate('file');
 
     if (!asset) {
       throw 'No asset';
     }
-    source = getSource(asset.source);
+    source = getSource(asset.file ? asset.file.name : asset.source);
     audio = asset.audio;
 
     basename = path.basename(source);
@@ -403,6 +403,7 @@ router.post('/start-job', json(), api(async req => {
       state: 'new',
       source,
       audio,
+      file,
       hls_enc_key: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null,
       hls_enc_iv: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null
     });
