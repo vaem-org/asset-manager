@@ -110,6 +110,7 @@ const getAudioJobs = async (asset, file, source) => {
 
 const encoderIO = socketio.of('/encoder', null);
 const browserIO = socketio.of('/encoders-io', null);
+const globalIO = socketio.of('/global', null);
 
 const router = new Router({});
 
@@ -157,11 +158,13 @@ const processQueue = () => {
 
       console.log(`Starting job on encoder ${id}`);
 
-      sources[current.source].asset.state = 'processing';
-      sources[current.source].asset.save()
-      .catch(err => {
-        console.log('Unable to set state of asset to processing', err);
-      });
+      if (sources[current.source].asset.state !== 'processing') {
+        sources[current.source].asset.state = 'processing';
+        sources[current.source].asset.save()
+        .catch(err => {
+          console.log('Unable to set state of asset to processing', err);
+        });
+      }
 
       // give encoder his job
       sockets[id].emit('new-job', _.assign({}, _.omit(current, 'next'), {
@@ -200,16 +203,13 @@ const sourceDone = async source => {
   try {
     await masterPlaylist(asset._id);
 
-    browserIO.emit('source-done', {
-      filename: source,
-      source: sources[source],
-      started: sources[source].started,
-      ended: (new Date()).getTime()
-    });
+    globalIO.emit('info', `Encoding asset "${sources[source].asset.title}" completed`);
 
     if (config.slackHook) {
       axios.post(config.slackHook, {
         text: `Transcoding asset complete: "${sources[source].asset.title}"`
+      }).catch(e => {
+        console.error(`Unable to use Slack hook, ${e.toString()}`)
       });
     }
 
@@ -329,6 +329,10 @@ encoderIO.on('connection', function (socket) {
           source.asset.save(err => {
             if (err) {
               console.log('Unable to add bitrate to asset');
+            }
+
+            if (source.asset) {
+              globalIO.emit('job-completed', _.pick(source.asset, ['_id', 'bitrates', 'jobs', 'state']));
             }
 
             if (source.completed === source.jobs.length) {
@@ -463,6 +467,12 @@ router.post('/start-job', json(), api(async req => {
 
   await asset.save();
 
+  if (!req.body.assetId) {
+    globalIO.emit('asset-added', {
+      id: asset._id
+    });
+  }
+
   // check if extra audio tracks need to be added
   const audioJobs = await getAudioJobs(asset, file, source);
 
@@ -516,6 +526,8 @@ router.post('/start-job', json(), api(async req => {
     file.asset = asset._id;
     await file.save();
   }
+
+  globalIO.emit('info', `Jobs added for "${asset.title}" started`);
 }));
 
 router.post('/update', api(async () => encoderIO.emit('update')));
@@ -546,7 +558,7 @@ router.delete('/jobs/:index', api(async req => {
 }));
 
 router.get('/docker', api(async req => {
-  return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${req.protocol}//admin:${config.auth.password}@${req.get('host')} vaem/encoder`;
+  return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${req.protocol}//${req.get('host')} vaem/encoder`;
 }));
 
 browserIO.on('connection', socket => {
