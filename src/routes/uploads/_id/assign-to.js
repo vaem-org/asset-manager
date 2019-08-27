@@ -18,8 +18,8 @@
 
 import config from '~config';
 import { Router } from 'express';
-import { basename } from 'path';
-import { createWriteStream, unlink } from 'fs';
+import { basename, dirname } from 'path';
+import { createWriteStream, unlink, ensureDir } from 'fs-extra';
 import { api, verify } from '@/util/express-helpers';
 import { convert } from '@/util/subtitles';
 import { File } from '@/model/file';
@@ -37,6 +37,7 @@ router.post('/:language/:assetId', api(async req => {
   const { stream } = await config.sourceFileSystem.read(item.name);
 
   const tmpFile = `${config.root}/var/tmp/${basename(item.name)}`;
+  await ensureDir(dirname(tmpFile));
   stream.pipe(
     createWriteStream(tmpFile)
   );
