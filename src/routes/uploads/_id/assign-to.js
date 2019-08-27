@@ -18,6 +18,8 @@
 
 import config from '~config';
 import { Router } from 'express';
+import { basename } from 'path';
+import { createWriteStream, unlink } from 'fs';
 import { api, verify } from '@/util/express-helpers';
 import { convert } from '@/util/subtitles';
 import { File } from '@/model/file';
@@ -31,10 +33,28 @@ router.use(verify);
 router.post('/:language/:assetId', api(async req => {
   const item = await File.findById(req.params.id);
 
-  return convert(
+  // copy file to temporary location
+  const { stream } = await config.sourceFileSystem.read(item.name);
+
+  const tmpFile = `${config.root}/var/tmp/${basename(item.name)}`;
+  stream.pipe(
+    createWriteStream(tmpFile)
+  );
+
+  await (new Promise((accept, reject) => {
+    stream.on('end', accept);
+    stream.on('error', reject);
+  }));
+
+  await convert(
     req.params.assetId,
-    `${config.source}/${item.name}`,
+    tmpFile,
     req.params.language);
+
+  // unlink temporary file
+  unlink(tmpFile, () => {
+    // ignore
+  });
 }));
 
 export default router;

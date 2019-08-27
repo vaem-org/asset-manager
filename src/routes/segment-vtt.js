@@ -29,7 +29,6 @@ router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
     return next();
   }
 
-  console.log(req.ip);
   if (!verifySignature(req, 'segment-vtt')) {
     throw {
       status: 403
@@ -62,7 +61,6 @@ router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
   }
 
   if (data) {
-    console.log(`Writing data to ${output}`);
     await config.destinationFileSystem.writeFile(output, data);
   }
 
