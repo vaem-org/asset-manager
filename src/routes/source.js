@@ -30,7 +30,8 @@ const serve = catchExceptions(async (req, res) => {
     res.redirect(redirect);
   } else {
     // parse ranges
-    const stat = await config.sourceFileSystem.get(req.url);
+    const path = decodeURIComponent(req.url);
+    const stat = await config.sourceFileSystem.get(path);
     const ranges = req.headers.range ? rangeParser(stat.size, req.headers.range) : [];
 
     if (ranges === -1) {
@@ -49,7 +50,7 @@ const serve = catchExceptions(async (req, res) => {
       res.setHeader('Content-Length', stat.size);
     }
 
-    const input = await config.sourceFileSystem.read(req.url, {
+    const input = await config.sourceFileSystem.read(path, {
       start: ranges.length === 1 ? ranges[0].start : 0
     });
 
