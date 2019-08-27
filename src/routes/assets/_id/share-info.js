@@ -16,25 +16,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { json, Router } from 'express';
-import moment from 'moment';
-import { api, verify } from '@/util/express-helpers';
-import { computeSignature } from '@/util/url-signer';
+import { Router, json } from 'express';
+import { api } from '@/util/express-helpers';
+import { verifySignature } from '@/util/url-signer';
+import { getStreamInfo } from '@/util/stream';
 
 const router = new Router({
   mergeParams: true
 });
 
-router.use(verify);
+router.post('/:timestamp/:signature', json(), api(async req => {
+  if (!verifySignature(req, req.params.id + req.body.password)) {
+    throw {
+      status: 403,
+      message: req.params.timestamp < Date.now() ? 'Link has expired' : 'Incorrect password'
+    }
+  }
 
-router.post('/', json(), api(async req => {
-  const validTo = moment().add(req.body.weeksValid, 'weeks').valueOf();
-  const signature = computeSignature(
-    req.params.id + req.body.password,
-    validTo
-  );
-
-  return `/${validTo}/${signature}`;
+  return await getStreamInfo(req.params.id, req.ip);
 }));
 
 export default router;

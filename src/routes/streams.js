@@ -29,9 +29,10 @@ import moment from 'moment';
 
 import querystring from 'querystring';
 import { Asset } from '~/model/asset';
-import { api, catchExceptions } from '~/util/express-helpers';
-import {computeSignature, verifySignature} from '@/util/url-signer';
+import { api, catchExceptions, verify } from '~/util/express-helpers';
+import { verifySignature} from '@/util/url-signer';
 import { getSignedUrl } from '~/util/bunnycdn';
+import { getStreamInfo } from '@/util/stream';
 
 /**
  * Parse an m3u8 stream
@@ -95,30 +96,8 @@ const checkAuth = (req, res, next) => {
   next();
 };
 
-router.get('/:assetId/item', api(async req => {
-  const item = await Asset.findById(req.params.assetId);
-
-  if (!item) {
-    throw 'Not found';
-  }
-
-  const timestamp = moment().add(8, 'hours').valueOf();
-  const signature = computeSignature(req.params.assetId, timestamp, req.ip);
-
-  return {
-    streamUrl: `/streams/${timestamp}/${signature}/${req.params.assetId}.m3u8`,
-    subtitles: item.subtitles
-  }
-}));
-
-router.get('/:timestamp/:signature/:assetId/subtitles', checkAuth, api(async req => {
-  const item = await Asset.findById(req.params.assetId);
-
-  if (!item) {
-    throw 'Not found';
-  }
-
-  return item.subtitles;
+router.get('/:assetId/item', verify, api(async req => {
+  return await getStreamInfo(req.params.assetId, req.ip);
 }));
 
 router.get(['/:timestamp/:signature/:assetId.key'],

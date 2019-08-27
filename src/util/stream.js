@@ -16,25 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { json, Router } from 'express';
+import { Asset } from '@/model/asset';
 import moment from 'moment';
-import { api, verify } from '@/util/express-helpers';
 import { computeSignature } from '@/util/url-signer';
+import _ from 'lodash';
 
-const router = new Router({
-  mergeParams: true
-});
+export async function getStreamInfo(assetId, ip) {
+  const item = await Asset.findById(assetId);
 
-router.use(verify);
+  if (!item) {
+    throw 'Not found';
+  }
 
-router.post('/', json(), api(async req => {
-  const validTo = moment().add(req.body.weeksValid, 'weeks').valueOf();
-  const signature = computeSignature(
-    req.params.id + req.body.password,
-    validTo
-  );
+  const timestamp = moment().add(8, 'hours').valueOf();
+  const signature = computeSignature(assetId, timestamp, ip);
 
-  return `/${validTo}/${signature}`;
-}));
-
-export default router;
+  return {
+    streamUrl: `/streams/${timestamp}/${signature}/${assetId}.m3u8`,
+    subtitles: _.mapKeys(_.omitBy(item.subtitles), language => `/streams/subtitles/${assetId}.${language}.vtt`)
+  }
+}
