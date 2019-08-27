@@ -73,9 +73,9 @@ router.get('/', catchExceptions(async (req, res) => {
   .pipe(res);
 }));
 
-router.put('/:language', api(async (req) => {
-  const ext = req.query.name && req.query.name.replace(/^.*\.([^.]+)$/, '$1');
-  if (!req.query.name || !fileType.isSubtitle(req.query.name)) {
+router.put('/:language/:name', api(async (req) => {
+  const ext = req.params.name && req.params.name.replace(/^.*\.([^.]+)$/, '$1');
+  if (!req.params.name || !fileType.isSubtitle(req.params.name)) {
     throw {
       status: 500,
       message: 'Invalid filename'
