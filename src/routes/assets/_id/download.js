@@ -16,27 +16,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '~config';
-import { catchExceptions } from '@/util/express-helpers';
+import { api, catchExceptions, verify } from '@/util/express-helpers';
 import { spawn } from 'child_process';
 import { Router } from 'express';
-import { computeSignature } from '@/util/url-signer';
+import { computeSignature, verifySignature } from '@/util/url-signer';
 import moment from 'moment';
 import { Asset } from '@/model/asset';
 import _ from 'lodash';
 import slug from 'slug';
-import jwt from 'jsonwebtoken';
 
-const router = new Router();
+const router = new Router({
+  mergeParams: true
+});
 
-router.get('/', catchExceptions(async (req, res) => {
-  let token = null;
-  try {
-    token = jwt.verify(req.query.token, config.jwtSecret);
-  }
-  catch (e) {
-  }
-  if (!token) {
+router.get('/', verify, api(async req => {
+  const timestamp = Date.now() + 120*1000;
+  const signature = computeSignature(req.params.id, timestamp);
+  return `/assets/${req.params.id}/download/${timestamp}/${signature}/stream.ts`;
+}));
+
+router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) => {
+  if (!verifySignature(req, req.params.id)) {
     throw {
       status: 401
     }

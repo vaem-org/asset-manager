@@ -29,13 +29,13 @@ const router = new Router({
   mergeParams: true
 });
 
-router.use(verify);
-
 router.get('/:language', catchExceptions(async (req, res, next) => {
+  console.log(req.url);
   try {
     jwt.verify(req.query.token, config.jwtSecret);
   }
   catch (e) {
+    console.error(e);
     throw {
       status: 401
     }
@@ -56,6 +56,8 @@ router.get('/:language', catchExceptions(async (req, res, next) => {
   fs.createReadStream(path)
   .pipe(res);
 }));
+
+router.use(verify);
 
 router.get('/', catchExceptions(async (req, res) => {
   const path = `${config.root}/var/subtitles/${req.params.id}.nl.vtt`;

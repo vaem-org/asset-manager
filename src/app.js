@@ -21,8 +21,9 @@ import 'dotenv/config';
 import glob from 'glob';
 import path from 'path';
 import cors from 'cors';
+import _ from 'lodash';
 import { initMongoose } from '~/util/mongoose';
-import { server as socketIOServer, app } from './util/socketio';
+import { app, server as socketIOServer } from './util/socketio';
 
 app.use(cors({
   origin: true,
@@ -35,17 +36,19 @@ app.get('/_alive', (req, res) => res.end('alive'));
 
 // add routes
 const root = `${__dirname}/routes`;
-glob
-.sync('**/*.js', { cwd: root })
-.forEach(file => {
-  const route = '/' + file
+const routes = _.mapKeys(glob
+  .sync('**/*.js', { cwd: root })
+, path =>
+    '/' + path
     .replace(/\.js$/, '')
     .split('/')
     .map(component => component.replace(/^_/, ':'))
     .join('/')
     .replace(/(\/|^)index$/, '')
-  ;
-  const router = require(path.join(root, file)).default;
+);
+
+Object.keys(routes).sort().reverse().forEach(route => {
+  const router = require(path.join(root, routes[route])).default;
   if (typeof router === 'function') {
     console.log(`Adding route: ${route}`);
     app.use(route, router);
