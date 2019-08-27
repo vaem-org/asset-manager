@@ -16,14 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '~config';
-import fs from 'fs-extra';
 import _ from 'lodash';
-import { Router, json, static as expressStatic } from 'express';
-import sharp from 'sharp';
+import { Router, json } from 'express';
 
-import { api, catchExceptions, verify } from '~/util/express-helpers';
-import { createThumbnail } from '~/util/ffmpeg-thumbnail';
+import { api, verify } from '~/util/express-helpers';
 
 import { Asset } from '~/model/asset';
 import { listDocuments } from '~/util/list-documents';
@@ -73,44 +69,6 @@ router.post('/remove', json(), api(async req => {
   }
 
   return true;
-}));
-
-const thumbnails = `${config.root}/var/thumbnails`;
-fs.ensureDir(thumbnails).catch(e => console.error(e));
-
-router.use('/thumbnails', expressStatic(thumbnails, {
-  maxAge: 7 * 24 * 3600 * 1000
-}));
-
-router.get([
-  '/thumbnails/:assetId.(jpg|png)',
-  '/thumbnails/:time/:assetId.(jpg|png)'
-], catchExceptions(async (req, res, next) => {
-  const item = await Asset.findById(req.params.assetId);
-  if (!item) {
-    console.log('Item not found');
-    return next('route');
-  }
-
-  if (!await fs.exists(`${thumbnails}/${req.params.assetId}.png`)) {
-    // create png thumbnail with ffmpeg
-    const url = `${config.outputBase || req.base}/player/streams/${req.session.id}/${req.params.assetId}.m3u8`;
-    await createThumbnail(url,
-      `${thumbnails}/${req.params.assetId}.png`,
-      req.params.time || '0:00:00');
-  }
-
-  if (req.params[0] === 'jpg' && !await fs.exists(`${thumbnails}/${req.params.assetId}.jpg`)) {
-    await sharp(`${thumbnails}/${req.params.assetId}.png`)
-    .jpeg({
-      quality: 60
-    })
-    .toFile(`${thumbnails}/${req.params.assetId}.jpg`);
-  }
-
-  fs
-  .createReadStream(`${thumbnails}/${req.params.assetId}.${req.params[0]}`)
-  .pipe(res);
 }));
 
 export default router;

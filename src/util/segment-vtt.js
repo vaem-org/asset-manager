@@ -18,14 +18,15 @@
 
 import child_process from 'child_process';
 import _ from 'lodash';
-import fs from 'fs-extra';
 import util from 'util';
 import config from '../../config/config';
 import {Asset} from '../model/asset';
+import { computeSignature } from '@/util/url-signer';
 
 const execFile = util.promisify(child_process.execFile);
 
 const run = args => new Promise((accept, reject) => {
+  console.log(`ffmpeg ${args.map(cmd => `"${cmd}"`).join(' ')}`);
   child_process.spawn('ffmpeg', args, {stdio: 'inherit'})
     .on('close', code => {
       if (code === 0) {
@@ -37,15 +38,13 @@ const run = args => new Promise((accept, reject) => {
     });
 });
 
-const segmentVtt = async (base, assetId, lang) => {
+const segmentVtt = async (source, assetId, lang) => {
   const root = config.output;
   const item = await Asset.findById(assetId);
 
   if (!item) {
     throw 'Item not found';
   }
-
-  const source = `${base}/${assetId}.235k.m3u8`;
 
   const {stdout} = await execFile('ffprobe', [
     '-v', 'error',
@@ -69,9 +68,10 @@ const segmentVtt = async (base, assetId, lang) => {
     throw 'No frames found for asset';
   }
 
-  if (!config.s3) {
-    fs.ensureDirSync(`${root}/${assetId}/subtitles/`);
-  }
+  await config.destinationFileSystem.ensureDir(`${assetId}/subtitles`);
+
+  const timestamp = Date.now() + 4 * 3600 * 1000;
+  const signature = computeSignature('segment-vtt', timestamp);
 
   await run(
     [
@@ -85,10 +85,10 @@ const segmentVtt = async (base, assetId, lang) => {
       '-hls_list_size', 0,
       '-hls_playlist_type', 'vod',
       '-hls_time', 10,
-      '-hls_segment_filename', `http://localhost:${config.port}/segment-vtt/null.%d.ts`,
+      '-hls_segment_filename', `http://127.0.0.1:${config.port}/${timestamp}/${signature}/segment-vtt/null.%d.ts`,
       '-method', 'PUT',
       '-c', 'copy',
-      `http://localhost:${config.port}/segment-vtt/${pkt_pts}/${assetId}/subtitles/${lang}..m3u8`
+      `http://127.0.0.1:${config.port}/segment-vtt/${timestamp}/${signature}/${pkt_pts}/${assetId}/subtitles/${lang}..m3u8`
     ]);
 };
 

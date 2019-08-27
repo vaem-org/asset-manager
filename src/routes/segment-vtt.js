@@ -17,13 +17,24 @@
  */
 
 import config from '~config';
-import { Readable } from 'stream';
 import { Router } from 'express';
-import { catchExceptions, verify } from '@/util/express-helpers';
+import { catchExceptions } from '@/util/express-helpers';
+import { verifySignature } from '@/util/url-signer';
 
 const router = new Router();
 
-router.use(verify, catchExceptions(async (req, res) => {
+router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  if (!['PUT', 'POST'].includes(req.method)) {
+    return next();
+  }
+
+  console.log(req.ip);
+  if (!verifySignature(req, 'segment-vtt')) {
+    throw {
+      status: 403
+    }
+  }
   const path = req.path.split('/');
 
   let output = '/' + path.slice(2).join('/');
@@ -46,16 +57,16 @@ router.use(verify, catchExceptions(async (req, res) => {
     data = Buffer.concat(buffers).toString().replace(
       /WEBVTT/g, 'WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:' + pkt_pts + ',LOCAL:00:00:00.000');
   } else if (req.path.search(/\._vtt\.m3u8$/) !== -1) {
+    output = output.replace(/\._vtt\.m3u8$/, '.m3u8');
     data = Buffer.concat(buffers);
   }
 
   if (data) {
-    const { stream } = await config.destinationFileSystem.write(output);
-    const source = new Readable();
-    source.push(data);
-    source.push(null);
-    source.pipe(stream);
+    console.log(`Writing data to ${output}`);
+    await config.destinationFileSystem.writeFile(output, data);
   }
 
   res.end();
 }));
+
+export default router;

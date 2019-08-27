@@ -25,6 +25,7 @@ import util from 'util';
 
 import segmentVtt from './segment-vtt';
 import { Asset } from '~/model/asset';
+import { getStreamInfo } from '@/util/stream';
 
 const outputDir = `${config.root}/var/subtitles`;
 
@@ -49,16 +50,17 @@ const convertSubrip = async (source, destination) => {
 
 /**
  * Convert a subtitle file
- * @param {String} base the base url of the asset manager for segmenting webvtt
  * @param {String} assetId
  * @param {String} sourceFile
  * @param {String} lang
  */
-const convert = async (base, assetId, sourceFile, lang) => {
+const convert = async (assetId, sourceFile, lang) => {
   const vtt = sourceFile.replace(/\.[^.]+$/, '.vtt');
   const ext = sourceFile.replace(/^.*\.([^.]+)$/, '$1');
   const destination = `${outputDir}/${assetId}.${lang}.vtt`;
   const srt = sourceFile.replace(/\.[^.]+$/, '.srt');
+
+  const source = await getStreamInfo(assetId, '127.0.0.1');
 
   if (ext === 'stl') {
     // convert to srt using python
@@ -109,7 +111,7 @@ const convert = async (base, assetId, sourceFile, lang) => {
   item.subtitles = Object.assign(item.subtitles || {}, { [lang]: true });
   await item.save();
 
-  await segmentVtt(base, assetId, lang);
+  await segmentVtt(`http://127.0.0.1:${config.port}${source.streamUrl}`, assetId, lang);
   console.log('Segmenting VTT successful');
 };
 

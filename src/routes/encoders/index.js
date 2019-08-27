@@ -527,7 +527,7 @@ router.post('/start-job', json(), api(async req => {
     await file.save();
   }
 
-  globalIO.emit('info', `Jobs added for "${asset.title}" started`);
+  globalIO.emit('info', `Jobs added for "${asset.title}"`);
 }));
 
 router.post('/update', api(async () => encoderIO.emit('update')));

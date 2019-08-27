@@ -93,7 +93,7 @@ router.put('/:language', api(async (req) => {
     req.pipe(output);
   }));
 
-  await subtitleConvert(`http://localhost:${config.port}/streams/-/-`,
+  await subtitleConvert(
     req.params.id,
     sourceFile,
     lang);

@@ -44,3 +44,4 @@ bin/sandbox.js
 bin/test.js
 docker-compose.override.yml
 .env
+/dist/

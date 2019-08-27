@@ -19,7 +19,7 @@
 import config from '~config';
 import { Router } from 'express';
 import { api, verify } from '@/util/express-helpers';
-import * as subtitles from '@/util/subtitles';
+import { convert } from '@/util/subtitles';
 import { File } from '@/model/file';
 
 const router = new Router({
@@ -31,8 +31,7 @@ router.use(verify);
 router.post('/:language/:assetId', api(async req => {
   const item = await File.findById(req.params.id);
 
-  return subtitles.convert(
-    `http://localhost:${config.port}/player/streams/-/-`,
+  return convert(
     req.params.assetId,
     `${config.source}/${item.name}`,
     req.params.language);
