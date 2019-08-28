@@ -6,7 +6,6 @@ volumes:
 services:
   app:
     image: vaem/asset-manager
-    build: .
     ports:
     - 5000:5000
     environment:
@@ -24,6 +23,6 @@ services:
       ASSETMANAGER_URL: http://app:5000/
 
   mongo:
-    image: mongo
+    image: mongo:4.2.0
     volumes:
       - db:/data/db

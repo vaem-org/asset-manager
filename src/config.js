@@ -15,11 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-require('dotenv').config();
-
-const { fileSystemFromURL } = require('@vaem/filesystem');
-
-const fs = require('fs');
+import 'dotenv/config';
+import { fileSystemFromURL } from '@vaem/filesystem';
+import fs from 'fs';
+import { URL } from 'url';
 
 const root = fs.realpathSync(`${__dirname}/..`);
 
@@ -29,6 +28,16 @@ const merge = (object, files) => {
   files.forEach(file => Object.assign(object, fs.existsSync(file) ? require(file) : {}));
   return object;
 };
+
+let googleAuth = null;
+const authUrl = process.env.AUTH_URL && new URL(process.env.AUTH_URL);
+if (authUrl && authUrl.protocol === 'google:') {
+  googleAuth = {
+      clientId: authUrl.username,
+      clientSecret: authUrl.password,
+      hd: authUrl.hostname
+  }
+}
 
 const source = `${root}/var/uploads`;
 const config = merge({
@@ -75,7 +84,9 @@ const config = merge({
     clientId: process.env.AZURE_CLIENT_ID,
     secret: process.env.AZURE_SECRET,
     tenantId: process.env.AZURE_TENANT_ID
-  }
+  },
+
+  googleAuth
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;
