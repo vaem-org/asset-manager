@@ -26,6 +26,7 @@ import m3u8 from 'm3u8';
 import cloudfrontSign from 'aws-cloudfront-sign';
 import path from 'path';
 import moment from 'moment';
+import { createReadStream, access, constants } from 'fs';
 
 import querystring from 'querystring';
 import { Asset } from '~/model/asset';
@@ -33,6 +34,10 @@ import { api, catchExceptions, verify } from '~/util/express-helpers';
 import { verifySignature} from '@/util/url-signer';
 import { getSignedUrl } from '~/util/bunnycdn';
 import { getStreamInfo } from '@/util/stream';
+
+const exists = filename => new Promise((accept) => {
+  access(filename, constants.R_OK, err => accept(!err));
+});
 
 /**
  * Parse an m3u8 stream
@@ -80,9 +85,6 @@ const cloudfrontSignCookies = path => cloudfrontSign.getSignedCookies(
     })
 );
 
-
-router.use('/subtitles', expressStatic(`${config.root}/var/subtitles`));
-
 // check authentication of stream
 const checkAuth = (req, res, next) => {
   if (config.publicStreams) {
@@ -98,6 +100,18 @@ const checkAuth = (req, res, next) => {
 
 router.get('/:assetId/item', verify, api(async req => {
   return await getStreamInfo(req.params.assetId, req.ip);
+}));
+
+router.use('/:timestamp/:signature/:assetId.:language.vtt', checkAuth, catchExceptions(async (req, res) => {
+  const filename = `${config.root}/var/subtitles/${req.params.assetId}.${req.params.language}.vtt`;
+  if (!await exists(filename)) {
+    throw {
+      status: 404
+    }
+  }
+
+  createReadStream(filename)
+    .pipe(res);
 }));
 
 router.get(['/:timestamp/:signature/:assetId.key'],

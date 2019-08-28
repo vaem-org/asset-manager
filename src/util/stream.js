@@ -33,6 +33,6 @@ export async function getStreamInfo(assetId, ip) {
 
   return {
     streamUrl: `/streams/${timestamp}/${signature}/${assetId}.m3u8`,
-    subtitles: _.mapValues(_.pickBy(item.subtitles), (enabled, language) => `/streams/subtitles/${assetId}.${language}.vtt`)
+    subtitles: _.mapValues(_.pickBy(item.subtitles), (enabled, language) => `/streams/${timestamp}/${signature}/${assetId}.${language}.vtt`)
   }
 }
