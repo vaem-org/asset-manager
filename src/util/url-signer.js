@@ -4,11 +4,10 @@ import crypto from 'crypto';
  * Compute a signature for given asset
  * @param {String} source the source string to perform a hash on
  * @param {int} validTo a unix timestamp to which the signature is considered valid
- * @param {String} ip the client's ip address
  */
-export function computeSignature(source, validTo, ip='') {
+export function computeSignature(source, validTo) {
   return crypto.createHmac('sha256', process.env.SIGNATURE_SECRET)
-    .update(source + validTo + ip)
+    .update(source + validTo)
     .digest('hex')
 }
 
@@ -16,10 +15,9 @@ export function computeSignature(source, validTo, ip='') {
  * Verify a url signature
  * @param {Request} req
  * @param {String} source
- * @param {String} ip
  * @returns {boolean}
  */
-export function verifySignature(req, source=null, ip='') {
+export function verifySignature(req, source=null) {
   // timestamp should be before now
   if (req.params.timestamp < Date.now()) {
     return false;
@@ -28,8 +26,7 @@ export function verifySignature(req, source=null, ip='') {
   // validate signature
   const signature = computeSignature(
     source || req.url,
-    req.params.timestamp,
-    ip
+    req.params.timestamp
   );
 
   return signature === req.params.signature;

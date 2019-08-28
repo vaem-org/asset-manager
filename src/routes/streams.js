@@ -91,7 +91,7 @@ const checkAuth = (req, res, next) => {
     return next();
   }
 
-  if (!verifySignature(req, req.params.assetId || req.url.split('/')[1], req.ip)) {
+  if (!verifySignature(req, req.params.assetId || req.url.split('/')[1])) {
     return res.status(403).end();
   }
 

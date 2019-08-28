@@ -84,7 +84,7 @@ const getDuration = async source => {
     }
 
     const timestamp = moment().add(8, 'hours').valueOf();
-    const signature = computeSignature(assetId, timestamp, '10.1.0.122');
+    const signature = computeSignature(assetId, timestamp);
     const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${assetId}.${bitrate}.m3u8`;
     console.info(`Checking duration for ${bitrate}`);
     const duration = await getDuration(videoUrl);

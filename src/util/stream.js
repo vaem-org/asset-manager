@@ -21,7 +21,7 @@ import moment from 'moment';
 import { computeSignature } from '@/util/url-signer';
 import _ from 'lodash';
 
-export async function getStreamInfo(assetId, ip) {
+export async function getStreamInfo(assetId) {
   const item = await Asset.findById(assetId);
 
   if (!item) {
@@ -29,7 +29,7 @@ export async function getStreamInfo(assetId, ip) {
   }
 
   const timestamp = moment().add(8, 'hours').valueOf();
-  const signature = computeSignature(assetId, timestamp, ip);
+  const signature = computeSignature(assetId, timestamp);
 
   return {
     streamUrl: `/streams/${timestamp}/${signature}/${assetId}.m3u8`,

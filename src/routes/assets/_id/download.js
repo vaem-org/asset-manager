@@ -47,7 +47,7 @@ router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) 
   const audioStream = asset.audioStreams.find(item => item.bitrate === 'aac-128k');
 
   const timestamp = moment().add(8, 'hours').valueOf();
-  const signature = computeSignature(req.params.id, timestamp, req.ip);
+  const signature = computeSignature(req.params.id, timestamp);
 
   const videoUrl = `${req.protocol}://${req.get('host')}/streams/${timestamp}/${signature}/${videoStream.filename}`;
   const audioUrl = audioStream && `${req.protocol}://${req.get('host')}/streams/${timestamp}/${signature}/${audioStream.filename}`;
