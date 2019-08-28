@@ -19,7 +19,7 @@
 import child_process from 'child_process';
 import _ from 'lodash';
 import util from 'util';
-import config from '../../config/config';
+import config from '../config';
 import {Asset} from '../model/asset';
 import { computeSignature } from '@/util/url-signer';
 

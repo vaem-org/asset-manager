@@ -3,5 +3,5 @@
 node_modules
 /var
 /public/build
-/src
+dist
 .env

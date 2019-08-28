@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '../config/config';
+import config from '@/config';
 import mongoose from 'mongoose';
 import masterPlaylist from '../src/util/master-playlist';
 

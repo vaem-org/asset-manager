@@ -26,8 +26,7 @@ module.exports = {
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
-      "~": resolve(__dirname, "src"),
-      "~config": resolve(__dirname, "config/config.js")
+      "~": resolve(__dirname, "src")
     }
   }
 };

@@ -1,14 +1,22 @@
-FROM vaem/node-ffmpeg:10.11.0-1
+FROM jrottenberg/ffmpeg:4.1-alpine
+FROM node:10.16.2-alpine
 
 # add mono for running Subtitle Edit for subtitle conversion
-RUN apt-get update && \
-	apt-get -y install mono-devel xvfb tzdata libgtk2.0-0 && \
-	rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
+    apk add --no-cache xvfb
+
+COPY --from=0 / /
+
+COPY ./lib/xvfb-run /usr/bin
 
 COPY . /app
 
 WORKDIR /app
 
-RUN yarn install
+ENV NODE_ENV=production
+
+RUN NODE_ENV=development yarn install  && yarn build && rm -rv src/ && \
+    yarn install --production && \
+    cd node_modules/@vaem/filesystem && NODE_ENV=development yarn
 
 CMD ["yarn", "start"]

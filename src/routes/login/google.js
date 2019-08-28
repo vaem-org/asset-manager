@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '~config';
+import config from '@/config';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 import { Router } from 'express';

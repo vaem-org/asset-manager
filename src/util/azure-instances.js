@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '~config';
+import config from '@/config';
 import {range} from 'lodash';
 
 import {URL} from 'url';

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '~config';
+import config from '@/config';
 
 import { Schema, model } from 'mongoose';
 import _ from 'lodash';

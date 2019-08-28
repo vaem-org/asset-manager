@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '~config';
+import config from '@/config';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';

@@ -8,7 +8,7 @@
     "dev": "nodemon --exec babel-node -w .env -w ./config -w ./src src/app.js",
     "postinstall": "if [ $STACK ]; then npm run build; fi",
     "start": "node dist/app.js",
-    "build": "babel src -d dist"
+    "build": "babel src -d dist --delete-dir-on-start"
   },
   "author": "Wouter van de Molengraft",
   "license": "UNLICENSED",

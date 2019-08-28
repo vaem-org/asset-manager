@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2018  Wouter van de Molengraft
+ * Copyright (C) 2019  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ const config = merge({
     allowIp: (process.env.ALLOW_IP || '').split(',').filter(value => value.length !== 0)
   },
 
-  profiles: require(`${__dirname}/profiles.json`),
+  profiles: require(`${root}/config/profiles.json`),
 
   hlsEnc: true,
 
@@ -78,6 +78,6 @@ const config = merge({
     secret: process.env.AZURE_SECRET,
     tenantId: process.env.AZURE_TENANT_ID
   }
-}, [`${__dirname}/local.js`, `${__dirname}/../var/config.js`]);
+}, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;

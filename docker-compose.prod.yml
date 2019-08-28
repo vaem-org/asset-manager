@@ -1,29 +1,28 @@
 version: "3"
 volumes:
   var:
+  db:
+
 services:
   app:
-    image: vaem/asset-manager
+#    image: vaem/asset-manager
+    build: .
     ports:
-    - 1234:1234
+    - 5000:5000
     environment:
       MONGO_URL: mongodb://mongo:27017/asset-manager
-      MEMCACHED_URL: memcached://memcached:11211
-      PASSWORD: admin
-      SIMPLE_ENCRYPTOR_KEY: 'my secret key of at least 16 characters'
       NODE_ENV: production
-      SOURCE_BASE: http://admin:admin@app:1234/source/
       SIGNATURE_SECRET: 'my signature secret'
+      JWT_SECRET: 'my jwt secret'
     volumes:
       - var:/app/var
 
   encoder:
     image: vaem/encoder
     environment:
-      ASSETMANAGER_URL: http://admin:admin@app:1234/
+      ASSETMANAGER_URL: http://app:5000/
 
   mongo:
     image: mongo
-
-  memcached:
-    image: memcached
+    volumes:
+      - data:/data/db

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '~config';
+import config from '@/config';
 import { json, Router } from 'express';
 import { api, catchExceptions, validObjectId, verify } from '@/util/express-helpers';
 import { Asset } from '@/model/asset';

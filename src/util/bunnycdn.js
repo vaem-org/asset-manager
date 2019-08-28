@@ -17,7 +17,7 @@
  */
 
 import {createHash} from 'crypto';
-import config from '~config';
+import config from '@/config';
 
 export function getSignedUrl(path, expires) {
   const digest = createHash('md5')

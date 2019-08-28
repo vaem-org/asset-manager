@@ -1,4 +1,4 @@
-import config from '~config';
+import config from '@/config';
 import { Router } from 'express';
 import { catchExceptions } from '@/util/express-helpers';
 import { Asset } from '@/model/asset';
