@@ -56,8 +56,6 @@ const config = merge({
   output: `${root}/var/output`,
   source,
 
-  publicStreams: process.env.PUBLIC_STREAMS,
-
   base: process.env.BASE,
 
   destinationFileSystem: fileSystemFromURL(process.env.DESTINATION_FS || `file://${root}/var/output`),

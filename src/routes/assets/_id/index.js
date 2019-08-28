@@ -56,7 +56,6 @@ router.delete('/', validObjectId, api(async req => {
   await asset.save();
 }));
 
-
 const thumbnails = `${config.root}/var/thumbnails`;
 fs.ensureDir(thumbnails).catch(e => console.error(e));
 

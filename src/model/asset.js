@@ -39,7 +39,8 @@ const schema = new Schema({
   subtitles: {},
   hls_enc_key: String,
   hls_enc_iv: String,
-  deleted: Boolean
+  deleted: Boolean,
+  public: Boolean
 });
 
 let labelsCache = {};

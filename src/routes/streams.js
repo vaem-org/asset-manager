@@ -86,17 +86,15 @@ const cloudfrontSignCookies = path => cloudfrontSign.getSignedCookies(
 );
 
 // check authentication of stream
-const checkAuth = (req, res, next) => {
-  if (config.publicStreams) {
-    return next();
-  }
+const checkAuth = catchExceptions(async (req, res, next) => {
+  req.item = await Asset.findById(req.params.assetId);
 
-  if (!verifySignature(req, req.params.assetId || req.url.split('/')[1])) {
+  if (!req.item.public && !verifySignature(req, req.params.assetId || req.url.split('/')[1])) {
     return res.status(403).end();
   }
 
   next();
-};
+});
 
 router.get('/:assetId/item', verify, api(async req => {
   return await getStreamInfo(req.params.assetId, req.ip);
@@ -116,8 +114,8 @@ router.use('/:timestamp/:signature/:assetId.:language.vtt', checkAuth, catchExce
 
 router.get(['/:timestamp/:signature/:assetId.key'],
   checkAuth,
-  catchExceptions(async (req, res, next) => {
-    const item = await Asset.findById(req.params.assetId);
+  (req, res, next) => {
+    const item = req.item;
     if (!item) {
       return next();
     }
@@ -126,14 +124,14 @@ router.get(['/:timestamp/:signature/:assetId.key'],
     res.setHeader('cache-control', 'private,max-age=604800');
 
     res.send(Buffer.from(item.hls_enc_key, 'hex'));
-  }));
+  });
 
 router.get([
   '/:timestamp/:signature/:assetId/subtitles/:language.m3u8',
   '/:timestamp/:signature/:assetId.:bitrate.m3u8',
   '/:timestamp/:signature/:assetId.m3u8'
 ], checkAuth, catchExceptions(async (req, res) => {
-  const asset = await Asset.findById(req.params.assetId);
+  const asset = req.item;
 
   let base =
     `${req.base}/streams/`
