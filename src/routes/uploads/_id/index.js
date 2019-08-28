@@ -27,7 +27,7 @@ const router = new Router({
 
 router.use(verify);
 
-router.get('/', validObjectId, catchExceptions(async (req, res) => {
+router.get('/', validObjectId('id'), catchExceptions(async (req, res) => {
   const item = await File.findById(req.params.id);
   res.setHeader('content-disposition', `attachment; filename="${item.name}"`);
   const redirect = await config.sourceFileSystem.getSignedUrl(item.name);

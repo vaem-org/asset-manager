@@ -30,7 +30,7 @@ import { createReadStream, access, constants } from 'fs';
 
 import querystring from 'querystring';
 import { Asset } from '~/model/asset';
-import { api, catchExceptions, verify } from '~/util/express-helpers';
+import { api, catchExceptions, validObjectId, verify } from '~/util/express-helpers';
 import { verifySignature} from '@/util/url-signer';
 import { getSignedUrl } from '~/util/bunnycdn';
 import { getStreamInfo } from '@/util/stream';
@@ -101,9 +101,13 @@ const checkAuth = catchExceptions(async (req, res, next) => {
   next();
 });
 
-router.get('/:assetId/item', verify, api(async req => {
+const streaminfo = api(async req => {
   return await getStreamInfo(req.params.assetId, req.ip);
-}));
+});
+
+router.get('/:assetId/item', verify, streaminfo);
+
+router.get('/:timestamp/:signature/:assetId', validObjectId('assetId'), checkAuth, streaminfo);
 
 router.use('/:timestamp/:signature/:assetId.:language.vtt', checkAuth, catchExceptions(async (req, res) => {
   const filename = `${config.root}/var/subtitles/${req.params.assetId}.${req.params.language}.vtt`;

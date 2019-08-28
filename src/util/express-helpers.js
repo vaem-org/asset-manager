@@ -110,15 +110,15 @@ export function decodeToken(req, res, next) {
 
 /**
  * Middleware to check for valid object id
- * @param req
- * @param res
- * @param next
- * @returns {*}
+ * @param {String} paramName the name of the route parameter to check
+ * @returns {*} an express middleware function
  */
-export function validObjectId(req, res, next) {
-  if (!Types.ObjectId.isValid(req.params.id)) {
-    return next('route');
-  } else {
-    return next();
-  }
+export function validObjectId(paramName) {
+  return (req, res, next) => {
+    if (!Types.ObjectId.isValid(req.params[paramName])) {
+      return next('route');
+    } else {
+      return next();
+    }
+  };
 }

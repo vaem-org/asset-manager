@@ -31,9 +31,9 @@ const router = new Router({
 
 router.use(verify);
 
-router.get('/', validObjectId, api(async (req) => Asset.findById(req.params.id)));
+router.get('/', validObjectId('id'), api(async (req) => Asset.findById(req.params.id)));
 
-router.post('/', validObjectId, json(), api(async req => {
+router.post('/', validObjectId('id'), json(), api(async req => {
   const asset = await Asset.findById(req.params.id);
   if (!asset) {
     throw {
@@ -44,7 +44,7 @@ router.post('/', validObjectId, json(), api(async req => {
   await asset.save();
 }));
 
-router.delete('/', validObjectId, api(async req => {
+router.delete('/', validObjectId('id'), api(async req => {
   const asset = await Asset.findById(req.params.id);
   if (!asset) {
     throw {
