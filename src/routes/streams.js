@@ -87,7 +87,12 @@ const cloudfrontSignCookies = path => cloudfrontSign.getSignedCookies(
 
 // check authentication of stream
 const checkAuth = catchExceptions(async (req, res, next) => {
-  req.item = await Asset.findById(req.params.assetId);
+  const assetId = req.params.assetId || req.path.split('/')[1];
+  req.item = await Asset.findById(assetId);
+
+  if (!req.item) {
+    return res.status(404).end();
+  }
 
   if (!req.item.public && !verifySignature(req, req.params.assetId || req.url.split('/')[1])) {
     return res.status(403).end();
