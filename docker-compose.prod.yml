@@ -5,7 +5,7 @@ volumes:
 
 services:
   app:
-#    image: vaem/asset-manager
+    image: vaem/asset-manager
     build: .
     ports:
     - 5000:5000
@@ -14,6 +14,7 @@ services:
       NODE_ENV: production
       SIGNATURE_SECRET: 'my signature secret'
       JWT_SECRET: 'my jwt secret'
+      BASE: 'public base url'
     volumes:
       - var:/app/var
 
@@ -25,4 +26,4 @@ services:
   mongo:
     image: mongo
     volumes:
-      - data:/data/db
+      - db:/data/db

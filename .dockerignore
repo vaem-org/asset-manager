@@ -1,7 +1,6 @@
 .idea
 .git
 node_modules
-/var
-/public/build
+var
 dist
 .env
