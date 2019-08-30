@@ -29,13 +29,28 @@ const merge = (object, files) => {
   return object;
 };
 
-let googleAuth = null;
+let auth = null;
 const authUrl = process.env.AUTH_URL && new URL(process.env.AUTH_URL);
-if (authUrl && authUrl.protocol === 'google:') {
-  googleAuth = {
-      clientId: authUrl.username,
-      clientSecret: authUrl.password,
-      hd: authUrl.hostname
+if (authUrl) {
+  switch(authUrl.protocol) {
+    case 'google:':
+      auth = {
+        provider: 'google',
+        clientId: authUrl.username,
+        clientSecret: authUrl.password,
+        hd: authUrl.hostname
+      };
+      break;
+
+    case 'local:':
+      auth = {
+        provider: 'local',
+        password: authUrl.hostname
+      };
+      break;
+
+    default:
+      throw `Unknown authentication protocol ${authUrl.protocol}`;
   }
 }
 
@@ -48,11 +63,7 @@ const config = merge({
 
   jwtSecret: process.env.JWT_SECRET,
 
-  auth: {
-    username: 'admin',
-    password: process.env.PASSWORD,
-    allowIp: (process.env.ALLOW_IP || '').split(',').filter(value => value.length !== 0)
-  },
+  auth,
 
   profiles: require(`${root}/config/profiles.json`),
 
@@ -84,9 +95,7 @@ const config = merge({
     clientId: process.env.AZURE_CLIENT_ID,
     secret: process.env.AZURE_SECRET,
     tenantId: process.env.AZURE_TENANT_ID
-  },
-
-  googleAuth
+  }
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;

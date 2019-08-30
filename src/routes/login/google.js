@@ -18,14 +18,14 @@
 
 import config from '@/config';
 import jwt from 'jsonwebtoken';
-import _ from 'lodash';
-import { Router } from 'express';
+import { Router, json } from 'express';
 import { OAuth2Client } from 'google-auth-library';
-import { catchExceptions } from '@/util/express-helpers';
+import { api, catchExceptions } from '@/util/express-helpers';
+import { getTokens } from '@/util/authentication';
 
 const router = new Router();
 
-const cfg = config.googleAuth || {};
+const cfg = config.auth || {};
 
 router.use((req, res, next) => {
   req.client = new OAuth2Client({
@@ -45,13 +45,16 @@ router.get('/', catchExceptions(async (req, res) => {
   }));
 }));
 
-router.get('/callback', catchExceptions(async (req, res) => {
-  const response = await req.client.getToken(req.query.code);
-
-  req.client.setCredentials(response.tokens);
-
+/**
+ * Convert tokens
+ * @param {OAuth2Client} client
+ * @param tokens
+ * @returns {Promise<{token: *, refreshToken: *}>}
+ */
+async function getClientTokens(client, tokens) {
+  client.setCredentials(tokens);
   // verify domain
-  const user = (await req.client.request({url: 'https://www.googleapis.com/plus/v1/people/me'})).data;
+  const user = (await client.request({url: 'https://www.googleapis.com/plus/v1/people/me'})).data;
   if (!user || user.domain !== cfg.hd) {
     throw {
       status: 401,
@@ -60,15 +63,31 @@ router.get('/callback', catchExceptions(async (req, res) => {
   }
 
   // construct jwt token
-  const token = jwt.sign({
-    id: user.id,
-    email: _.get(user, 'emails[0].value'),
-    displayName: user.displayName
-  }, config.jwtSecret, {
-    expiresIn: '1d'
+  return getTokens({
+    provider: 'google',
+    display: user.displayName,
+    refreshParameters: {
+      token: tokens.refresh_token
+    }
   });
+}
 
-  return res.end(`<script>window.opener.postMessage(${JSON.stringify({token})}, '*')</script>`);
+router.get('/callback', catchExceptions(async (req, res) => {
+  const response = await req.client.getToken(req.query.code);
+
+  // construct jwt token
+  const tokens = await getClientTokens(req.client, response.tokens);
+
+  return res.end(`<script>window.opener.postMessage(${JSON.stringify(tokens)}, '*')</script>`);
+}));
+
+router.post('/refresh', json(), api(async req => {
+  const decoded = jwt.verify(req.body.token, config.jwtSecret);
+  const response = await req.client.refreshTokenNoCache(decoded.token);
+  const { token } = await getClientTokens(req.client, response.tokens);
+  return {
+    token
+  };
 }));
 
 export default router;
