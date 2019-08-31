@@ -1,11 +1,12 @@
 FROM jrottenberg/ffmpeg:4.1-alpine
-FROM node:10.16.2-alpine
+FROM node:10.15.2-alpine
 
 # add mono for running Subtitle Edit for subtitle conversion
-RUN apk add --no-cache mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
-    apk add --no-cache xvfb
+RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main musl\>1.1.20 && \
+    apk add --no-cache mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
+    apk add --no-cache xvfb git
 
-COPY --from=0 / /
+COPY --from=0 /usr/local /usr/local
 
 COPY ./lib/xvfb-run /usr/bin
 
