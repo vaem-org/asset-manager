@@ -67,13 +67,13 @@ router.delete('/:language', api(async (req) => {
   }
 
   delete item.subtitles[req.params.language];
+  item.markModified('subtitles');
   await item.save();
 
   // delete files
   const files = await config.destinationFileSystem.list(`${item._id}/subtitles`);
   for(let file of files) {
     if (file.name.startsWith(req.params.language)) {
-      console.log(`${item._id}/subtitles/${file.name}`);
       await config.destinationFileSystem.delete(`${item._id}/subtitles/${file.name}`);
     }
   }

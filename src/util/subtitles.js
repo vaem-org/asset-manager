@@ -109,6 +109,7 @@ const convert = async (assetId, sourceFile, lang) => {
 
   const item = await Asset.findById(assetId);
   item.subtitles = Object.assign(item.subtitles || {}, { [lang]: true });
+  item.markModified('subtitles');
   await item.save();
 
   await segmentVtt(`http://127.0.0.1:${config.port}${source.streamUrl}`, assetId, lang);
