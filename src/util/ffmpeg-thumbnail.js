@@ -21,8 +21,8 @@ import childProcess from 'child_process';
 const createThumbnail = (source, destination, time) => new Promise((accept, reject) => {
   childProcess.spawn('ffmpeg', [
     '-y',
-    '-i', source,
     '-ss', time,
+    '-i', source,
     '-c:v', 'png',
     '-frames:v', 1,
     '-v', 'error',
@@ -30,13 +30,13 @@ const createThumbnail = (source, destination, time) => new Promise((accept, reje
   ], {
     stdio: 'inherit'
   })
-    .on('close', code => {
-      if (code !== 0) {
-        return reject(new Error('ffmpeg thumbnail process failed'));
-      }
+  .on('close', code => {
+    if (code !== 0) {
+      return reject(new Error('ffmpeg thumbnail process failed'));
+    }
 
-      accept();
-    });
+    accept();
+  });
 });
 
-export {createThumbnail};
+export { createThumbnail };
