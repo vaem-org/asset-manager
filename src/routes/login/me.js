@@ -16,39 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { json, Router } from 'express';
-import { api, validObjectId, verify } from '@/util/express-helpers';
-import { Asset } from '@/model/asset';
+import { Router } from 'express';
+import { api, verify } from '@/util/express-helpers';
 
-const router = new Router({
-  mergeParams: true
-});
+const router = new Router();
 
-router.use(verify);
-
-router.get('/', validObjectId('id'), api(async (req) => Asset.findById(req.params.id)));
-
-router.post('/', validObjectId('id'), json(), api(async req => {
-  const asset = await Asset.findById(req.params.id);
-  if (!asset) {
-    throw {
-      status: 404
-    }
-  }
-  asset.set(req.body);
-  await asset.save();
-}));
-
-router.delete('/', validObjectId('id'), api(async req => {
-  const asset = await Asset.findById(req.params.id);
-  if (!asset) {
-    throw {
-      status: 404
-    }
-  }
-
-  asset.removeFiles();
-  await asset.save();
+router.get('/', verify, api(async req => {
+  return {display: req.token.display};
 }));
 
 export default router;

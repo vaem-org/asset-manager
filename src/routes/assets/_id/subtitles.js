@@ -24,21 +24,19 @@ import * as fileType from '@/util/file-type';
 import { convert as subtitleConvert } from '@/util/subtitles';
 import { api, catchExceptions, verify } from '@/util/express-helpers';
 import { Asset } from '@/model/asset';
+import { getSignedUrl, verifySignature } from '@/util/url-signer';
 
 const router = new Router({
   mergeParams: true
 });
 
-router.get('/:language', catchExceptions(async (req, res, next) => {
-  try {
-    jwt.verify(req.query.token, config.jwtSecret);
-  }
-  catch (e) {
-    console.error(e);
+router.get('/:timestamp/:signature/:language', catchExceptions(async (req, res, next) => {
+  if (!verifySignature(req, `${req.params.id}/${req.params.language}`)) {
     throw {
       status: 401
     }
   }
+
   const asset = await Asset.findById(req.params.id);
 
   if (!asset || !asset.subtitles) {
@@ -58,21 +56,26 @@ router.get('/:language', catchExceptions(async (req, res, next) => {
 
 router.use(verify);
 
+router.get('/:language', api(async req => {
+  return getSignedUrl(`${req.params.id}/${req.params.language}`, 60, false) + '/' + req.params.language;
+}));
+
 router.delete('/:language', api(async (req) => {
   const item = await Asset.findById(req.params.id);
-  if (!item || !item.subtitles[req.params.langauge]) {
+  if (!item || !item.subtitles[req.params.language]) {
     throw {
       status: 404
     }
   }
 
   delete item.subtitles[req.params.language];
+  item.markModified('subtitles');
   await item.save();
 
   // delete files
   const files = await config.destinationFileSystem.list(`${item._id}/subtitles`);
   for(let file of files) {
-    if (file.name.startsWith(req.params.langauge)) {
+    if (file.name.startsWith(req.params.language)) {
       await config.destinationFileSystem.delete(`${item._id}/subtitles/${file.name}`);
     }
   }
