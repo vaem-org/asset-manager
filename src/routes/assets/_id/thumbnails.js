@@ -39,7 +39,7 @@ const getSignature = (assetId, time) => {
     .digest('hex');
 };
 
-router.get('/', verify, api(async (req, res) => {
+router.get('/', verify, api(async req => {
   const getUrl = time =>
     `/assets/${req.params.id}/thumbnails/${getSignature(req.params.id, time)}/${time}.jpg`;
 
