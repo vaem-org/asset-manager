@@ -60,7 +60,7 @@ router.use(verify);
 
 router.delete('/:language', api(async (req) => {
   const item = await Asset.findById(req.params.id);
-  if (!item || !item.subtitles[req.params.langauge]) {
+  if (!item || !item.subtitles[req.params.language]) {
     throw {
       status: 404
     }
@@ -72,7 +72,8 @@ router.delete('/:language', api(async (req) => {
   // delete files
   const files = await config.destinationFileSystem.list(`${item._id}/subtitles`);
   for(let file of files) {
-    if (file.name.startsWith(req.params.langauge)) {
+    if (file.name.startsWith(req.params.language)) {
+      console.log(`${item._id}/subtitles/${file.name}`);
       await config.destinationFileSystem.delete(`${item._id}/subtitles/${file.name}`);
     }
   }
