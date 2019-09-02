@@ -36,8 +36,9 @@ export function verifySignature(req, source=null) {
  * Get a signed url
  * @param {String} source
  * @param {Number} expiresInSeconds the number of seconds the url is valid
+ * @param {Boolean} appendSource
  */
-export function getSignedUrl(source, expiresInSeconds) {
+export function getSignedUrl(source, expiresInSeconds, appendSource=true) {
   const validTo = Date.now() + expiresInSeconds*1000;
-  return `/${validTo}/${computeSignature(source, validTo)}${source}`;
+  return `/${validTo}/${computeSignature(source, validTo)}${appendSource ? source : ''}`;
 }

@@ -16,14 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '@/config';
 import { json, Router } from 'express';
-import { api, catchExceptions, validObjectId, verify } from '@/util/express-helpers';
+import { api, validObjectId, verify } from '@/util/express-helpers';
 import { Asset } from '@/model/asset';
-import fs from 'fs-extra';
-import { getStreamInfo } from '@/util/stream';
-import { createThumbnail } from '@/util/ffmpeg-thumbnail';
-import sharp from 'sharp';
 
 const router = new Router({
   mergeParams: true
@@ -54,43 +49,6 @@ router.delete('/', validObjectId('id'), api(async req => {
 
   asset.removeFiles();
   await asset.save();
-}));
-
-const thumbnails = `${config.root}/var/thumbnails`;
-fs.ensureDir(thumbnails).catch(e => console.error(e));
-
-router.get([
-  '/thumbnail.(jpg|png)',
-  '/thumbnail/:time.(jpg|png)'
-], catchExceptions(async (req, res, next) => {
-  const item = await Asset.findById(req.params.id);
-  if (!item) {
-    console.log('Item not found');
-    return next('route');
-  }
-
-  const filename = `${thumbnails}/${req.params.id}-${req.params.time || 0}`;
-
-  if (!await fs.exists(`${filename}.png`)) {
-    // create png thumbnail with ffmpeg
-    const info = await getStreamInfo(req.params.id);
-    const url = `${config.base}${info.streamUrl}`;
-    await createThumbnail(url,
-      `${filename}.png`,
-      req.params.time || '0:00:00');
-  }
-
-  if (req.params[0] === 'jpg' && !await fs.exists(`${filename}.jpg`)) {
-    await sharp(`${filename}.png`)
-    .jpeg({
-      quality: 60
-    })
-    .toFile(`${filename}.jpg`);
-  }
-
-  fs
-  .createReadStream(`${filename}.${req.params[0]}`)
-  .pipe(res);
 }));
 
 export default router;
