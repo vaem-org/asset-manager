@@ -56,9 +56,10 @@ router.get('/:signature/:time.(jpg|png)', catchExceptions(async (req, res, next)
   }
 
   const item = await Asset.findById(req.params.id);
-  if (!item) {
-    console.log('Item not found');
-    return next('route');
+  if (!item || item.state !== 'processed') {
+    throw {
+      status: 404
+    }
   }
 
   res.setHeader('Expires', Date.now() + 24*3600*1000);
