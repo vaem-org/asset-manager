@@ -30,7 +30,6 @@ const router = new Router({
 });
 
 router.get('/:language', catchExceptions(async (req, res, next) => {
-  console.log(req.url);
   try {
     jwt.verify(req.query.token, config.jwtSecret);
   }
@@ -59,20 +58,24 @@ router.get('/:language', catchExceptions(async (req, res, next) => {
 
 router.use(verify);
 
-router.get('/', catchExceptions(async (req, res) => {
-  const path = `${config.root}/var/subtitles/${req.params.id}.nl.vtt`;
-
-  if (!await fs.exists(path)) {
+router.delete('/:language', api(async (req) => {
+  const item = await Asset.findById(req.params.id);
+  if (!item || !item.subtitles[req.params.langauge]) {
     throw {
       status: 404
     }
   }
 
-  res.setHeader('Content-Type', 'application/octet-stream');
-  res.setHeader('Content-Disposition', `attachment; filename="${req.params.id}.nl.vtt"`);
+  delete item.subtitles[req.params.language];
+  await item.save();
 
-  fs.createReadStream(path)
-  .pipe(res);
+  // delete files
+  const files = await config.destinationFileSystem.list(`${item._id}/subtitles`);
+  for(let file of files) {
+    if (file.name.startsWith(req.params.langauge)) {
+      await config.destinationFileSystem.delete(`${item._id}/subtitles/${file.name}`);
+    }
+  }
 }));
 
 router.put('/:language/:name', api(async (req) => {
