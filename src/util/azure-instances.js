@@ -39,41 +39,43 @@ export async function createEncoders({numCpus=1, numInstances=1}) {
     throw 'Not initialized';
   }
 
-  await client.containerGroups.createOrUpdate(
-    config.azureInstances.resourceGroup,
-    'encoder',
-    {
-      containers: range(numInstances).map(index => (
-        {
-          image: config.azureInstances.image,
-          environmentVariables: [
-            {
-              name: 'ASSETMANAGER_URL',
-              secureValue: config.base
+  await Promise.all(range(numInstances).map(async index => {
+    return client.containerGroups.createOrUpdate(
+      config.azureInstances.resourceGroup,
+      `encoder${index}`,
+      {
+        containers: [
+          {
+            image: config.azureInstances.image,
+            environmentVariables: [
+              {
+                name: 'ASSETMANAGER_URL',
+                secureValue: config.base
+              }
+            ],
+            name: 'encoder',
+            resources: {
+              requests: {
+                cpu: numCpus,
+                memoryInGB: 1
+              }
             }
-          ],
-          name: `encoder${index}`,
-          resources: {
-            requests: {
-              cpu: numCpus,
-              memoryInGB: 1
-            }
-          }
-        })),
-      osType: 'Linux',
-      location: 'West Europe'
-    }
-  )
+          }],
+        osType: 'Linux',
+        location: 'WestEurope'
+      }
+    )
+  }));
 }
 
-export async function deleteEncoders() {
+export async function deleteEncoder(index) {
   if (!client) {
     throw 'Not initialized';
   }
 
   await client.containerGroups.deleteMethod(
     config.azureInstances.resourceGroup,
-    'encoder'
+    `encoder${index}`
   );
 }
 
