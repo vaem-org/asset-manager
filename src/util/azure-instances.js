@@ -39,10 +39,6 @@ export async function createEncoders({numCpus=1, numInstances=1}) {
     throw 'Not initialized';
   }
 
-  const url = new URL(config.base);
-  url.username = config.auth.username;
-  url.password = config.auth.password;
-
   await client.containerGroups.createOrUpdate(
     config.azureInstances.resourceGroup,
     'encoder',
@@ -53,7 +49,7 @@ export async function createEncoders({numCpus=1, numInstances=1}) {
           environmentVariables: [
             {
               name: 'ASSETMANAGER_URL',
-              secureValue: url.toString()
+              secureValue: config.base
             }
           ],
           name: `encoder${index}`,

@@ -40,11 +40,21 @@ const getSignature = (assetId, time) => {
 };
 
 router.get('/', verify, api(async req => {
+  const asset = await Asset.findById(req.params.id);
+
+  if (!asset) {
+    throw {
+      status: 404
+    }
+  }
+
+  const duration = asset.videoParameters.duration;
+
   const getUrl = time =>
     `/assets/${req.params.id}/thumbnails/${getSignature(req.params.id, time)}/${time}.jpg`;
 
   return {
-    default: getUrl(10)
+    default: getUrl(duration > 60 ? 10 : 0)
   }
 }));
 
