@@ -193,6 +193,11 @@ encoderIO.on('connection', function (socket) {
 
   socket.on('request-encoder-id', (data, callback) => {
     const id = data.encoderId && !encoders[data.encoderId] ? data.encoderId : (encoderId++);
+
+    if (data.token !== config.encoderToken) {
+      return callback(null);
+    }
+
     encoders[id] = {
       id,
       currentlyProcessing: {},
@@ -316,7 +321,8 @@ encoderIO.on('connection', function (socket) {
     });
 
     callback({
-      encoderId: id
+      encoderId: id,
+      destinationFileSystem: process.env.DESTINATION_FS
     });
 
     if (encoder2Job[id]) {
