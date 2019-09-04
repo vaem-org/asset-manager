@@ -200,3 +200,86 @@ export async function getNormalizeParameters(source, parameters = ['-map', '0:1'
     `offset=${parsed['target_offset']}`
   ].join(':');
 }
+
+/**
+ * Get jobs for encoding audio
+ * @param {Asset} asset
+ * @param {File} file
+ * @param {String} source
+ * @returns {Promise<[]|Array>}
+ */
+export async function getAudioJobs(asset, file, source) {
+  const jobs = [];
+
+  if (!asset.videoParameters.hasAudio) {
+    return [];
+  }
+
+  const channels = file && !_.isEmpty(file.audioStreams) ? file.audioStreams : await guessChannelLayout(
+    source);
+
+  // check validity of channel layout
+  if (channels.stereo.length > 2) {
+    throw 'Too many stereo channels';
+  }
+
+  if ([0, 1, 6].indexOf(channels.surround.length) === -1) {
+    throw 'Invalid number of surround channels';
+  }
+
+  let surroundMap = null;
+  if (!_.isEmpty(channels.surround)) {
+    surroundMap = channels.surround.length > 1 ? {
+      'filter_complex': `${channels.surround.map(stream => `[0:${stream}]`)
+      .join('')}amerge=inputs=6[aout]`,
+      'map': '[aout]'
+    } : {
+      'map': `0:${channels.surround[0]}`,
+    }
+  }
+
+  let stereoMap = null;
+  if (channels.stereo.length > 1) {
+    stereoMap = {
+      'filter_complex': `${channels.stereo.map(stream => `[0:${stream}]`)
+      .join('')}amerge=inputs=2[aout]`,
+      'map': '[aout]'
+    };
+  } else if (channels.stereo.length === 1) {
+    stereoMap = {
+      'map': `0:${channels.stereo[0]}`
+    };
+  } else {
+    // if no stereo channels are available downmix the surround channel to stereo
+    stereoMap = surroundMap;
+  }
+
+  ['64k', '128k'].forEach(bitrate => {
+    jobs.push({
+      bitrate: `aac-${bitrate}`,
+      codec: 'mp4a.40.2',
+      bandwidth: parseInt(bitrate) * 1024,
+      options: _.merge({}, {
+        'b:a': bitrate,
+        'c:a': 'libfdk_aac',
+        'ac': 2,
+        'vn': true
+      }, stereoMap)
+    });
+  });
+
+  if (!_.isEmpty(channels.surround)) {
+    jobs.push({
+      bitrate: 'ac3-448k',
+      codec: 'ac-3',
+      bandwidth: 448 * 1024,
+      options: _.merge({}, {
+        'c:a': 'ac3',
+        'ac': 6,
+        'vn': true
+      }, surroundMap)
+    });
+  }
+
+  return jobs;
+}
