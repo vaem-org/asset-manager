@@ -31,6 +31,7 @@ import { Asset } from '@/model/asset';
 import masterPlaylist from '@/util/master-playlist';
 import { socketio } from '@/util/socketio';
 import { getSignedUrl } from '@/util/url-signer';
+import { startEncoders } from '@/util/azure-instances';
 
 const encoderIO = socketio.of('/encoder', null);
 const browserIO = socketio.of('/encoders-io', null);
@@ -46,15 +47,29 @@ let encoderId = 1;
 
 const sources = {};
 
+const autoScaleEncoders = !!config.azureInstances.clientId;
+
 let queue = [];
 /**
  * Process queue and give each encoder a job if there is one available
  */
 const encoder2Job = {};
-const processQueue = () => {
+let creatingEncoders = false;
+
+async function processQueue() {
   let noEncoders = false;
   if (queue.length === 0) {
     return;
+  }
+
+  if (Object.keys(encoders).length === 0 && autoScaleEncoders && !creatingEncoders) {
+    // create encoders
+    creatingEncoders = true;
+
+    console.info('Creating encoder instances');
+    await startEncoders();
+
+    creatingEncoders = false;
   }
 
   const sortedEncoders = _.orderBy(
@@ -105,7 +120,7 @@ const processQueue = () => {
       noEncoders = true;
     }
   }
-};
+}
 
 /**
  * Called when an encoder is done
@@ -117,8 +132,25 @@ const encoderDone = id => {
   }
 
   console.log(`Encoder ${id} done.`);
-  processQueue();
+  processQueue()
+    .catch(e => console.error(e));
 };
+
+// check for idle encoders
+if (autoScaleEncoders) {
+  setInterval(() => {
+    if (queue.length !== 0) {
+      return;
+    }
+
+    Object.values(encoders).forEach(encoder => {
+      if (encoder.state.status === 'idle') {
+        console.log(`Quitting encoder ${encoder.id}`);
+        sockets[encoder.id].emit('quit');
+      }
+    });
+  }, 5000);
+}
 
 const sourceDone = async source => {
   console.log('Source has completed: ', source);
@@ -127,11 +159,13 @@ const sourceDone = async source => {
   try {
     await masterPlaylist(asset._id);
 
-    globalIO.emit('info', `Encoding asset "${sources[source].asset.title}" completed`);
+    globalIO.emit('info', `Encoding asset "${asset.title}" completed`);
+
+    console.info(`"${asset.title}" completed in ${Math.round((Date.now() - sources[source].started) / 1000)} seconds`);
 
     if (config.slackHook) {
       axios.post(config.slackHook, {
-        text: `Transcoding asset complete: "${sources[source].asset.title}"`
+        text: `Transcoding asset complete: "${asset.title}"`
       }).catch(e => {
         console.error(`Unable to use Slack hook, ${e.toString()}`)
       });
@@ -141,7 +175,6 @@ const sourceDone = async source => {
     asset.save();
 
     delete sources[source];
-
   }
   catch (e) {
     console.log(e);
@@ -201,7 +234,9 @@ encoderIO.on('connection', function (socket) {
           if (!initialized) {
             initialized = true;
             console.log('Starting queue');
-            processQueue();
+            processQueue()
+              .catch(e => console.error(e))
+            ;
           }
         } else {
           encoders[id][_.camelCase(event)] = data;
@@ -433,7 +468,7 @@ router.post('/start-job', json(), api(async req => {
 
   sources[source] = {
     completed: 0,
-    started: (new Date()).getTime(),
+    started: Date.now(),
     jobs: todo,
     asset: asset
   };
@@ -448,7 +483,8 @@ router.post('/start-job', json(), api(async req => {
   }
 
   // add job to queue
-  processQueue();
+  processQueue()
+    .catch(e => console.error(e));
 
   if (file) {
     file.asset = asset._id;
