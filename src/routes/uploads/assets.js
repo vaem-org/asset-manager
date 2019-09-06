@@ -26,7 +26,7 @@ router.use(verify);
 
 router.get('/',
   api(async () => Asset
-    .find({ state: 'processed' })
+    .find({ state: 'processed', deleted: {$ne: true} })
     .select('title')
     .sort({ createdAt: -1 })
   ));
