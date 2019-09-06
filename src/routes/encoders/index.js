@@ -23,6 +23,7 @@ import path from 'path';
 import { Router, json } from 'express';
 import crypto from 'crypto';
 import { URL } from 'url';
+import { Mutex } from 'async-mutex';
 import fixKeys from '@/util/fix-keys';
 import { getSeekable, getSource, getVideoParameters, getAudioJobs } from '@/util/source';
 import { api, verify } from '@/util/express-helpers';
@@ -57,11 +58,15 @@ let queue = [];
 const encoder2Job = {};
 let creatingEncoders = false;
 
+const queueMutex = new Mutex();
+
 async function processQueue() {
   let noEncoders = false;
   if (queue.length === 0) {
     return;
   }
+
+  const release = await queueMutex.acquire();
 
   if (Object.keys(encoders).length === 0 && autoScaleEncoders && !creatingEncoders) {
     // create encoders
@@ -107,11 +112,13 @@ async function processQueue() {
       }
 
       // give encoder his job
-      sockets[id].emit('new-job', _.assign({}, _.omit(current, 'next'), {
-        source: current.audio ? [current.source, current.audio] : current.source
-      }), response => {
-        console.log('Response from encoder: ', response);
+      const response = await new Promise((accept) => {
+        sockets[id].emit('new-job', _.assign({}, _.omit(current, 'next'), {
+          source: current.audio ? [current.source, current.audio] : current.source
+        }), accept);
       });
+
+      console.log('Response from encoder: ', response);
 
       console.log('Job started.');
       queue.shift();
@@ -121,6 +128,8 @@ async function processQueue() {
       noEncoders = true;
     }
   }
+
+  release();
 }
 
 /**
