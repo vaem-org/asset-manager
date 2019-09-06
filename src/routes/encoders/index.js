@@ -353,10 +353,6 @@ router.post('/start-job', json(), api(async req => {
     throw 'File not found';
   }
 
-  if (file && file.asset) {
-    throw 'Video already encoded';
-  }
-
   let todo = [];
   let source = file ? getSource(file.name) : null;
 
