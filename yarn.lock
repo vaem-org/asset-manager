@@ -800,7 +800,7 @@
 
 "@vaem/filesystem@https://github.com/vaem-org/filesystem.git":
   version "1.0.0"
-  resolved "https://github.com/vaem-org/filesystem.git#875d06cab2acc7d6fd17669f3cc36349fb978788"
+  resolved "https://github.com/vaem-org/filesystem.git#7e2a292f9abdf15f55e8d158dcc8ab0b773772a0"
   dependencies:
     "@azure/storage-blob" "^10.4.0"
     aws-sdk "^2.510.0"
@@ -1004,9 +1004,9 @@ aws-cloudfront-sign@^2.2.0:
     lodash "^3.6.0"
 
 aws-sdk@^2.510.0:
-  version "2.522.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.522.0.tgz#f3419800fad29c03c9344d433c0782c4ad7cf0bb"
-  integrity sha512-JNUVaBqXwzDVqR/9dDw4a55aVsdDQYlf/cBM5bSj/g95wbuNWMzrY1TfAxEfSKwH0llp/1/xdXP75AKKp2UoSg==
+  version "2.524.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.524.0.tgz#0acbd6a066cfb5b357b254b6ed273cca98ca6d5f"
+  integrity sha512-nCnKEExs1OqwNG6sIrRy+Lj8Zt2M6BTa6YlEMQ1gIpdwznaAN9XyTnm+MDc3iYsSl58MOBwiKpY8d6CONuxuDw==
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
