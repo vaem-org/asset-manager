@@ -22,6 +22,7 @@ import _ from 'lodash';
 import path from 'path';
 import { Router, json } from 'express';
 import crypto from 'crypto';
+import { URL } from 'url';
 import fixKeys from '@/util/fix-keys';
 import { getSeekable, getSource, getVideoParameters, getAudioJobs } from '@/util/source';
 import { api, verify } from '@/util/express-helpers';
@@ -172,7 +173,7 @@ const sourceDone = async source => {
     }
 
     asset.state = 'processed';
-    asset.save();
+    await asset.save();
 
     delete sources[source];
   }
@@ -295,13 +296,14 @@ encoderIO.on('connection', function (socket) {
               console.log('Unable to add bitrate to asset');
             }
 
-            if (source.asset) {
-              globalIO.emit('job-completed', _.pick(source.asset, ['_id', 'bitrates', 'jobs', 'state']));
-            }
+            const emit = () => globalIO.emit('job-completed', _.pick(source.asset, ['_id', 'bitrates', 'jobs', 'state']));
 
             if (source.completed === source.jobs.length) {
               sourceDone(filename)
+              .then(emit)
               .catch(e => console.error(e));
+            } else if (source.asset) {
+              emit();
             }
           });
         }
@@ -528,7 +530,9 @@ router.delete('/jobs/:index', api(async req => {
 }));
 
 router.get('/docker', api(async req => {
-  return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${req.protocol}//${req.get('host')} vaem/encoder`;
+  const parsed = new URL(config.base);
+  parsed.username = process.env.ENCODER_TOKEN;
+  return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${parsed.toString()} vaem/encoder`;
 }));
 
 browserIO.on('connection', socket => {
