@@ -92,7 +92,7 @@ async function processQueue() {
     jobStarted = false;
 
     const freeEncoder = _.find(sortedEncoders, encoder => {
-      return !encoder2Job[encoder.id] && ['idle', 'error'].indexOf(encoder.state.status) !== -1;
+      return !encoder2Job[encoder.id] && encoder.state.status === 'idle';
     });
 
     if (freeEncoder) {
