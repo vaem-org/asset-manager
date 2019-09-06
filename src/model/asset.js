@@ -60,7 +60,7 @@ schema.methods.removeFiles = function () {
   // remove files
   console.log(`Removing files for asset ${this._id}`);
 
-  config.destinationFileSystem.recursivelyDelete(this._id)
+  config.destinationFileSystem.recursivelyDelete(this._id.toString())
   .catch(err => `Unable to delete files: ${err.toString()}`);
 
   this.deleted = true;
