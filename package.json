@@ -41,7 +41,8 @@
     "slug": "^1.1.0",
     "socket.io": "^2.0.1",
     "throng": "^4.0.0",
-    "woothee": "^1.10.1"
+    "woothee": "^1.10.1",
+    "uuid": "latest"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
