@@ -24,6 +24,8 @@ import cors from 'cors';
 import _ from 'lodash';
 import { initMongoose } from '~/util/mongoose';
 import { app, server as socketIOServer } from './util/socketio';
+import { init as azureInstancesInit } from '@/util/azure-instances';
+import config from '@/config';
 
 app.use(cors({
   origin: true,
@@ -59,6 +61,10 @@ const port = process.env.PORT || 5000;
 
 (async () => {
   await initMongoose();
+
+  if (config.azureInstances.clientId) {
+    await azureInstancesInit();
+  }
 
   socketIOServer.listen(port, () => {
     console.log(`Server listening on http://localhost:${port}`);

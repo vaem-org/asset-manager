@@ -19,6 +19,7 @@ import 'dotenv/config';
 import { fileSystemFromURL } from '@vaem/filesystem';
 import fs from 'fs';
 import { URL } from 'url';
+import { randomBytes } from 'crypto';
 
 const root = fs.realpathSync(`${__dirname}/..`);
 
@@ -94,8 +95,12 @@ const config = merge({
     resourceGroup: process.env.AZURE_RESOURCE_GROUP,
     clientId: process.env.AZURE_CLIENT_ID,
     secret: process.env.AZURE_SECRET,
-    tenantId: process.env.AZURE_TENANT_ID
-  }
+    tenantId: process.env.AZURE_TENANT_ID,
+    numInstances: 4,
+    numCPUs: 4
+  },
+
+  encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex')
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;

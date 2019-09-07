@@ -17,29 +17,35 @@
  */
 
 import config from '@/config';
-import {range} from 'lodash';
+import _ from 'lodash';
 
-import {URL} from 'url';
-import {ContainerInstanceManagementClient} from '@azure/arm-containerinstance';
-import {loginWithServicePrincipalSecretWithAuthResponse} from '@azure/ms-rest-nodeauth';
+import { ContainerInstanceManagementClient } from '@azure/arm-containerinstance';
+import { loginWithServicePrincipalSecretWithAuthResponse } from '@azure/ms-rest-nodeauth';
 
 /**
  * @var ContainerInstanceManagementClient
  */
 let client;
 
+let created = false;
+
 /**
  * Create encoders
- * @param {Number} numCpus the number of cpus per instance
- * @param {Number} numInstances the number of instances to create
  * @returns {Promise<void>}
  */
-export async function createEncoders({numCpus=1, numInstances=1}) {
+export async function createEncoders() {
   if (!client) {
     throw 'Not initialized';
   }
 
-  await Promise.all(range(numInstances).map(async index => {
+  console.log('Creating instances');
+
+  const list = await client.containerGroups.list();
+
+  const existing = _.map(list.filter(item => item.name.startsWith('encoder')), item => parseInt(item.name.replace(/^encoder/, ''), 10));
+
+  await Promise.all(_.difference(_.range(config.azureInstances.numInstances), existing).map(async index => {
+    console.info(`Creating encoder${index}`);
     return client.containerGroups.createOrUpdate(
       config.azureInstances.resourceGroup,
       `encoder${index}`,
@@ -56,27 +62,42 @@ export async function createEncoders({numCpus=1, numInstances=1}) {
             name: 'encoder',
             resources: {
               requests: {
-                cpu: numCpus,
+                cpu: config.azureInstances.numCPUs,
                 memoryInGB: 1
               }
             }
           }],
         osType: 'Linux',
-        location: 'WestEurope'
+        location: 'WestEurope',
+        restartPolicy: 'Never'
       }
     )
   }));
+  created = true;
 }
 
-export async function deleteEncoder(index) {
+export async function startEncoders() {
+  if (!created) {
+    await createEncoders();
+  }
+
+  await Promise.all(_.range(config.azureInstances.numInstances).map(index => client.containerGroups.start(
+    config.azureInstances.resourceGroup,
+    `encoder${index}`
+  )));
+}
+
+export async function deleteEncoders() {
   if (!client) {
     throw 'Not initialized';
   }
 
-  await client.containerGroups.deleteMethod(
-    config.azureInstances.resourceGroup,
-    `encoder${index}`
-  );
+  await Promise.all(_.range(config.azureInstances.numInstances).map(index =>
+    client.containerGroups.deleteMethod(
+      config.azureInstances.resourceGroup,
+      `encoder${index}`
+    )
+  ));
 }
 
 export async function init() {

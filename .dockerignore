@@ -4,3 +4,4 @@ node_modules
 var
 dist
 .env
+config/local.js
