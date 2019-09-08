@@ -202,19 +202,12 @@ export async function getNormalizeParameters(source, parameters = ['-map', '0:1'
 }
 
 /**
- * Get jobs for encoding audio
- * @param {Asset} asset
+ * Get the audio channel mapping for a file
  * @param {File} file
  * @param {String} source
- * @returns {Promise<[]|Array>}
+ * @returns {Promise<{stereoMap: *, surroundMap: *}>}
  */
-export async function getAudioJobs(asset, file, source) {
-  const jobs = [];
-
-  if (!asset.videoParameters.hasAudio) {
-    return [];
-  }
-
+export async function getChannelMapping(file, source) {
   const channels = file && !_.isEmpty(file.audioStreams) ? file.audioStreams : await guessChannelLayout(
     source);
 
@@ -253,6 +246,28 @@ export async function getAudioJobs(asset, file, source) {
     // if no stereo channels are available downmix the surround channel to stereo
     stereoMap = surroundMap;
   }
+
+  return {
+    surroundMap,
+    stereoMap
+  }
+}
+
+/**
+ * Get jobs for encoding audio
+ * @param {Asset} asset
+ * @param {File} file
+ * @param {String} source
+ * @returns {Promise<[]|Array>}
+ */
+export async function getAudioJobs(asset, file, source) {
+  const jobs = [];
+
+  if (!asset.videoParameters.hasAudio) {
+    return [];
+  }
+
+  const { surroundMap, stereoMap } = await getChannelMapping(file, source);
 
   ['64k', '128k'].forEach(bitrate => {
     jobs.push({

@@ -20,20 +20,28 @@ import { Router } from 'express';
 import { spawn } from 'child_process';
 import genuuid from 'uuid/v4';
 import _ from 'lodash';
+import { Types } from 'mongoose';
 import { EventEmitter } from 'events'
 import { api } from '@/util/express-helpers';
-import { getSeekable, getSource, getVideoParameters } from '@/util/source';
+import {
+  getChannelMapping,
+  getSeekable,
+  getSource,
+  getVideoParameters,
+} from '@/util/source';
 import config from '@/config';
 import { File } from '@/model/file';
 
-const router = new Router();
+const router = new Router({
+  mergeParams: true
+});
 
 const processes = {};
 
 const events = new EventEmitter();
 
-router.post('/:id/start', api(async req => {
-  const item = await File.findById(req.params.id);
+router.post('/', api(async req => {
+  const item = Types.ObjectId.isValid(req.params.id) && await File.findById(req.params.id);
   if (!item) {
     throw {
       status: 404
@@ -46,14 +54,23 @@ router.post('/:id/start', api(async req => {
     source
   );
 
+  const channels = await getChannelMapping(item, source);
+
+  const video = _.find(
+    _.get(videoParameters, 'ffprobe.streams'),
+    { codec_type: 'video'})
+
   let framerate = 25;
 
-  const rFrameRate = _.get(_.find(_.get(videoParameters, 'ffprobe.streams'),
-    { codec_type: 'video' }), 'r_frame_rate', '').split('/').map(i => parseInt(i));
+  const rFrameRate = _.get(video, 'r_frame_rate', '').split('/').map(i => parseInt(i));
 
   if (rFrameRate.length === 2) {
     framerate = rFrameRate[0] / rFrameRate[1];
   }
+
+  const audioMapping = _.flatten(_.map(channels.stereoMap, (value, key) => {
+    return [`-${key}`, value]
+  }));
 
   // start a new ffmpeg process
   const uuid = genuuid();
@@ -67,7 +84,8 @@ router.post('/:id/start', api(async req => {
     '-b:v', '3000k',
     '-maxrate', '3000k',
     '-bufsize', '3000k',
-    '-map', '0:0',
+    '-map', `0:${video.index}`,
+    ...audioMapping,
     '-vcodec', 'libx264',
     '-vprofile', 'high',
     '-level', '4.1',
@@ -79,26 +97,41 @@ router.post('/:id/start', api(async req => {
     '-method', 'PUT',
     '-hls_list_size', 5,
     '-hls_time', 2,
-    `http://localhost:${config.port}/uploads/preview/${uuid}/stream.m3u8`
+    `http://localhost:${config.port}/uploads/${req.params.id}/preview/${uuid}/stream.m3u8`
   ], {
     stdio: ['ignore', 'inherit', 'inherit']
   });
 
   child.on('close', code => {
     console.log(`ffmpeg proces closed with ${code}`);
-    delete processes[uuid];
+
+    // clean up after 30 seconds
+    setTimeout(() => delete processes[uuid], 30000);
   });
 
   processes[uuid] = {
     child,
-    buffers: {}
+    buffers: {},
+    files: [],
+    setTimer() {
+      if (this.timer) {
+        clearTimeout(this.timer);
+      }
+
+      // automatically kill ffmpeg when no file has been accessed for 30 seconds
+      this.timer = setTimeout(() => {
+        this.child.kill();
+      }, 30000);
+    }
   };
 
   await new Promise(accept => {
     events.once(uuid, accept);
   });
 
-  return `${config.base}/uploads/preview/${uuid}/stream.m3u8`;
+  processes[uuid].setTimer();
+
+  return `/uploads/${req.params.id}/preview/${uuid}/stream.m3u8`;
 }));
 
 router.put('/:uuid/:filename', (req, res, next) => {
@@ -112,6 +145,15 @@ router.put('/:uuid/:filename', (req, res, next) => {
   req.on('end', () => {
     process.buffers[req.params.filename] = Buffer.concat(buffers);
     res.end();
+
+    process.files.push(req.params.filename);
+
+    // remove old files from memory
+    if (process.files.length > 5) {
+      const drop = process.files.shift();
+      delete process.buffers[drop];
+    }
+
     if (req.params.filename.endsWith('.m3u8')) {
       events.emit(req.params.uuid);
     }
@@ -124,6 +166,12 @@ router.get('/:uuid/:filename', (req, res, next) => {
   if (!buffer) {
     return next();
   }
+
+  if (process.timer) {
+    clearTimeout(process.timer);
+  }
+
+  process.setTimer();
 
   res.end(buffer);
 });

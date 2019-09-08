@@ -22,7 +22,7 @@ import { api, verify } from '@/util/express-helpers';
 const router = new Router();
 
 router.get('/', verify, api(async req => {
-  return {display: req.token.display};
+  return {display: req.token && req.token.display};
 }));
 
 export default router;
