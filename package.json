@@ -43,7 +43,7 @@
     "socket.io": "^2.0.1",
     "throng": "^4.0.0",
     "woothee": "^1.10.1",
-    "uuid": "latest"
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
