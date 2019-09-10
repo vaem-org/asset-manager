@@ -465,6 +465,7 @@ router.post('/start-job', json(), api(async req => {
     }
 
     todo.unshift({
+      seekable: 0, // TODO: make sure it is efficient
       source,
       segmentOptions,
 
