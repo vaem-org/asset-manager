@@ -45,7 +45,7 @@ export function getSource(source) {
   }
 
   const url = '/' + source.split('/').map(encodeURIComponent).join('/');
-  return `${config.base}/source${getSignedUrl(url, 4*3600)}`;
+  return `${config.base}/source${getSignedUrl(url, 8*3600)}`;
 }
 
 /**
