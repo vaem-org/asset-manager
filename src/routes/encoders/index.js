@@ -347,7 +347,7 @@ router.get('/', api(async () => encoders));
 router.get('/queue', api(async () => queue));
 
 router.post('/start-job', json(), api(async req => {
-  const file = req.body.fileId ? await File.findById(req.body.fileId) : null;
+  let file = req.body.fileId ? await File.findById(req.body.fileId) : null;
 
   if (!file && req.body.fileId) {
     throw 'File not found';
@@ -366,6 +366,7 @@ router.post('/start-job', json(), api(async req => {
 
   if (req.body.assetId) {
     asset = await Asset.findById(req.body.assetId).populate('file');
+    file = asset.file;
 
     if (!asset) {
       throw 'No asset';
