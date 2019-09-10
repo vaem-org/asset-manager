@@ -283,7 +283,7 @@ export async function getAudioJobs(asset, file, source) {
     });
   });
 
-  if (!_.isEmpty(channels.surround)) {
+  if (!_.isEmpty(surroundMap)) {
     jobs.push({
       bitrate: 'ac3-448k',
       codec: 'ac-3',
