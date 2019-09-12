@@ -269,10 +269,11 @@ encoderIO.on('connection', function (socket) {
         const job = _.find(source.jobs, { m3u8: data.filename });
         if (job) {
           source.completed++;
-          source.asset.bitrates.push(job.options.maxrate || job.bitrate);
+          source.asset.bitrates = source.asset.bitrates.concat(job.options.maxrate || job.bitrate);
+          source.asset.markModified('bitrates');
 
           // store output resolution
-          const stream = _.find(_.get(data, 'ffprobe.streams', []), { codec_type: 'video' });
+          const stream = _.find(_.get(data, 'ffprobes[0].streams', []), { codec_type: 'video' });
 
           if (stream) {
             const aspect = _.get(stream, 'display_aspect_ratio', '')
@@ -282,7 +283,7 @@ encoderIO.on('connection', function (socket) {
             ;
 
             source.asset.streams.push({
-              filename: path.basename(data.filename),
+              filename: path.basename(data.filenames[0]),
               bandwidth: parseInt(job.options.maxrate) * 1024,
               resolution:
                 aspect.length > 0 ? Math.max(stream.width,
@@ -292,12 +293,14 @@ encoderIO.on('connection', function (socket) {
               codec: 'avc1.640029'
             });
           } else {
-            source.asset.audioStreams.push({
-              filename: path.basename(data.filename),
-              bitrate: job.bitrate,
-              bandwidth: parseInt(job.bitrate) * 1024,
-              codec: job.codec
-            });
+            for(let i=0; i<job.bitrate.length; i++) {
+              source.asset.audioStreams.push({
+                filename: path.basename(data.filenames[i]),
+                bitrate: job.bitrate[i],
+                bandwidth: parseInt(job.bitrate[i]) * 1024,
+                codec: job.codec[i]
+              });
+            }
           }
 
           source.asset.save(err => {
@@ -465,14 +468,16 @@ router.post('/start-job', json(), api(async req => {
     }
 
     todo.unshift({
-      seekable: 0, // TODO: make sure it is efficient
       source,
-      segmentOptions,
+      segmentOptions: {
+        ...segmentOptions,
+        ...job.segmentOptions
+      },
 
       bitrate: job.bitrate,
       options: job.options,
       codec: job.codec,
-      m3u8: `${outputBase}/${basename}.${job.bitrate}.m3u8`,
+      m3u8: `${outputBase}/${basename}.audio-%v.m3u8`,
       hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
     });
   });

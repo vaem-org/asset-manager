@@ -269,32 +269,47 @@ export async function getAudioJobs(asset, file, source) {
 
   const { surroundMap, stereoMap } = await getChannelMapping(file, source);
 
-  ['64k', '128k'].forEach(bitrate => {
-    jobs.push({
-      bitrate: `aac-${bitrate}`,
-      codec: 'mp4a.40.2',
-      bandwidth: parseInt(bitrate) * 1024,
-      options: _.merge({}, {
-        'b:a': bitrate,
-        'c:a': 'libfdk_aac',
-        'ac': 2,
-        'vn': true
-      }, stereoMap)
-    });
-  });
+  /*
+  ffmpeg -seekable 0 -i "${SOURCE}" -y -threads 0  \
+  -b:a:0 128k -ac:0 2 -c:a:0 libfdk_aac \
+  -b:a:1 192k -ac:1 2 -c:a:1 libfdk_aac \
+  -b:a:2 480k -ac:2 6 -c:a:2 ac3 \
+  -filter_complex "[0:7][0:8]amerge=inputs=2,asplit=2[aout1][aout2], [0:1][0:2][0:3][0:4][0:5][0:6]amerge=inputs=6[aout3]" \
+  -map "[aout1]" -map "[aout2]" -map "[aout3]" \
+  -var_stream_map "a:0 a:1 a:2" \
+  -hls_list_size 0 -hls_playlist_type vod -hls_time 10 -hls_segment_filename 'stream.%v.%05d.ts' 'stream.%v.m3u8'
+   */
 
-  if (!_.isEmpty(surroundMap)) {
-    jobs.push({
-      bitrate: 'ac3-448k',
-      codec: 'ac-3',
-      bandwidth: 448 * 1024,
-      options: _.merge({}, {
-        'c:a': 'ac3',
-        'ac': 6,
-        'vn': true
-      }, surroundMap)
-    });
-  }
+  jobs.push({
+    bitrate: ['aac-64k', 'aac-128k', ...(surroundMap ? ['ac3-448k'] : [])],
+    codec: ['mp4a.40.2', 'mp4a.40.2', ...(surroundMap ? ['ac-3'] : [])],
+    bandwidth: [64*1024, 128*1024, ...(surroundMap ? [448*1024] : [])],
+    options: {
+      seekable: 0,
+      'b:a:0': '64k',
+      'b:a:1': '128k',
+      'c:a:0': 'libfdk_aac',
+      'c:a:1': 'libfdk_aac',
+      'ac:0': 2,
+      'ac:1': 2,
+      'vn': true,
+      'filter_complex': [
+        `${stereoMap.filter_complex},[aout]asplit=2[aout1][aout2]`,
+        ...(surroundMap ? [surroundMap.filter_complex.replace('[aout]', '[aout3]')] : '')
+        ].join(','),
+      ...(surroundMap ? {
+        'b:a:2': '448k',
+        'ac:2': 6,
+        'c:a:2': 'ac3'
+      } : {}),
+      'map': ['[aout1]', '[aout2]', ...(surroundMap ? ['[aout3]'] : [])]
+    },
+    segmentOptions: {
+      'hls_time': 10,
+      'hls_segment_filename': `/app/tmp/segments/${asset._id}.audio-v.m3u8/${asset._id}.audio-%v.%05d.ts`,
+      'var_stream_map': ['a:0', 'a:1', ...(surroundMap ? ['a:2'] : [])].join(' ')
+    }
+  });
 
   return jobs;
 }

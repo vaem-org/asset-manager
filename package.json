@@ -11,7 +11,7 @@
     "build": "babel src -d dist --delete-dir-on-start"
   },
   "author": "Wouter van de Molengraft",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-only",
   "engines": {
     "node": ">=9.3.0"
   },
@@ -23,7 +23,6 @@
     "aws-cloudfront-sign": "^2.2.0",
     "axios": "^0.19.0",
     "basic-auth": "^2.0.0",
-    "bytes": "3.1.0",
     "cors": "^2.8.4",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
@@ -32,7 +31,7 @@
     "google-auth-library": "^5.2.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
-    "m3u8": "0.0.8",
+    "m3u8": "^0.0.8",
     "moment": "^2.24.0",
     "mongoose": "^5.6.12",
     "mongoose-timestamp": "^0.6.0",
@@ -42,8 +41,8 @@
     "slug": "^1.1.0",
     "socket.io": "^2.0.1",
     "throng": "^4.0.0",
-    "woothee": "^1.10.1",
-    "uuid": "^3.3.3"
+    "uuid": "^3.3.3",
+    "woothee": "^1.10.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
