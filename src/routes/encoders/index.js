@@ -297,7 +297,7 @@ encoderIO.on('connection', function (socket) {
               source.asset.audioStreams.push({
                 filename: path.basename(data.filenames[i]),
                 bitrate: job.bitrate[i],
-                bandwidth: parseInt(job.bitrate[i]) * 1024,
+                bandwidth: job.bandwidth[i],
                 codec: job.codec[i]
               });
             }
