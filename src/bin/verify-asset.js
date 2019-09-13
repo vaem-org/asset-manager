@@ -28,7 +28,7 @@ import mongoose from 'mongoose';
 import { execFile as _execFile } from 'child_process';
 import { promisify } from 'util';
 
-import { Asset } from '~/model/asset';
+import { Asset } from '@/model/asset';
 
 const execFile = promisify(_execFile);
 const getDuration = async source => {

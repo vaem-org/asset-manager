@@ -20,7 +20,7 @@
 
 import config from '@/config';
 import mongoose from 'mongoose';
-import masterPlaylist from '../src/util/master-playlist';
+import masterPlaylist from '../util/master-playlist';
 
 (async () => {
   await mongoose.connect(config.mongo, {

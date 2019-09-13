@@ -39,9 +39,9 @@ node_modules
 
 /var/**
 !**/.keep
-bin/sandbox.js
+src/bin/sandbox.js
 .DS_Store
-bin/test.js
+src/bin/test.js
 docker-compose.override.yml
 .env
 /dist/

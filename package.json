@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --exec babel-node -w .env -w ./config -w ./src src/app.js",
+    "dev": "nodemon --exec babel-node -w .env -w ./config -w ./src --ignore './src/bin/**' src/app.js",
     "postinstall": "if [ $STACK ]; then npm run build; fi",
     "start": "node dist/app.js",
     "build": "babel src -d dist --delete-dir-on-start"
