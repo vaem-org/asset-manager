@@ -39,7 +39,6 @@ const run = args => new Promise((accept, reject) => {
 });
 
 const segmentVtt = async (source, assetId, lang) => {
-  const root = config.output;
   const item = await Asset.findById(assetId);
 
   if (!item) {

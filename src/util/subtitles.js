@@ -96,6 +96,7 @@ const convert = async (assetId, sourceFile, lang) => {
   const data = await fs.readFile(destination);
   await fs.writeFile(destination, data.toString().replace(/{\\.*?}/g, ''));
 
+  await config.destinationFileSystem.ensureDir(`${assetId}/subtitles`);
   const { stream } = await config.destinationFileSystem.write(
     `${assetId}/subtitles/${lang}.vtt`
   );
@@ -112,7 +113,7 @@ const convert = async (assetId, sourceFile, lang) => {
   item.markModified('subtitles');
   await item.save();
 
-  await segmentVtt(`http://127.0.0.1:${config.port}${source.streamUrl}`, assetId, lang);
+  await segmentVtt(`http://127.0.0.1:${config.port}${source.streamUrl.replace('.m3u8', '.235k.m3u8')}`, assetId, lang);
   console.log('Segmenting VTT successful');
 };
 

@@ -18,6 +18,7 @@
 
 import config from '@/config';
 import fs from 'fs-extra';
+import _ from 'lodash';
 import { api, catchExceptions, verify } from '@/util/express-helpers';
 import { Asset } from '@/model/asset';
 import { getStreamInfo } from '@/util/stream';
@@ -58,7 +59,7 @@ router.get('/', verify, api(async req => {
   }
 }));
 
-router.get('/:signature/:time.(jpg|png)', catchExceptions(async (req, res, next) => {
+router.get('/:signature/:time.(jpg|png)', catchExceptions(async (req, res) => {
   if (getSignature(req.params.id, req.params.time) !== req.params.signature) {
     throw {
       status: 401
@@ -74,12 +75,20 @@ router.get('/:signature/:time.(jpg|png)', catchExceptions(async (req, res, next)
 
   res.setHeader('Expires', Date.now() + 24*3600*1000);
 
+  const maxStream = _.maxBy(item.streams, stream => stream.bandwidth);
+
+  if (!maxStream) {
+    throw {
+      status: 404
+    }
+  }
+
   const filename = `${thumbnails}/${req.params.id}-${req.params.time || 0}`;
 
   if (!await fs.exists(`${filename}.png`)) {
     // create png thumbnail with ffmpeg
     const info = await getStreamInfo(req.params.id);
-    const url = `${config.base}${info.streamUrl}`;
+    const url = `${config.base}${info.streamUrl.replace(`${item._id}.m3u8`, maxStream.filename)}`;
     await createThumbnail(url,
       `${filename}.png`,
       req.params.time || '0:00:00');
