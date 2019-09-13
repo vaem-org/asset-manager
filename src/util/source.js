@@ -21,8 +21,7 @@ import _ from 'lodash';
 import util from 'util';
 import config from '../config';
 import getParams from './get-params';
-import { URL } from 'url';
-import { computeSignature, getSignedUrl } from '@/util/url-signer';
+import { getSignedUrl } from '@/util/url-signer';
 
 const execFile = util.promisify(child_process.execFile);
 /**
@@ -45,7 +44,7 @@ export function getSource(source) {
   }
 
   const url = '/' + source.split('/').map(encodeURIComponent).join('/');
-  return `${config.base}/source${getSignedUrl(url, 8*3600)}`;
+  return `${config.base}/source${getSignedUrl(url, 16*3600)}`;
 }
 
 /**

@@ -404,9 +404,9 @@ router.post('/start-job', json(), api(async req => {
     framerate = rFrameRate[0] / rFrameRate[1];
   }
 
-  const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 4*3600)}`;
+  const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 16*3600)}`;
 
-  const outputBase = `/output${getSignedUrl(`/${asset._id}`, 4*3600)}`;
+  const outputBase = `/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
 
   // prepare the jobs array
   _.each(config.profiles, (profiles, width) => {
