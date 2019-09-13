@@ -500,6 +500,7 @@ router.post('/start-job', json(), api(async req => {
 
   if (!req.body.assetId) {
     asset.jobs = _.map(todo, 'options');
+    asset.numStreams = _.sumBy(todo, job => _.isArray(job.bitrate) ? job.bitrate.length : 1);
     await asset.save();
   }
 

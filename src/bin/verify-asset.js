@@ -55,7 +55,7 @@ const getDuration = async source => {
     throw 'Item not found';
   }
 
-  if (asset.bitrates.length !== asset.jobs.length) {
+  if (asset.bitrates.length !== (asset.numStreams || asset.jobs.length)) {
     console.error(`Not all jobs are completed: ${_.difference(_.map(asset.jobs, 'maxrate'),
       asset.bitrates).join(', ')} are missing`);
     process.exit(1);
@@ -71,27 +71,22 @@ const getDuration = async source => {
   const faulty = _.keys(_.omit(counts, ['m3u8', 'undefined']))
   .filter(bitrate => Math.abs(counts[bitrate] - max) >= 5);
   if (faulty.length > 0) {
-    console.error(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
+    console.warn(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
   }
   asset.bitrates = _.difference(asset.bitrates, faulty);
 
   const good = [];
   // verify durations of all bitrates
-  for (let bitrate of asset.bitrates) {
-    if (bitrate === '1k') {
-      good.push(bitrate);
-      return;
-    }
-
+  for (let entry of [...asset.streams, ...asset.audioStreams]) {
     const timestamp = moment().add(8, 'hours').valueOf();
     const signature = computeSignature(assetId, timestamp);
-    const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${assetId}.${bitrate}.m3u8`;
-    console.info(`Checking duration for ${bitrate}`);
+    const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${entry.filename}`;
+    console.info(`Checking duration for ${entry.bitrate || `${entry.bandwidth/1024}k`}`);
     const duration = await getDuration(videoUrl);
     if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2) {
-      console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
+      console.error(`Duration for bitrate ${entry.bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
     } else {
-      good.push(bitrate);
+      good.push(entry.bitrate);
     }
   }
   asset.bitrates = good;

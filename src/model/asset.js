@@ -33,6 +33,7 @@ const schema = new Schema({
   audioStreams: [{}],
   videoParameters: {},
   jobs: [{}],
+  numStreams: Number,
   source: String,
   file: {type: Schema.Types.ObjectId, ref: 'File'},
   audio: String,
