@@ -477,6 +477,7 @@ router.post('/start-job', json(), api(async req => {
       bitrate: job.bitrate,
       options: job.options,
       codec: job.codec,
+      bandwidth: job.bandwidth,
       m3u8: `${outputBase}/${basename}.audio-%v.m3u8`,
       hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
     });
