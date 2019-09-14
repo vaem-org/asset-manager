@@ -268,17 +268,6 @@ export async function getAudioJobs(asset, file, source) {
 
   const { surroundMap, stereoMap } = await getChannelMapping(file, source);
 
-  /*
-  ffmpeg -seekable 0 -i "${SOURCE}" -y -threads 0  \
-  -b:a:0 128k -ac:0 2 -c:a:0 libfdk_aac \
-  -b:a:1 192k -ac:1 2 -c:a:1 libfdk_aac \
-  -b:a:2 480k -ac:2 6 -c:a:2 ac3 \
-  -filter_complex "[0:7][0:8]amerge=inputs=2,asplit=2[aout1][aout2], [0:1][0:2][0:3][0:4][0:5][0:6]amerge=inputs=6[aout3]" \
-  -map "[aout1]" -map "[aout2]" -map "[aout3]" \
-  -var_stream_map "a:0 a:1 a:2" \
-  -hls_list_size 0 -hls_playlist_type vod -hls_time 10 -hls_segment_filename 'stream.%v.%05d.ts' 'stream.%v.m3u8'
-   */
-
   jobs.push({
     bitrate: ['aac-64k', 'aac-128k', ...(surroundMap ? ['ac3-448k'] : [])],
     codec: ['mp4a.40.2', 'mp4a.40.2', ...(surroundMap ? ['ac-3'] : [])],
@@ -293,15 +282,20 @@ export async function getAudioJobs(asset, file, source) {
       'ac:1': 2,
       'vn': true,
       'filter_complex': [
-        `${stereoMap.filter_complex},[aout]asplit=2[aout1][aout2]`,
-        ...(surroundMap ? [surroundMap.filter_complex.replace('[aout]', '[aout3]')] : '')
+        stereoMap && stereoMap.filter_complex ? `${stereoMap.filter_complex},[aout]asplit=2[aout1][aout2]` : `[${(stereoMap && stereoMap.map) || '0:a'}]asplit=2[aout1][aout2]`,
+        ...(surroundMap && surroundMap.filter_complex ? [surroundMap.filter_complex.replace('[aout]', '[aout3]')] : '')
         ].join(','),
       ...(surroundMap ? {
         'b:a:2': '448k',
         'ac:2': 6,
         'c:a:2': 'ac3'
       } : {}),
-      'map': ['[aout1]', '[aout2]', ...(surroundMap ? ['[aout3]'] : [])]
+      'map': [
+        '[aout1]',
+        '[aout2]',
+        ...(surroundMap && surroundMap.filter_complex ? ['[aout3]'] : []),
+        ...(surroundMap && !surroundMap.filter_complex ? [surroundMap.map] : []),
+      ]
     },
     segmentOptions: {
       'hls_time': 10,
@@ -309,6 +303,8 @@ export async function getAudioJobs(asset, file, source) {
       'var_stream_map': ['a:0', 'a:1', ...(surroundMap ? ['a:2'] : [])].join(' ')
     }
   });
+
+  console.log(jobs[0]);
 
   return jobs;
 }
