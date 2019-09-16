@@ -75,6 +75,10 @@ export function verify(req, res, next) {
     return next();
   }
 
+  if (process.env.API_TOKEN && req.headers['authorization'] === `Bearer ${process.env.API_TOKEN}`) {
+    return next();
+  }
+
   try {
     req.token = getToken(req);
   } catch (e) {
