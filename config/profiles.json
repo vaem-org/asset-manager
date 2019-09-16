@@ -1,14 +1,14 @@
 {
   "320": [
 		{
-			"vf": "scale=320:trunc(ow/a/2)*2",
+			"vf": "scale=320:trunc(ow/dar/2)*2",
 			"b:v": "235k",
 			"maxrate": "235k",
 			"bufsize": "235k"
 		}],
 	"384": [
 		{
-			"vf": "scale=384:trunc(ow/a/2)*2",
+			"vf": "scale=384:trunc(ow/dar/2)*2",
 			"b:v": "375k",
 			"maxrate": "375k",
 			"bufsize": "375k"
@@ -16,20 +16,20 @@
 	],
 	"512": [
 		{
-			"vf": "scale=512:trunc(ow/a/2)*2",
+			"vf": "scale=512:trunc(ow/dar/2)*2",
 			"b:v": "560k",
 			"maxrate": "560k",
 			"bufsize": "560k"
 		},
 		{
-			"vf": "scale=512:trunc(ow/a/2)*2",
+			"vf": "scale=512:trunc(ow/dar/2)*2",
 			"b:v": "750k",
 			"maxrate": "750k",
 			"bufsize": "750k"
 		}],
 	"640": [
 		{
-			"vf": "scale=640:trunc(ow/a/2)*2",
+			"vf": "scale=640:trunc(ow/dar/2)*2",
 			"b:v": "1050k",
 			"maxrate": "1050k",
 			"bufsize": "1050k"
@@ -37,19 +37,19 @@
 
 	"720": [
 		{
-			"vf": "scale=720:trunc(ow/a/2)*2",
+			"vf": "scale=720:trunc(ow/dar/2)*2",
 			"b:v": "1750k",
 			"maxrate": "1750k",
 			"bufsize": "1750k"
 		},
 		{
-			"vf": "scale=720:trunc(ow/a/2)*2",
+			"vf": "scale=720:trunc(ow/dar/2)*2",
 			"b:v": "2350k",
 			"maxrate": "2350k",
 			"bufsize": "2350k"
 		},
 		{
-			"vf": "scale=1280:trunc(ow/a/2)*2",
+			"vf": "scale=1280:trunc(ow/dar/2)*2",
 			"b:v": "3000k",
 			"maxrate": "3000k",
 			"bufsize": "3000k"
@@ -57,13 +57,13 @@
 
 	"1920": [
 		{
-			"vf": "scale=1920:trunc(ow/a/2)*2",
+			"vf": "scale=1920:trunc(ow/dar/2)*2",
 			"b:v": "4300k",
 			"maxrate": "4300k",
 			"bufsize": "4300k"
 		},
 		{
-			"vf": "scale=1920:trunc(ow/a/2)*2",
+			"vf": "scale=1920:trunc(ow/dar/2)*2",
 			"b:v": "5800k",
 			"maxrate": "5800k",
 			"bufsize": "5800k"

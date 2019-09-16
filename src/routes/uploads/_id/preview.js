@@ -80,7 +80,7 @@ router.post('/', api(async req => {
     '-i', source,
     '-loglevel', 'error',
     '-threads', 0,
-    '-vf', 'scale=1280:trunc(ow/a/2)*2',
+    '-vf', 'scale=1280:trunc(ow/dar/2)*2',
     '-b:v', '3000k',
     '-maxrate', '3000k',
     '-bufsize', '3000k',
