@@ -3055,7 +3055,7 @@ lru-cache@^5.0.0:
   dependencies:
     yallist "^3.0.2"
 
-m3u8@0.0.8:
+m3u8@^0.0.8:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/m3u8/-/m3u8-0.0.8.tgz#c3673eb591cd8538cd1f0c234ce848c78c76a094"
   integrity sha512-ZtwAeYkQ9rtoetC2xeu0HMC9XjHidUW7+pNB2YYEOfifX80d0xsruoBLrQbiH6nPmc5zESMWFF6/cuO9Cm0wBA==
