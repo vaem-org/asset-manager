@@ -100,7 +100,8 @@ const config = merge({
     numCPUs: 4
   },
 
-  encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex')
+  encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex'),
+  slackHook: process.env.SLACK_HOOK
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;
