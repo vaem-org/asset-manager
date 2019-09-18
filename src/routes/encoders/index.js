@@ -102,10 +102,17 @@ async function processQueue() {
       encoder2Job[id] = current;
 
       console.log(`Starting job on encoder ${id}`);
+      const asset = sources[current.source].asset;
 
-      if (sources[current.source].asset.state !== 'processing') {
-        sources[current.source].asset.state = 'processing';
-        sources[current.source].asset.save()
+      if (asset.state !== 'processing') {
+        asset.state = 'processing';
+        Asset.update({
+          _id: asset._id
+        }, {
+          $set: {
+            state: 'processing'
+          }
+        })
         .catch(err => {
           console.log('Unable to set state of asset to processing', err);
         });
@@ -164,7 +171,7 @@ if (autoScaleEncoders) {
 
 const sourceDone = async source => {
   console.log('Source has completed: ', source);
-  const asset = sources[source].asset;
+  const asset = await Asset.findById(sources[source].asset.id);
 
   try {
     await masterPlaylist(asset._id);
@@ -190,6 +197,54 @@ const sourceDone = async source => {
     console.log(e);
   }
 };
+
+/**
+ * Update an asset
+ * @param {String} assetId
+ * @param {{}} data
+ * @param {{}} job
+ * @returns {Promise<*>}
+ */
+async function updateStream({ assetId, data, job }) {
+  const asset = await Asset.findById(assetId);
+  asset.bitrates = asset.bitrates.concat(job.options.maxrate || job.bitrate);
+  asset.markModified('bitrates');
+
+  // store output resolution
+  const stream = _.find(_.get(data, 'ffprobes[0].streams', []), { codec_type: 'video' });
+
+  if (stream) {
+    const aspect = _.get(stream, 'display_aspect_ratio', '')
+      .split(':')
+      .map(value => parseInt(value))
+      .filter(value => value)
+    ;
+
+    asset.streams.push({
+      filename: path.basename(data.filenames[0]),
+      bandwidth: parseInt(job.options.maxrate) * 1024,
+      resolution:
+        aspect.length > 0 ? Math.max(stream.width,
+          Math.floor(stream.height / aspect[1] * aspect[0])) + 'x' + stream.height :
+          `${stream.width}x${stream.height}`
+      ,
+      codec: 'avc1.640029'
+    });
+  } else {
+    for(let i=0; i<job.bitrate.length; i++) {
+      asset.audioStreams.push({
+        filename: path.basename(data.filenames[i]),
+        bitrate: job.bitrate[i],
+        bandwidth: job.bandwidth[i],
+        codec: job.codec[i]
+      });
+    }
+  }
+
+  await asset.save();
+
+  return asset;
+}
 
 /**
  * Get the class of the encoder (using the cpu info)
@@ -269,52 +324,20 @@ encoderIO.on('connection', function (socket) {
         const job = _.find(source.jobs, { m3u8: data.filename });
         if (job) {
           source.completed++;
-          source.asset.bitrates = source.asset.bitrates.concat(job.options.maxrate || job.bitrate);
-          source.asset.markModified('bitrates');
-
-          // store output resolution
-          const stream = _.find(_.get(data, 'ffprobes[0].streams', []), { codec_type: 'video' });
-
-          if (stream) {
-            const aspect = _.get(stream, 'display_aspect_ratio', '')
-              .split(':')
-              .map(value => parseInt(value))
-              .filter(value => value)
-            ;
-
-            source.asset.streams.push({
-              filename: path.basename(data.filenames[0]),
-              bandwidth: parseInt(job.options.maxrate) * 1024,
-              resolution:
-                aspect.length > 0 ? Math.max(stream.width,
-                  Math.floor(stream.height / parseInt(aspect[1]) * parseInt(aspect[0]))) + 'x' + stream.height :
-                  `${stream.width}x${stream.height}`
-              ,
-              codec: 'avc1.640029'
-            });
-          } else {
-            for(let i=0; i<job.bitrate.length; i++) {
-              source.asset.audioStreams.push({
-                filename: path.basename(data.filenames[i]),
-                bitrate: job.bitrate[i],
-                bandwidth: job.bandwidth[i],
-                codec: job.codec[i]
-              });
-            }
-          }
-
-          source.asset.save(err => {
-            if (err) {
-              console.log('Unable to add bitrate to asset');
-            }
-
-            const emit = () => globalIO.emit('job-completed', _.pick(source.asset, ['_id', 'bitrates', 'jobs', 'state']));
+          updateStream({
+            assetId: source.asset._id,
+            data,
+            job
+          }).then(asset => {
+            source.asset = asset;
+            const emit = () => globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']));
 
             if (source.completed === source.jobs.length) {
+              source.asset.state = 'processed';
               sourceDone(filename)
-              .then(emit)
-              .catch(e => console.error(e));
-            } else if (source.asset) {
+                .then(emit)
+                .catch(e => console.error(e));
+            } else if (asset) {
               emit();
             }
           });
