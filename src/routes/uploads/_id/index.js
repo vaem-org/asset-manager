@@ -35,6 +35,9 @@ router.get('/', validObjectId('id'), catchExceptions(async (req, res) => {
     res.redirect(redirect);
   } else {
     const input = await config.sourceFileSystem.read(item.name);
+    req.on('close', () => {
+      input.stream.destroy();
+    });
     input.stream.pipe(res);
   }
 }));

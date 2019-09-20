@@ -55,6 +55,10 @@ const serve = catchExceptions(async (req, res) => {
     });
 
     input.stream.pipe(res);
+
+    req.on('close', () => {
+      input.stream.destroy();
+    });
   }
 });
 
