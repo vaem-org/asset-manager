@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import 'dotenv/config';
-import { fileSystemFromURL } from '@vaem/filesystem';
+import { fileSystemFromURL } from '@vaem-util/filesystem';
 import fs from 'fs';
 import { URL } from 'url';
 import { randomBytes } from 'crypto';

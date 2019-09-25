@@ -34,7 +34,6 @@ ENV NODE_ENV=production FONTCONFIG_PATH=/etc/fonts
 
 RUN rm -rv src/ && \
     yarn install --production && \
-    cd node_modules/@vaem/filesystem && NODE_ENV=development yarn && rm -r node_modules && \
     yarn cache clean
 
 CMD ["yarn", "start"]
