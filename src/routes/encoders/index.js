@@ -106,7 +106,7 @@ async function processQueue() {
 
       if (asset.state !== 'processing') {
         asset.state = 'processing';
-        Asset.update({
+        Asset.updateOne({
           _id: asset._id
         }, {
           $set: {
@@ -481,9 +481,10 @@ router.post('/start-job', json(), api(async req => {
 
   const segmentOptions = {};
 
-  if (config.hlsEnc) {
-    segmentOptions.hls_key_info_file = hlsKeyInfoFile;
-  }
+  // TODO: Check fix for Samsung TV's (they do not play encrypted audio tracks
+  // if (config.hlsEnc) {
+  //   segmentOptions.hls_key_info_file = hlsKeyInfoFile;
+  // }
 
   audioJobs.forEach(job => {
     if (asset.bitrates.indexOf(job.bitrate) !== -1) {
@@ -502,7 +503,7 @@ router.post('/start-job', json(), api(async req => {
       codec: job.codec,
       bandwidth: job.bandwidth,
       m3u8: `${outputBase}/${basename}.audio-%v.m3u8`,
-      hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
+      // hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
     });
   });
 
