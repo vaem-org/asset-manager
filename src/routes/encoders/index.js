@@ -481,9 +481,9 @@ router.post('/start-job', json(), api(async req => {
 
   const segmentOptions = {};
 
-  if (config.hlsEnc) {
-    segmentOptions.hls_key_info_file = hlsKeyInfoFile;
-  }
+  // if (config.hlsEnc) {
+  //   segmentOptions.hls_key_info_file = hlsKeyInfoFile;
+  // }
 
   audioJobs.forEach(job => {
     if (asset.bitrates.indexOf(job.bitrate) !== -1) {
@@ -502,7 +502,7 @@ router.post('/start-job', json(), api(async req => {
       codec: job.codec,
       bandwidth: job.bandwidth,
       m3u8: `${outputBase}/${basename}.audio-%v.m3u8`,
-      hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
+      // hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
     });
   });
 
