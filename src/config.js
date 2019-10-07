@@ -72,7 +72,7 @@ const config = merge({
 
   env: process.env.NODE_ENV || 'development',
 
-  mongo: process.env.MONGO_URL || 'mongodb://localhost/asset-manager',
+  mongo: process.env.MONGO_URL || 'mongodb://localhost:48489/asset-manager',
 
   output: `${root}/var/output`,
   source,
