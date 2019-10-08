@@ -17,10 +17,11 @@
  */
 
 import mongoose from 'mongoose';
+import config from '@/config';
 
 export async function initMongoose() {
   mongoose.set('useFindAndModify', false);
-  await mongoose.connect(process.env.MONGO_URL || 'mongodb://localhost/asset-manager', {
+  await mongoose.connect(config.mongo, {
     useNewUrlParser: true,
     useCreateIndex: true
   });

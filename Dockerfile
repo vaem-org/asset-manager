@@ -1,8 +1,6 @@
 FROM jrottenberg/ffmpeg:4.1-alpine AS ffmpeg
 FROM node:10.15.2-alpine AS build
 
-RUN apk add --no-cache git
-
 COPY package.json /app/package.json
 COPY yarn.lock /app/yarn.lock
 
