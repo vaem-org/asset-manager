@@ -101,7 +101,9 @@ const config = merge({
   },
 
   encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex'),
-  slackHook: process.env.SLACK_HOOK
+  slackHook: process.env.SLACK_HOOK,
+
+  separateAudio: process.env.SEPARATE_AUDIO === '1'
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;

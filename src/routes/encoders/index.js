@@ -25,7 +25,13 @@ import crypto from 'crypto';
 import { URL } from 'url';
 import { Mutex } from 'async-mutex';
 import fixKeys from '@/util/fix-keys';
-import { getSeekable, getSource, getVideoParameters, getAudioJobs } from '@/util/source';
+import {
+  getSeekable,
+  getSource,
+  getVideoParameters,
+  getAudioJobs,
+  getChannelMapping
+} from '@/util/source';
 import { api, verify } from '@/util/express-helpers';
 import * as settings from '@/model/settings';
 import { File } from '@/model/file';
@@ -431,6 +437,8 @@ router.post('/start-job', json(), api(async req => {
 
   const outputBase = `/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
 
+  const { stereoMap } = await getChannelMapping(file, source);
+
   // prepare the jobs array
   _.each(config.profiles, (profiles, width) => {
     width = parseInt(width);
@@ -446,7 +454,12 @@ router.post('/start-job', json(), api(async req => {
               'ss': req.body.ss || null,
               'vf': (req.body.vf ? req.body.vf + '[out];[out]' : '') + options.vf,
               'f': 'mpegts',
-              'map': `0:${videoParameters.video}`,
+              'map': [
+                `0:${videoParameters.video}`,
+                ...(!config.separateAudio ? [
+                  stereoMap.map ? stereoMap.map : '[aout]'
+                ] : [])
+              ],
               'seekable': getSeekable(source),
               'vcodec': 'libx264',
               'vprofile': 'high',
@@ -455,6 +468,12 @@ router.post('/start-job', json(), api(async req => {
               'pix_fmt': 'yuv420p',
               'g': 2 * Math.ceil(framerate),
               'x264opts': 'no-scenecut'
+            },
+            config.separateAudio ? {} : {
+              'filter_complex': stereoMap.filter_complex,
+              'c:a': 'libfdk_aac',
+              'ac': 2,
+              'b:a': '128k'
             }
           ),
           videoParameters,
@@ -477,7 +496,7 @@ router.post('/start-job', json(), api(async req => {
   }
 
   // check if extra audio tracks need to be added
-  const audioJobs = await getAudioJobs(asset, file, source);
+  const audioJobs = config.separateAudio ? await getAudioJobs(asset, file, source) : [];
 
   const segmentOptions = {};
 
