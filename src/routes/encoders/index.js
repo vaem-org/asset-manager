@@ -443,6 +443,11 @@ router.post('/start-job', json(), api(async req => {
   _.each(config.profiles, (profiles, width) => {
     width = parseInt(width);
     if (width <= videoParameters.width) {
+      let audioMap = '0:a';
+
+      if (stereoMap) {
+        audioMap = stereoMap.map ? stereoMap.map : '[aout]';
+      }
       todo = todo
       .concat(_.filter(profiles, profile => asset.bitrates.indexOf(profile.maxrate) === -1)
       .map(options => (
@@ -457,7 +462,7 @@ router.post('/start-job', json(), api(async req => {
               'map': [
                 `0:${videoParameters.video}`,
                 ...(!config.separateAudio ? [
-                  stereoMap.map ? stereoMap.map : '[aout]'
+                  audioMap
                 ] : [])
               ],
               'seekable': getSeekable(source),
