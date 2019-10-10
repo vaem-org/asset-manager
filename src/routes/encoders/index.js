@@ -475,7 +475,7 @@ router.post('/start-job', json(), api(async req => {
               'x264opts': 'no-scenecut'
             },
             config.separateAudio ? {} : {
-              'filter_complex': stereoMap.filter_complex,
+              'filter_complex': stereoMap ? stereoMap.filter_complex : null,
               'c:a': 'libfdk_aac',
               'ac': 2,
               'b:a': '128k'
