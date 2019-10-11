@@ -72,13 +72,18 @@ router.delete('/:language', api(async (req) => {
   item.markModified('subtitles');
   await item.save();
 
-  // delete files
-  const files = await config.destinationFileSystem.list(`${item._id}/subtitles`);
-  for(let file of files) {
-    if (file.name.startsWith(req.params.language)) {
-      await config.destinationFileSystem.delete(`${item._id}/subtitles/${file.name}`);
+  (async () => {
+    // delete files
+    const files = await config.destinationFileSystem.list(`${item._id}/subtitles`);
+    for(let file of files) {
+      if (file.name.startsWith(req.params.language)) {
+        await config.destinationFileSystem.delete(`${item._id}/subtitles/${file.name}`);
+      }
     }
-  }
+  })()
+  .catch(e => {
+    console.error(e.toString());
+  })
 }));
 
 router.put('/:language/:name', api(async (req) => {

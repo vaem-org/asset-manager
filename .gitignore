@@ -45,3 +45,4 @@ src/bin/test.js
 docker-compose.override.yml
 .env
 /dist/
+/lib/se355/Settings.xml

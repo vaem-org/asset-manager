@@ -23,6 +23,24 @@ import { verifySignature } from '@/util/url-signer';
 
 const router = new Router();
 
+const uploadQueue = [];
+let uploading = false;
+
+async function uploadNext() {
+  uploading = true;
+  const { output, data } = uploadQueue.shift();
+
+  await config.destinationFileSystem.writeFile(output, data);
+  await (new Promise(accept => setTimeout(accept, 250)));
+
+  if (uploadQueue.length > 0) {
+    uploadNext()
+      .catch(e => console.error(e.toString()));
+  } else {
+    uploading = false;
+  }
+}
+
 router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   if (!['PUT', 'POST'].includes(req.method)) {
@@ -61,8 +79,10 @@ router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
   }
 
   if (data) {
-    await config.destinationFileSystem.writeFile(output, data);
-    await (new Promise(accept => setTimeout(accept, 250)));
+    uploadQueue.push({ output, data});
+    if (!uploading) {
+      uploadNext().catch(e => console.error(e));
+    }
   }
 
   res.end();
