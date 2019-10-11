@@ -62,6 +62,7 @@ router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
 
   if (data) {
     await config.destinationFileSystem.writeFile(output, data);
+    await (new Promise(accept => setTimeout(accept, 250)));
   }
 
   res.end();
