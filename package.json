@@ -8,7 +8,8 @@
     "dev": "nodemon --exec babel-node -w .env -w ./config -w ./src --ignore './src/bin/**' src/app.js",
     "postinstall": "if [ $STACK ]; then npm run build; fi",
     "start": "node dist/app.js",
-    "build": "babel src -d dist --delete-dir-on-start"
+    "build": "babel src -d dist --delete-dir-on-start",
+    "console": "babel-node src/bin/console.js"
   },
   "author": "Wouter van de Molengraft",
   "license": "GPL-3.0-only",
@@ -40,6 +41,7 @@
     "sharp": "^0.23.0",
     "slug": "^1.1.0",
     "socket.io": "^2.0.1",
+    "sywac": "^1.2.2",
     "throng": "^4.0.0",
     "uuid": "^3.3.3",
     "woothee": "^1.10.1"

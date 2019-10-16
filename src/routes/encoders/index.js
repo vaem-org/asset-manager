@@ -29,7 +29,7 @@ import {
   getSeekable,
   getSource,
   getVideoParameters,
-  getAudioJobs,
+  getAudioJob,
   getChannelMapping
 } from '@/util/source';
 import { api, verify } from '@/util/express-helpers';
@@ -439,6 +439,9 @@ router.post('/start-job', json(), api(async req => {
 
   const { stereoMap } = await getChannelMapping(file, source);
 
+  // check if extra audio tracks need to be added
+  const audioJob = config.separateAudio ? await getAudioJob(asset, file, source) : null;
+
   // prepare the jobs array
   _.each(config.profiles, (profiles, width) => {
     width = parseInt(width);
@@ -454,8 +457,9 @@ router.post('/start-job', json(), api(async req => {
         {
           source,
           audio,
-          options: _.extend({}, options,
+          options:
             {
+              ...options,
               'ss': req.body.ss || null,
               'vf': (req.body.vf ? req.body.vf + '[out];[out]' : '') + options.vf,
               'f': 'mpegts',
@@ -472,15 +476,14 @@ router.post('/start-job', json(), api(async req => {
               'preset': 'slow',
               'pix_fmt': 'yuv420p',
               'g': 2 * Math.ceil(framerate),
-              'x264opts': 'no-scenecut'
+              'x264opts': 'no-scenecut',
+              ...(config.separateAudio ? {} : {
+                'filter_complex': stereoMap ? stereoMap.filter_complex : null,
+                'c:a': 'libfdk_aac',
+                'ac': 2,
+                'b:a': '128k'
+              })
             },
-            config.separateAudio ? {} : {
-              'filter_complex': stereoMap ? stereoMap.filter_complex : null,
-              'c:a': 'libfdk_aac',
-              'ac': 2,
-              'b:a': '128k'
-            }
-          ),
           videoParameters,
           width: width,
           m3u8: `${outputBase}/${basename}.${options.maxrate}.m3u8`,
@@ -500,9 +503,6 @@ router.post('/start-job', json(), api(async req => {
     });
   }
 
-  // check if extra audio tracks need to be added
-  const audioJobs = config.separateAudio ? await getAudioJobs(asset, file, source) : [];
-
   const segmentOptions = {};
 
   // TODO: Check fix for Samsung TV's (they do not play encrypted audio tracks
@@ -510,26 +510,25 @@ router.post('/start-job', json(), api(async req => {
   //   segmentOptions.hls_key_info_file = hlsKeyInfoFile;
   // }
 
-  audioJobs.forEach(job => {
-    if (asset.bitrates.indexOf(job.bitrate) !== -1) {
-      return;
-    }
-
+  if (audioJob && asset.bitrates.indexOf(audioJob.bitrate) === -1) {
     todo.unshift({
       source,
       segmentOptions: {
         ...segmentOptions,
-        ...job.segmentOptions
+        ...audioJob.segmentOptions
       },
 
-      bitrate: job.bitrate,
-      options: job.options,
-      codec: job.codec,
-      bandwidth: job.bandwidth,
+      bitrate: audioJob.bitrate,
+      options: {
+        ...audioJob.options,
+        vn: true
+      },
+      codec: audioJob.codec,
+      bandwidth: audioJob.bandwidth,
       m3u8: `${outputBase}/${basename}.audio-%v.m3u8`,
       // hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
     });
-  });
+  }
 
   if (todo.length === 0) {
     throw 'No jobs left';

@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /*
  * VAEM - Asset manager
  * Copyright (C) 2018  Wouter van de Molengraft
@@ -19,12 +17,11 @@
  */
 
 import config from '@/config';
-
+import sywac from 'sywac';
 import moment from 'moment';
 import { computeSignature } from '@/util/url-signer';
 
 import _ from 'lodash';
-import mongoose from 'mongoose';
 import { execFile as _execFile } from 'child_process';
 import { promisify } from 'util';
 
@@ -43,12 +40,7 @@ const getDuration = async source => {
   return parseFloat(_.get(json, 'format.duration'));
 };
 
-(async () => {
-  await mongoose.connect(config.mongo, {
-    useNewUrlParser: true
-  });
-
-  const assetId = process.argv[2];
+sywac.command('verify-asset <assetId>', async ({ assetId }) => {
   const asset = await Asset.findById(assetId);
 
   if (!asset) {
@@ -96,9 +88,4 @@ const getDuration = async source => {
   if (asset.bitrates.length === asset.jobs.length) {
     console.info('Asset has been verified successfully');
   }
-
-  await mongoose.disconnect();
-})().catch(e => {
-  console.error(e);
-  process.exit(1);
 });

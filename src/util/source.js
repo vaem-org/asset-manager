@@ -257,18 +257,16 @@ export async function getChannelMapping(file, source) {
  * @param {Asset} asset
  * @param {File} file
  * @param {String} source
- * @returns {Promise<[]|Array>}
+ * @returns {Promise<{}>}
  */
-export async function getAudioJobs(asset, file, source) {
-  const jobs = [];
-
+export async function getAudioJob(asset, file, source) {
   if (!asset.videoParameters.hasAudio) {
     return [];
   }
 
   const { surroundMap, stereoMap } = await getChannelMapping(file, source);
 
-  jobs.push({
+  return {
     bitrate: ['aac-64k', 'aac-128k', ...(surroundMap ? ['ac3-448k'] : [])],
     codec: ['mp4a.40.2', 'mp4a.40.2', ...(surroundMap ? ['ac-3'] : [])],
     bandwidth: [64*1024, 128*1024, ...(surroundMap ? [448*1024] : [])],
@@ -280,7 +278,6 @@ export async function getAudioJobs(asset, file, source) {
       'c:a:1': 'libfdk_aac',
       'ac:0': 2,
       'ac:1': 2,
-      'vn': true,
       'filter_complex': [
         stereoMap && stereoMap.filter_complex ? `${stereoMap.filter_complex},[aout]asplit=2[aout1][aout2]` : `[${(stereoMap && stereoMap.map) || '0:a'}]asplit=2[aout1][aout2]`,
         ...(surroundMap && surroundMap.filter_complex ? [surroundMap.filter_complex.replace('[aout]', '[aout3]')] : '')
@@ -302,9 +299,5 @@ export async function getAudioJobs(asset, file, source) {
       'hls_segment_filename': `/app/tmp/segments/${asset._id}.audio-v.m3u8/${asset._id}.audio-%v.%05d.ts`,
       'var_stream_map': ['a:0', 'a:1', ...(surroundMap ? ['a:2'] : [])].join(' ')
     }
-  });
-
-  console.log(jobs[0]);
-
-  return jobs;
+  };
 }

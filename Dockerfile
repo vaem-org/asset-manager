@@ -32,6 +32,7 @@ ENV NODE_ENV=production FONTCONFIG_PATH=/etc/fonts
 
 RUN rm -rv src/ && \
     yarn install --production && \
-    yarn cache clean
+    yarn cache clean && \
+    ln -s dist/bin bin
 
 CMD ["yarn", "start"]

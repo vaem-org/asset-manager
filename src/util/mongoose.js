@@ -23,6 +23,7 @@ export async function initMongoose() {
   mongoose.set('useFindAndModify', false);
   await mongoose.connect(config.mongo, {
     useNewUrlParser: true,
-    useCreateIndex: true
+    useCreateIndex: true,
+    useUnifiedTopology: true
   });
 }
