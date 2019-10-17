@@ -453,6 +453,7 @@ router.post('/start-job', json(), api(async req => {
         .map(bitrate => ({width, bitrate}))
     })
     .flat()
+    .reverse()
   ;
 
   let audioMap = '0:a';
@@ -552,7 +553,7 @@ router.post('/start-job', json(), api(async req => {
     asset: asset
   };
 
-  queue = queue.concat(todo.reverse());
+  queue = queue.concat(todo);
 
   browserIO.emit('queue-update', queue.length);
 

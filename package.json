@@ -14,7 +14,7 @@
   "author": "Wouter van de Molengraft",
   "license": "GPL-3.0-only",
   "engines": {
-    "node": ">=9.3.0"
+    "node": ">=12.11.0"
   },
   "dependencies": {
     "@azure/arm-containerinstance": "^5.4.0",

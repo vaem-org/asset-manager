@@ -1,5 +1,5 @@
 FROM jrottenberg/ffmpeg:4.2-alpine AS ffmpeg
-FROM node:10.15.2-alpine AS build
+FROM node:12.12.0-alpine AS build
 
 COPY package.json /app/package.json
 COPY yarn.lock /app/yarn.lock
@@ -12,7 +12,7 @@ COPY . /app
 
 RUN yarn build
 
-FROM node:10.15.2-alpine
+FROM node:12.12.0-alpine
 COPY --from=ffmpeg / /
 
 # add mono for running Subtitle Edit for subtitle conversion
