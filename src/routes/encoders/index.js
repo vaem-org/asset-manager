@@ -443,62 +443,69 @@ router.post('/start-job', json(), api(async req => {
   const audioJob = config.separateAudio ? await getAudioJob(asset, file, source) : null;
 
   // prepare the jobs array
-  _.each(config.profiles, (bitrates, width) => {
-    width = parseInt(width);
-    if (width <= videoParameters.width) {
-      let audioMap = '0:a';
+  const profiles = Object.keys(config.profiles)
+    .filter(width => width <= videoParameters.width)
+    .map(width => {
+      return config.profiles[width]
+        .filter(bitrate => !asset.bitrates.includes(bitrate))
+        .map(bitrate => ({width, bitrate}))
+    })
+    .flat()
+  ;
 
-      if (stereoMap) {
-        audioMap = stereoMap.map ? stereoMap.map : '[aout]';
-      }
-      todo = todo
-      .concat(_.filter(bitrates, bitrate => asset.bitrates.indexOf(bitrate) === -1)
-      .map(function (bitrate) {
-        bitrate = bitrate + 'k';
+  let audioMap = '0:a';
 
-        return {
-          source,
-          audio,
-          bitrate,
-          arguments: [
-            '-seekable', getSeekable(source),
-            '-i', source,
-            '-vf', (req.body.vf ? req.body.vf + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
-            '-b:v', bitrate,
-            '-maxrate', bitrate,
-            '-bufsize', bitrate,
-            '-f', 'hls',
-            '-hls_list_size', 0,
-            '-hls_playlist_type', 'vod',
-            '-hls_time', 2,
-            ...[
-              `0:${videoParameters.video}`,
-              ...(!config.separateAudio ? [
-                audioMap
-              ] : [])
-            ].map(map => ['-map', map]).flat(),
-            '-vcodec', 'libx264',
-            '-vprofile', 'high',
-            '-level', '4.1',
-            '-pix_fmt', 'yuv420p',
-            '-g', 2 * Math.ceil(framerate),
-            '-x264opts', 'no-scenecut',
-            ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
-            ...(config.separateAudio ? [] : [
-              ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
-              '-c:a', 'libfdk_aac',
-              '-ac', 2,
-              '-b:a', '128k',
-            ])
-          ],
+  if (stereoMap) {
+    audioMap = stereoMap.map ? stereoMap.map : '[aout]';
+  }
 
-          videoParameters,
-          m3u8: `${outputBase}/${basename}.${bitrate}.m3u8`,
-          hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
-        };
-      }));
-    }
-  });
+  todo = [
+    ...todo,
+    ...profiles.map(({ width, bitrate}) => {
+      bitrate = bitrate + 'k';
+
+      return {
+        source,
+        audio,
+        bitrate,
+        arguments: [
+          '-seekable', getSeekable(source),
+          '-i', source,
+          '-vf', (req.body.vf ? req.body.vf + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
+          '-b:v', bitrate,
+          '-maxrate', bitrate,
+          '-bufsize', bitrate,
+          '-f', 'hls',
+          '-hls_list_size', 0,
+          '-hls_playlist_type', 'vod',
+          '-hls_time', 2,
+          ...[
+            `0:${videoParameters.video}`,
+            ...(!config.separateAudio ? [
+              audioMap
+            ] : [])
+          ].map(map => ['-map', map]).flat(),
+          '-vcodec', 'libx264',
+          '-vprofile', 'high',
+          '-level', '4.1',
+          '-pix_fmt', 'yuv420p',
+          '-g', 2 * Math.ceil(framerate),
+          '-x264opts', 'no-scenecut',
+          ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
+          ...(config.separateAudio ? [] : [
+            ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
+            '-c:a', 'libfdk_aac',
+            '-ac', 2,
+            '-b:a', '128k',
+          ])
+        ],
+
+        videoParameters,
+        m3u8: `${outputBase}/${basename}.${bitrate}.m3u8`,
+        hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
+      };
+    })
+  ];
 
   // TODO: Check fix for Samsung TV's (they do not play encrypted audio tracks
   // if (config.hlsEnc) {
