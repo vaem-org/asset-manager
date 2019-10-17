@@ -266,23 +266,26 @@ export async function getAudioJob(asset, file, source) {
 
   const { surroundMap, stereoMap } = await getChannelMapping(file, source);
 
+  const filterComplex = [
+    ...(stereoMap && stereoMap.filter_complex ? [stereoMap.filter_complex, '[aout]asplit=2[aout1][aout2]'] : []),
+    ...(surroundMap && surroundMap.filter_complex ? [surroundMap.filter_complex.replace('[aout]', '[surround]')] : [])
+  ].join(',');
+
+  const stereo = stereoMap && stereoMap.filter_complex ? false : stereoMap.map;
+
   return {
     bitrate: ['aac-64k', 'aac-128k', ...(surroundMap ? ['ac3-448k'] : [])],
     codec: ['mp4a.40.2', 'mp4a.40.2', ...(surroundMap ? ['ac-3'] : [])],
     bandwidth: [64*1024, 128*1024, ...(surroundMap ? [448*1024] : [])],
+    varStreamMap: ['a:0,name:audio-0', 'a:1,name:audio-1', ...(surroundMap ? ['a:2,name:audio-2'] : [])].join(' '),
     arguments: [
-      '-seekable', 0,
-      '-i', source,
       '-b:a:0', '64k',
       '-b:a:1', '128k',
       '-c:a:0', 'libfdk_aac',
       '-c:a:1', 'libfdk_aac',
       '-ac:0', 2,
       '-ac:1', 2,
-      '-filter_complex', [
-        stereoMap && stereoMap.filter_complex ? `${stereoMap.filter_complex},[aout]asplit=2[aout1][aout2]` : `[${(stereoMap && stereoMap.map) || '0:a'}]asplit=2[aout1][aout2]`,
-        ...(surroundMap && surroundMap.filter_complex ? [surroundMap.filter_complex.replace('[aout]', '[aout3]')] : '')
-      ].join(','),
+      ...(filterComplex ? ['-filter_complex', filterComplex] : []),
 
       ...(surroundMap ? [
         '-b:a:2', '448k',
@@ -291,15 +294,11 @@ export async function getAudioJob(asset, file, source) {
       ] : []),
 
       ...[
-        '[aout1]',
-        '[aout2]',
-        ...(surroundMap && surroundMap.filter_complex ? ['[aout3]'] : []),
+        stereo || '[aout1]',
+        stereo || '[aout2]',
+        ...(surroundMap && surroundMap.filter_complex ? ['[surround]'] : []),
         ...(surroundMap && !surroundMap.filter_complex ? [surroundMap.map] : []),
       ].map(map => ['-map', map]).flat(),
-
-      '-hls_time', 10,
-      '-hls_segment_filename', `/app/tmp/segments/${asset._id}.audio-v.m3u8/${asset._id}.audio-%v.%05d.ts`,
-      '-var_stream_map', ['a:0', 'a:1', ...(surroundMap ? ['a:2'] : [])].join(' ')
     ],
   };
 }

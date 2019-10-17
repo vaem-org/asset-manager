@@ -236,8 +236,10 @@ async function updateStream({ assetId, data, job }) {
       ,
       codec: 'avc1.640029'
     });
-  } else {
-    for(let i=0; i<job.bitrate.length; i++) {
+  }
+
+  if (job.bitrate instanceof Array) {
+    for (let i = 1; i < job.bitrate.length; i++) {
       asset.audioStreams.push({
         filename: path.basename(data.filenames[i]),
         bitrate: job.bitrate[i],
@@ -459,73 +461,76 @@ router.post('/start-job', json(), api(async req => {
     audioMap = stereoMap.map ? stereoMap.map : '[aout]';
   }
 
-  todo = [
-    ...todo,
-    ...profiles.map(({ width, bitrate}) => {
-      bitrate = bitrate + 'k';
+  for(let i=0; i<profiles.length; i++) {
+    const { width, bitrate } = profiles[i];
 
-      return {
-        source,
-        audio,
-        bitrate,
-        arguments: [
-          '-seekable', getSeekable(source),
-          '-i', source,
-          '-vf', (req.body.vf ? req.body.vf + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
-          '-b:v', bitrate,
-          '-maxrate', bitrate,
-          '-bufsize', bitrate,
-          '-f', 'hls',
-          '-hls_list_size', 0,
-          '-hls_playlist_type', 'vod',
-          '-hls_time', 2,
-          ...[
-            `0:${videoParameters.video}`,
-            ...(!config.separateAudio ? [
-              audioMap
-            ] : [])
-          ].map(map => ['-map', map]).flat(),
-          '-vcodec', 'libx264',
-          '-vprofile', 'high',
-          '-level', '4.1',
-          '-pix_fmt', 'yuv420p',
-          '-g', 2 * Math.ceil(framerate),
-          '-x264opts', 'no-scenecut',
-          ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
-          ...(config.separateAudio ? [] : [
-            ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
-            '-c:a', 'libfdk_aac',
-            '-ac', 2,
-            '-b:a', '128k',
-          ])
-        ],
-
-        videoParameters,
-        m3u8: `${outputBase}/${basename}.${bitrate}.m3u8`,
-        hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
-      };
-    })
-  ];
-
-  // TODO: Check fix for Samsung TV's (they do not play encrypted audio tracks
-  // if (config.hlsEnc) {
-  //   segmentOptions.hls_key_info_file = hlsKeyInfoFile;
-  // }
-
-  if (audioJob && asset.bitrates.indexOf(audioJob.bitrate) === -1) {
-    todo.unshift({
+    let bitrateString = `${bitrate}k`;
+    const job = {
       source,
+      audio,
+      videoParameters,
+      bitrate: bitrateString,
+      m3u8: `${outputBase}/${basename}.${bitrateString}.m3u8`,
+      hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false,
+      segmentFilename: `${asset._id}.${bitrate}.%05d.ts`
+    };
 
-      bitrate: audioJob.bitrate,
-      arguments: [
+    let audioArguments = [];
+
+    if (!config.separateAudio && asset.videoParameters.hasAudio) {
+      audioArguments = [
+        '-map', audioMap,
+        ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
+        '-c:a', 'libfdk_aac',
+        '-ac', 2,
+        '-b:a', '128k',
+      ]
+    } else if (i === 0 && asset.videoParameters.hasAudio) {
+      // add audio variants
+      Object.assign(job, {
+        bitrate: [bitrateString, ...audioJob.bitrate],
+        codec: ['avc1.640029', ...audioJob.codec],
+        bandwidth: [bitrate*1024, ...audioJob.bandwidth],
+        segmentFilename: `${asset._id}.%v.%05d.ts`,
+        m3u8: `${outputBase}/${basename}.%v.m3u8`
+      });
+
+      audioArguments = [
         ...audioJob['arguments'],
-        '-vn'
-      ],
-      codec: audioJob.codec,
-      bandwidth: audioJob.bandwidth,
-      m3u8: `${outputBase}/${basename}.audio-%v.m3u8`,
-      // hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
-    });
+        '-var_stream_map', `v:0,name:${bitrateString} ${audioJob.varStreamMap}`
+      ]
+    }
+
+    todo.push({
+      ...job,
+      arguments: [
+        '-seekable', getSeekable(source),
+        '-i', source,
+
+        // output
+        '-f', 'hls',
+        '-hls_list_size', 0,
+        '-hls_playlist_type', 'vod',
+        '-hls_time', 2,
+        ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
+
+        // video options
+        '-map', '0:v',
+        '-vcodec', 'libx264',
+        '-vprofile', 'high',
+        '-level', '4.1',
+        '-pix_fmt', 'yuv420p',
+        '-g', 2 * Math.ceil(framerate),
+        '-x264opts', 'no-scenecut',
+        '-vf', (req.body.vf ? req.body.vf + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
+        '-b:v', bitrateString,
+        '-maxrate', bitrateString,
+        '-bufsize', bitrateString,
+
+        // audio options
+        ...audioArguments
+      ]
+    })
   }
 
   if (todo.length === 0) {
@@ -552,7 +557,7 @@ router.post('/start-job', json(), api(async req => {
   browserIO.emit('queue-update', queue.length);
 
   if (!req.body.assetId) {
-    asset.jobs = _.map(todo, 'options');
+    asset.jobs = _.map(todo, 'arguments');
     asset.numStreams = _.sumBy(todo, job => _.isArray(job.bitrate) ? job.bitrate.length : 1);
     await asset.save();
   }
