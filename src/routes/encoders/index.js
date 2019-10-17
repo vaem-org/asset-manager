@@ -558,7 +558,15 @@ router.post('/start-job', json(), api(async req => {
   browserIO.emit('queue-update', queue.length);
 
   if (!req.body.assetId) {
-    asset.jobs = _.map(todo, 'arguments');
+    asset.jobs = _.map(todo, job => {
+      return job.arguments.map(value => {
+        if (value.startsWith && value.startsWith('-')) {
+          return value;
+        } else {
+          return `'${value}'`;
+        }
+      }).join(' ')
+    });
     asset.numStreams = _.sumBy(todo, job => _.isArray(job.bitrate) ? job.bitrate.length : 1);
     await asset.save();
   }
