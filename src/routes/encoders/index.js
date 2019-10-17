@@ -213,7 +213,7 @@ const sourceDone = async source => {
  */
 async function updateStream({ assetId, data, job }) {
   const asset = await Asset.findById(assetId);
-  asset.bitrates = asset.bitrates.concat(job.options.maxrate || job.bitrate);
+  asset.bitrates = asset.bitrates.concat(job.bitrate);
   asset.markModified('bitrates');
 
   // store output resolution
@@ -228,7 +228,7 @@ async function updateStream({ assetId, data, job }) {
 
     asset.streams.push({
       filename: path.basename(data.filenames[0]),
-      bandwidth: parseInt(job.options.maxrate) * 1024,
+      bandwidth: parseInt(job.bitrate) * 1024,
       resolution:
         aspect.length > 0 ? Math.max(stream.width,
           Math.floor(stream.height / aspect[1] * aspect[0])) + 'x' + stream.height :
@@ -443,7 +443,7 @@ router.post('/start-job', json(), api(async req => {
   const audioJob = config.separateAudio ? await getAudioJob(asset, file, source) : null;
 
   // prepare the jobs array
-  _.each(config.profiles, (profiles, width) => {
+  _.each(config.profiles, (bitrates, width) => {
     width = parseInt(width);
     if (width <= videoParameters.width) {
       let audioMap = '0:a';
@@ -452,58 +452,53 @@ router.post('/start-job', json(), api(async req => {
         audioMap = stereoMap.map ? stereoMap.map : '[aout]';
       }
       todo = todo
-      .concat(_.filter(profiles, profile => asset.bitrates.indexOf(profile.maxrate) === -1)
-      .map(options => (
-        {
+      .concat(_.filter(bitrates, bitrate => asset.bitrates.indexOf(bitrate) === -1)
+      .map(function (bitrate) {
+        bitrate = bitrate + 'k';
+
+        return {
           source,
           audio,
-          options:
-            {
-              ...options,
-              'ss': req.body.ss || null,
-              'vf': (req.body.vf ? req.body.vf + '[out];[out]' : '') + options.vf,
-              'f': 'mpegts',
-              'map': [
-                `0:${videoParameters.video}`,
-                ...(!config.separateAudio ? [
-                  audioMap
-                ] : [])
-              ],
-              'seekable': getSeekable(source),
-              'vcodec': 'libx264',
-              'vprofile': 'high',
-              'level': '4.1',
-              'preset': 'slow',
-              'pix_fmt': 'yuv420p',
-              'g': 2 * Math.ceil(framerate),
-              'x264opts': 'no-scenecut',
-              ...(config.separateAudio ? {} : {
-                'filter_complex': stereoMap ? stereoMap.filter_complex : null,
-                'c:a': 'libfdk_aac',
-                'ac': 2,
-                'b:a': '128k'
-              })
-            },
+          bitrate,
+          arguments: [
+            '-seekable', getSeekable(source),
+            '-i', source,
+            '-vf', (req.body.vf ? req.body.vf + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
+            '-b:v', bitrate,
+            '-maxrate', bitrate,
+            '-bufsize', bitrate,
+            '-f', 'hls',
+            '-hls_list_size', 0,
+            '-hls_playlist_type', 'vod',
+            '-hls_time', 2,
+            ...[
+              `0:${videoParameters.video}`,
+              ...(!config.separateAudio ? [
+                audioMap
+              ] : [])
+            ].map(map => ['-map', map]).flat(),
+            '-vcodec', 'libx264',
+            '-vprofile', 'high',
+            '-level', '4.1',
+            '-pix_fmt', 'yuv420p',
+            '-g', 2 * Math.ceil(framerate),
+            '-x264opts', 'no-scenecut',
+            ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
+            ...(config.separateAudio ? [] : [
+              ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
+              '-c:a', 'libfdk_aac',
+              '-ac', 2,
+              '-b:a', '128k',
+            ])
+          ],
+
           videoParameters,
-          width: width,
-          m3u8: `${outputBase}/${basename}.${options.maxrate}.m3u8`,
-          segmentOptions: config.hlsEnc ? {
-            'hls_key_info_file': hlsKeyInfoFile
-          } : {},
+          m3u8: `${outputBase}/${basename}.${bitrate}.m3u8`,
           hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false
-        })));
+        };
+      }));
     }
   });
-
-  await asset.save();
-
-  if (!req.body.assetId) {
-    globalIO.emit('asset-added', {
-      id: asset._id
-    });
-  }
-
-  const segmentOptions = {};
 
   // TODO: Check fix for Samsung TV's (they do not play encrypted audio tracks
   // if (config.hlsEnc) {
@@ -513,16 +508,12 @@ router.post('/start-job', json(), api(async req => {
   if (audioJob && asset.bitrates.indexOf(audioJob.bitrate) === -1) {
     todo.unshift({
       source,
-      segmentOptions: {
-        ...segmentOptions,
-        ...audioJob.segmentOptions
-      },
 
       bitrate: audioJob.bitrate,
-      options: {
-        ...audioJob.options,
-        vn: true
-      },
+      arguments: [
+        ...audioJob['arguments'],
+        '-vn'
+      ],
       codec: audioJob.codec,
       bandwidth: audioJob.bandwidth,
       m3u8: `${outputBase}/${basename}.audio-%v.m3u8`,
@@ -532,6 +523,14 @@ router.post('/start-job', json(), api(async req => {
 
   if (todo.length === 0) {
     throw 'No jobs left';
+  }
+
+  await asset.save();
+
+  if (!req.body.assetId) {
+    globalIO.emit('asset-added', {
+      id: asset._id
+    });
   }
 
   sources[source] = {

@@ -270,34 +270,36 @@ export async function getAudioJob(asset, file, source) {
     bitrate: ['aac-64k', 'aac-128k', ...(surroundMap ? ['ac3-448k'] : [])],
     codec: ['mp4a.40.2', 'mp4a.40.2', ...(surroundMap ? ['ac-3'] : [])],
     bandwidth: [64*1024, 128*1024, ...(surroundMap ? [448*1024] : [])],
-    options: {
-      seekable: 0,
-      'b:a:0': '64k',
-      'b:a:1': '128k',
-      'c:a:0': 'libfdk_aac',
-      'c:a:1': 'libfdk_aac',
-      'ac:0': 2,
-      'ac:1': 2,
-      'filter_complex': [
+    arguments: [
+      '-seekable', 0,
+      '-i', source,
+      '-b:a:0', '64k',
+      '-b:a:1', '128k',
+      '-c:a:0', 'libfdk_aac',
+      '-c:a:1', 'libfdk_aac',
+      '-ac:0', 2,
+      '-ac:1', 2,
+      '-filter_complex', [
         stereoMap && stereoMap.filter_complex ? `${stereoMap.filter_complex},[aout]asplit=2[aout1][aout2]` : `[${(stereoMap && stereoMap.map) || '0:a'}]asplit=2[aout1][aout2]`,
         ...(surroundMap && surroundMap.filter_complex ? [surroundMap.filter_complex.replace('[aout]', '[aout3]')] : '')
-        ].join(','),
-      ...(surroundMap ? {
-        'b:a:2': '448k',
-        'ac:2': 6,
-        'c:a:2': 'ac3'
-      } : {}),
-      'map': [
+      ].join(','),
+
+      ...(surroundMap ? [
+        '-b:a:2', '448k',
+        '-ac:2', 6,
+        '-c:a:2', 'ac3'
+      ] : []),
+
+      ...[
         '[aout1]',
         '[aout2]',
         ...(surroundMap && surroundMap.filter_complex ? ['[aout3]'] : []),
         ...(surroundMap && !surroundMap.filter_complex ? [surroundMap.map] : []),
-      ]
-    },
-    segmentOptions: {
-      'hls_time': 10,
-      'hls_segment_filename': `/app/tmp/segments/${asset._id}.audio-v.m3u8/${asset._id}.audio-%v.%05d.ts`,
-      'var_stream_map': ['a:0', 'a:1', ...(surroundMap ? ['a:2'] : [])].join(' ')
-    }
+      ].map(map => ['-map', map]).flat(),
+
+      '-hls_time', 10,
+      '-hls_segment_filename', `/app/tmp/segments/${asset._id}.audio-v.m3u8/${asset._id}.audio-%v.%05d.ts`,
+      '-var_stream_map', ['a:0', 'a:1', ...(surroundMap ? ['a:2'] : [])].join(' ')
+    ],
   };
 }
