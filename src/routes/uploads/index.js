@@ -108,7 +108,13 @@ router.put('/:name', catchExceptions(async (req, res) => {
     }
   }
 
+  let closed = false;
   const handleClose = () => {
+    if (closed) {
+      return;
+    }
+
+    closed = true;
     file.state = file.uploaded === file.size ? 'complete' : 'idle';
     file.uploaded = offset + numBytes;
     file.save();
