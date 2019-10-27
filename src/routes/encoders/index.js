@@ -340,7 +340,7 @@ encoderIO.on('connection', function (socket) {
             source.asset = asset;
             const emit = () => globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']));
 
-            if (source.completed === source.jobs.length) {
+            if (source.completed >= source.jobs.length) {
               source.asset.state = 'processed';
               sourceDone(filename)
                 .then(emit)
