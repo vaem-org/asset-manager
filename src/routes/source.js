@@ -57,8 +57,7 @@ const serve = catchExceptions(async (req, res) => {
     input.stream.pipe(res);
 
     req.on('close', () => {
-      // input.stream.destroy();
-      // TODO: stream is being destroyed to soon, check why
+      setTimeout(() => input.stream.destroy(), 250);
     });
   }
 });

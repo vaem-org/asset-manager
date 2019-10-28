@@ -55,34 +55,36 @@ async function getFiles(root) {
 }
 
 router.get('/', api(async req => {
-  const files = await getFiles('/');
+  if (!req.query.q) {
+    const files = await getFiles('/');
 
-  const entries = await File.find();
+    const entries = await File.find();
 
-  const byName = _.keyBy(entries, 'name');
+    const byName = _.keyBy(entries, 'name');
 
-  for (let stat of files) {
-    let file = byName[stat.path] || new File({
-      name: stat.path,
-      state: 'complete',
-      size: stat.size,
-      uploaded: stat.size
-    });
-
-    if (byName[stat.path]) {
-      file.set({
+    for (let stat of files) {
+      let file = byName[stat.path] || new File({
+        name: stat.path,
+        state: 'complete',
         size: stat.size,
         uploaded: stat.size
       });
-    }
-    await file.save();
-    entries.push(file);
-  }
 
-  await File.deleteMany({
-    name: { $not: { $in: files.map(file => file.path) } },
-    state: { $ne: 'prepared' }
-  });
+      if (byName[stat.path]) {
+        file.set({
+          size: stat.size,
+          uploaded: stat.size
+        });
+      }
+      await file.save();
+      entries.push(file);
+    }
+
+    await File.deleteMany({
+      name: { $not: { $in: files.map(file => file.path) } },
+      state: { $ne: 'prepared' }
+    });
+  }
 
   return listDocuments(req, File, req.query.q ? {
     name: {
