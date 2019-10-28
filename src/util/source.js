@@ -24,6 +24,7 @@ import getParams from './get-params';
 import { getSignedUrl } from '@/util/url-signer';
 
 const execFile = util.promisify(child_process.execFile);
+
 /**
  * Check the http seekable option for given source
  */
@@ -44,7 +45,7 @@ export function getSource(source) {
   }
 
   const url = '/' + source.split('/').map(encodeURIComponent).join('/');
-  return `${config.base}/source${getSignedUrl(url, 16*3600)}`;
+  return `${config.base}/source${getSignedUrl(url, 16 * 3600)}`;
 }
 
 /**
@@ -65,13 +66,20 @@ export async function getVideoParameters(source, audioStreams = null) {
 
   let monoChannels = [];
   const downmix = [];
-  const {stdout} = await execFile('ffprobe', getParams({
-    v: 'quiet',
-    print_format: 'json',
-    show_format: true,
-    show_streams: true,
-    seekable: getSeekable(source),
-  }).concat([source]));
+  let stdout;
+
+  try {
+    ({ stdout } = await execFile('ffprobe', getParams({
+      v: 'error',
+      print_format: 'json',
+      show_format: true,
+      show_streams: true,
+      seekable: getSeekable(source),
+    }).concat([source])));
+  }
+  catch (e) {
+    throw `ffprobe failed with ${e.stderr || e.toString()}`
+  }
 
   const sourceParameters = JSON.parse(stdout);
 
@@ -85,23 +93,19 @@ export async function getVideoParameters(source, audioStreams = null) {
       result['width'] = stream['width'];
       result['height'] = stream['height'];
       result['video'] = i;
-    }
-    else if (
+    } else if (
       stream['codec_type'] === 'audio' && stream['channels'] === 1 &&
       stream.channel_layout && /\(DL|DR\)/.exec(stream.channel_layout)
     ) {
       downmix.push(i);
-    }
-    else if (
+    } else if (
       stream['codec_type'] === 'audio' && stream['channels'] === 2 &&
       stream.channel_layout === 'downmix'
     ) {
       downmix.push(i);
-    }
-    else if (stream['codec_type'] === 'audio' && stream['channels'] === 1) {
+    } else if (stream['codec_type'] === 'audio' && stream['channels'] === 1) {
       monoChannels.push(i);
-    }
-    else if (stream['codec_type'] === 'audio') {
+    } else if (stream['codec_type'] === 'audio') {
       result.audio = i;
     }
   });
@@ -123,8 +127,7 @@ export async function getVideoParameters(source, audioStreams = null) {
         'filter_complex': `[0:${audioStreams[0]}][0:${audioStreams[1]}]amerge=inputs=2[aout]`,
         'map': [`0:${result.video}`, '[aout]']
       };
-  }
-  else if (audioStreams) {
+  } else if (audioStreams) {
     result['mixAudio'] = {};
     result.audio = audioStreams[0];
   }
@@ -134,7 +137,8 @@ export async function getVideoParameters(source, audioStreams = null) {
     result.audio = downmix[0];
   }
 
-  result.audioStreams = result.mixAudio ? (audioStreams || monoChannels).slice(0, 2) : [result.audio];
+  result.audioStreams = result.mixAudio ? (audioStreams || monoChannels).slice(0,
+    2) : [result.audio];
 
   result.hasAudio = hasAudio;
 
@@ -149,32 +153,32 @@ export async function getVideoParameters(source, audioStreams = null) {
  * @return {Promise<{stereo: [int], surround: [int]}>}
  */
 export async function guessChannelLayout(source) {
-  const parameters =  await getVideoParameters(source);
+  const parameters = await getVideoParameters(source);
 
   if (!parameters.hasAudio) {
     return null;
   }
 
-  const audioStreams = _.filter(_.get(parameters, 'ffprobe.streams'), {codec_type: 'audio'});
+  const audioStreams = _.filter(_.get(parameters, 'ffprobe.streams'), { codec_type: 'audio' });
 
   const numChannels = _.sumBy(audioStreams, 'channels');
   let surround = [];
 
-  const surroundTrack = _.find(audioStreams, {channels: 6});
+  const surroundTrack = _.find(audioStreams, { channels: 6 });
   if (surroundTrack) {
     surround = [surroundTrack];
-  }
-  else if (numChannels >= 6 && _.find(audioStreams, stream => /FL/.exec(stream.layout))) {
+  } else if (numChannels >= 6 && _.find(audioStreams, stream => /FL/.exec(stream.layout))) {
     const index = _.findIndex(audioStreams, stream => /FL/.exec(stream.layout));
-    surround = audioStreams.slice(index, index+6);
-  }
-  else if (numChannels >= 6) {
+    surround = audioStreams.slice(index, index + 6);
+  } else if (numChannels >= 6) {
     // assume first 2 channels are for downmix stereo
     surround = audioStreams.slice(2);
   }
 
   return {
-    stereo: parameters.audioStreams.length > 0 ? parameters.audioStreams  : _.map(_.filter(audioStreams, {channels: 2}), 'index'),
+    stereo: parameters.audioStreams.length > 0 ? parameters.audioStreams : _.map(_.filter(
+      audioStreams,
+      { channels: 2 }), 'index'),
     surround: _.map(surround, 'index')
   };
 }
@@ -186,7 +190,8 @@ export async function guessChannelLayout(source) {
  * @return {Promise<string>}
  */
 export async function getNormalizeParameters(source, parameters = ['-map', '0:1']) {
-  const {stderr} = await execFile('ffmpeg', ['-hide_banner', '-i', source, '-filter:a', 'loudnorm=print_format=json', '-f', 'null', ...parameters, '-']);
+  const { stderr } = await execFile('ffmpeg',
+    ['-hide_banner', '-i', source, '-filter:a', 'loudnorm=print_format=json', '-f', 'null', ...parameters, '-']);
 
   const parsed = JSON.parse(stderr.split('\n').slice(-13).join('\n'));
 
@@ -268,7 +273,8 @@ export async function getAudioJob(asset, file, source) {
 
   const filterComplex = [
     ...(stereoMap && stereoMap.filter_complex ? [stereoMap.filter_complex, '[aout]asplit=2[aout1][aout2]'] : []),
-    ...(surroundMap && surroundMap.filter_complex ? [surroundMap.filter_complex.replace('[aout]', '[surround]')] : [])
+    ...(surroundMap && surroundMap.filter_complex ? [surroundMap.filter_complex.replace('[aout]',
+      '[surround]')] : [])
   ].join(',');
 
   const stereo = stereoMap && stereoMap.filter_complex ? false : stereoMap.map;
@@ -276,8 +282,9 @@ export async function getAudioJob(asset, file, source) {
   return {
     bitrate: ['aac-64k', 'aac-128k', ...(surroundMap ? ['ac3-448k'] : [])],
     codec: ['mp4a.40.2', 'mp4a.40.2', ...(surroundMap ? ['ac-3'] : [])],
-    bandwidth: [64*1024, 128*1024, ...(surroundMap ? [448*1024] : [])],
-    varStreamMap: ['a:0,name:audio-0', 'a:1,name:audio-1', ...(surroundMap ? ['a:2,name:audio-2'] : [])].join(' '),
+    bandwidth: [64 * 1024, 128 * 1024, ...(surroundMap ? [448 * 1024] : [])],
+    varStreamMap: ['a:0,name:audio-0', 'a:1,name:audio-1', ...(surroundMap ? ['a:2,name:audio-2'] : [])].join(
+      ' '),
     arguments: [
       '-b:a:0', '64k',
       '-b:a:1', '128k',

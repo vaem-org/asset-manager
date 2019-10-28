@@ -53,8 +53,6 @@ const encoders = {};
 const sockets = {};
 let encoderId = 1;
 
-const sources = {};
-
 const autoScaleEncoders = !!config.azureInstances.clientId;
 
 let queue = [];
@@ -108,12 +106,12 @@ async function processQueue() {
       encoder2Job[id] = current;
 
       console.log(`Starting job on encoder ${id}`);
-      const asset = sources[current.source].asset;
+      const asset = await Asset.findById(current.asset);
 
       if (asset.state !== 'processing') {
         asset.state = 'processing';
         Asset.updateOne({
-          _id: asset._id
+          _id: current.asset
         }, {
           $set: {
             state: 'processing'
@@ -175,16 +173,13 @@ if (autoScaleEncoders) {
   }, 5000);
 }
 
-const sourceDone = async source => {
-  console.log('Source has completed: ', source);
-  const asset = await Asset.findById(sources[source].asset.id);
+const assetDone = async asset => {
+  console.log(`Asset has completed: ${asset._id}`);
 
   try {
     await masterPlaylist(asset._id);
 
     globalIO.emit('info', `Encoding asset "${asset.title}" completed`);
-
-    console.info(`"${asset.title}" completed in ${Math.round((Date.now() - sources[source].started) / 1000)} seconds`);
 
     if (config.slackHook) {
       axios.post(config.slackHook, {
@@ -196,8 +191,6 @@ const sourceDone = async source => {
 
     asset.state = 'processed';
     await asset.save();
-
-    delete sources[source];
   }
   catch (e) {
     console.log(e);
@@ -208,12 +201,11 @@ const sourceDone = async source => {
  * Update an asset
  * @param {String} assetId
  * @param {{}} data
- * @param {{}} job
  * @returns {Promise<*>}
  */
-async function updateStream({ assetId, data, job }) {
+async function updateStream({ assetId, data }) {
   const asset = await Asset.findById(assetId);
-  asset.bitrates = asset.bitrates.concat(job.bitrate);
+  asset.bitrates = _.uniq(asset.bitrates.concat(data.bitrate));
   asset.markModified('bitrates');
 
   // store output resolution
@@ -228,7 +220,7 @@ async function updateStream({ assetId, data, job }) {
 
     asset.streams.push({
       filename: path.basename(data.filenames[0]),
-      bandwidth: parseInt(job.bitrate) * 1024,
+      bandwidth: parseInt(data.bitrate) * 1024,
       resolution:
         aspect.length > 0 ? Math.max(stream.width,
           Math.floor(stream.height / aspect[1] * aspect[0])) + 'x' + stream.height :
@@ -238,13 +230,13 @@ async function updateStream({ assetId, data, job }) {
     });
   }
 
-  if (job.bitrate instanceof Array) {
-    for (let i = 1; i < job.bitrate.length; i++) {
+  if (data.bitrate instanceof Array) {
+    for (let i = 1; i < data.bitrate.length; i++) {
       asset.audioStreams.push({
         filename: path.basename(data.filenames[i]),
-        bitrate: job.bitrate[i],
-        bandwidth: job.bandwidth[i],
-        codec: job.codec[i]
+        bitrate: data.bitrate[i],
+        bandwidth: data.bandwidth[i],
+        codec: data.codec[i]
       });
     }
   }
@@ -328,28 +320,21 @@ encoderIO.on('connection', function (socket) {
     });
 
     socket.on('m3u8', data => {
-      _.each(sources, (source, filename) => {
-        const job = _.find(source.jobs, { m3u8: data.filename });
-        if (job) {
-          source.completed++;
-          updateStream({
-            assetId: source.asset._id,
-            data,
-            job
-          }).then(asset => {
-            source.asset = asset;
-            const emit = () => globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']));
+      (async () => {
+        const asset = await updateStream({
+          assetId: data.asset,
+          data
+        });
 
-            if (source.completed >= source.jobs.length) {
-              source.asset.state = 'processed';
-              sourceDone(filename)
-                .then(emit)
-                .catch(e => console.error(e));
-            } else if (asset) {
-              emit();
-            }
-          });
+        const todoBitrates = _.map(asset.jobs, 'bitrate').flat();
+        if (_.difference(todoBitrates, asset.bitrates).length === 0) {
+          asset.state = 'processed';
+          await assetDone(asset)
         }
+
+        globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']))
+      })().catch(e => {
+        console.error(e);
       });
     });
 
@@ -470,6 +455,7 @@ router.post('/start-job', json(), api(async req => {
       source,
       audio,
       videoParameters,
+      asset: asset._id,
       bitrate: bitrateString,
       m3u8: `${outputBase}/${basename}.${bitrateString}.m3u8`,
       hlsEncKey: config.hlsEnc ? asset.hls_enc_key : false,
@@ -546,26 +532,22 @@ router.post('/start-job', json(), api(async req => {
     });
   }
 
-  sources[source] = {
-    completed: 0,
-    started: Date.now(),
-    jobs: todo,
-    asset: asset
-  };
-
   queue = queue.concat(todo);
 
   browserIO.emit('queue-update', queue.length);
 
   if (!req.body.assetId) {
     asset.jobs = _.map(todo, job => {
-      return job.arguments.map(value => {
-        if (value.startsWith && value.startsWith('-')) {
-          return value;
-        } else {
-          return `'${value}'`;
-        }
-      }).join(' ')
+      return {
+        bitrate: job.bitrate,
+        command: job.arguments.map(value => {
+          if (value.startsWith && value.startsWith('-')) {
+            return value;
+          } else {
+            return `'${value}'`;
+          }
+        }).join(' ')
+      }
     });
     asset.numStreams = _.sumBy(todo, job => _.isArray(job.bitrate) ? job.bitrate.length : 1);
     await asset.save();
