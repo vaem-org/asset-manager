@@ -21,6 +21,7 @@ import _ from 'lodash';
 
 import { ContainerInstanceManagementClient } from '@azure/arm-containerinstance';
 import { loginWithServicePrincipalSecretWithAuthResponse } from '@azure/ms-rest-nodeauth';
+import { URL } from "url";
 
 /**
  * @var ContainerInstanceManagementClient
@@ -44,6 +45,10 @@ export async function createEncoders() {
 
   const existing = _.map(list.filter(item => item.name.startsWith('encoder')), item => parseInt(item.name.replace(/^encoder/, ''), 10));
 
+  const parsed = new URL(config.base);
+  parsed.username = process.env.ENCODER_TOKEN;
+  const assetManagerUrl = parsed.toString();
+
   await Promise.all(_.difference(_.range(config.azureInstances.numInstances), existing).map(async index => {
     console.info(`Creating encoder${index}`);
     return client.containerGroups.createOrUpdate(
@@ -56,7 +61,7 @@ export async function createEncoders() {
             environmentVariables: [
               {
                 name: 'ASSETMANAGER_URL',
-                secureValue: config.base
+                secureValue: assetManagerUrl
               }
             ],
             name: 'encoder',
