@@ -25,9 +25,14 @@ const router = new Router();
 
 router.get('', verify, api(async () => {
   const assets = await Asset.find()
-    .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted']);
+    .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted', 'videoParameters.duration']);
 
-  return _.mapValues(_.keyBy(assets, '_id'), value => _.omit(value.toObject(), '_id'));
+  return _.mapValues(_.keyBy(assets, '_id'), value => {
+    return {
+      ..._.omit(value.toObject(), ['_id', 'videoParameters']),
+      duration: parseFloat(value.videoParameters.duration)
+    }
+  });
 }));
 
 export default router;
