@@ -434,7 +434,7 @@ router.post('/start-job', json(), api(async req => {
     .filter(width => width <= videoParameters.width)
     .map(width => {
       return config.profiles[width]
-        .filter(bitrate => !asset.bitrates.includes(bitrate))
+        .filter(bitrate => !asset.bitrates.includes(`${bitrate}k`))
         .map(bitrate => ({width, bitrate}))
     })
     .flat()
