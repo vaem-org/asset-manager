@@ -28,6 +28,9 @@ const serve = catchExceptions(async (req, res) => {
   const redirect = await config.sourceFileSystem.getSignedUrl(req.url);
   if (redirect) {
     res.redirect(redirect);
+  } else if (config.sourceAccelRedirect) {
+    res.setHeader('X-Accel-Redirect', config.sourceAccelRedirect + req.url);
+    res.end();
   } else {
     // parse ranges
     const path = decodeURIComponent(req.url);
