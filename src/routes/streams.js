@@ -140,6 +140,7 @@ router.get([
   '/:timestamp/:signature/:assetId.:bitrate.m3u8',
   '/:timestamp/:signature/:assetId.m3u8'
 ], checkAuth, catchExceptions(async (req, res) => {
+  console.log(`${req.method} ${req.url}`)
   const asset = req.item;
 
   let base =
@@ -210,7 +211,7 @@ router.get([
 
   const addSubtitles =
     (req.query.subtitles ||
-      (req.headers['user-agent'] || '').search(/AppleTV/) !== -1) &&
+      (req.headers['user-agent'] || '').search(/Apple\s*TV/) !== -1) &&
     Object.keys(asset.subtitles || {}).length > 0
   ;
 
