@@ -19,7 +19,6 @@
 import config from '@/config';
 import { Router } from 'express';
 import fs from 'fs-extra';
-import jwt from 'jsonwebtoken';
 import * as fileType from '@/util/file-type';
 import { convert as subtitleConvert } from '@/util/subtitles';
 import { api, catchExceptions, verify } from '@/util/express-helpers';

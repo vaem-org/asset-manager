@@ -19,6 +19,7 @@
 import config from '@/config';
 import axios from 'axios';
 import _ from 'lodash';
+import { execFile as _execFile } from 'child_process';
 import path from 'path';
 import { Router, json } from 'express';
 import crypto from 'crypto';
@@ -40,6 +41,10 @@ import masterPlaylist from '@/util/master-playlist';
 import { socketio } from '@/util/socketio';
 import { getSignedUrl } from '@/util/url-signer';
 import { startEncoders } from '@/util/azure-instances';
+import { getStreamInfo } from '@/util/stream';
+import { promisify } from 'util';
+
+const execFile = promisify(_execFile);
 
 const encoderIO = socketio.of('/encoder', null);
 const browserIO = socketio.of('/encoders-io', null);
@@ -209,7 +214,28 @@ async function updateStream({ assetId, data }) {
   asset.markModified('bitrates');
 
   // store output resolution
-  const stream = _.find(_.get(data, 'ffprobes[0].streams', []), { codec_type: 'video' });
+
+  const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
+
+  // ffprobe first bitrate
+  const source = await getStreamInfo(assetId, '127.0.0.1');
+
+  let stream;
+  let stdout;
+  try {
+    ({ stdout } = await execFile('ffprobe', [
+      '-v','error',
+      '-print_format', 'json',
+      '-show_format',
+      '-show_streams',
+      `http://127.0.0.1:${config.port}${source.streamUrl.replace('.m3u8', `.${bitrates[0]}.m3u8`)}`
+    ]));
+
+    stream = _.find(_.get(JSON.parse(stdout), 'streams', []), { codec_type: 'video' });
+  }
+  catch (e) {
+    throw `ffprobe failed with ${e.stderr || e.toString()}`
+  }
 
   if (stream) {
     const aspect = _.get(stream, 'display_aspect_ratio', '')
@@ -219,8 +245,8 @@ async function updateStream({ assetId, data }) {
     ;
 
     asset.streams.push({
-      filename: path.basename(data.filenames[0]),
-      bandwidth: parseInt(data.bitrate) * 1024,
+      filename: `${assetId}.${bitrates[0]}.m3u8`,
+      bandwidth: parseInt(bitrates[0]) * 1024,
       resolution:
         aspect.length > 0 ? Math.max(stream.width,
           Math.floor(stream.height / aspect[1] * aspect[0])) + 'x' + stream.height :
@@ -233,7 +259,7 @@ async function updateStream({ assetId, data }) {
   if (data.bitrate instanceof Array) {
     for (let i = 1; i < data.bitrate.length; i++) {
       asset.audioStreams.push({
-        filename: path.basename(data.filenames[i]),
+        filename: `${assetId}.audio-${i-1}.m3u8`,
         bitrate: data.bitrate[i],
         bandwidth: data.bandwidth[i],
         codec: data.codec[i]
@@ -351,8 +377,7 @@ encoderIO.on('connection', function (socket) {
     });
 
     callback({
-      encoderId: id,
-      destinationFileSystem: process.env.DESTINATION_FS
+      encoderId: id
     });
 
     if (encoder2Job[id]) {
@@ -422,7 +447,7 @@ router.post('/start-job', json(), api(async req => {
 
   const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 16*3600)}`;
 
-  const outputBase = `/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
+  const outputBase = `${config.base}/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
 
   const { stereoMap } = await getChannelMapping(file, source);
 
@@ -478,7 +503,6 @@ router.post('/start-job', json(), api(async req => {
         bitrate: [bitrateString, ...audioJob.bitrate],
         codec: ['avc1.640029', ...audioJob.codec],
         bandwidth: [bitrate*1024, ...audioJob.bandwidth],
-        segmentFilename: `${asset._id}.%v.%05d.ts`,
         m3u8: `${outputBase}/${basename}.%v.m3u8`
       });
 
@@ -494,13 +518,6 @@ router.post('/start-job', json(), api(async req => {
         '-seekable', getSeekable(source),
         '-i', source,
 
-        // output
-        '-f', 'hls',
-        '-hls_list_size', 0,
-        '-hls_playlist_type', 'vod',
-        '-hls_time', 2,
-        ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
-
         // video options
         '-map', '0:v',
         '-vcodec', 'libx264',
@@ -515,7 +532,17 @@ router.post('/start-job', json(), api(async req => {
         '-bufsize', bitrateString,
 
         // audio options
-        ...audioArguments
+        ...audioArguments,
+
+        // output
+        '-method', 'PUT',
+        '-f', 'hls',
+        '-hls_list_size', 0,
+        '-hls_playlist_type', 'vod',
+        '-hls_time', 2,
+        ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
+        '-hls_segment_filename', `${outputBase}/${basename}.%v.%05d.ts`,
+        job.m3u8,
       ]
     })
   }

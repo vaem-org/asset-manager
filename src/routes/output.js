@@ -58,17 +58,20 @@ router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, 
       console.error(error);
       res.end();
     });
-    req.on('end', async () => {
-      res.end();
+    req.on('end', () => {
       const content = Buffer.concat(buffers).toString();
       if (content.indexOf('#EXT-X-ENDLIST') !== -1) {
-        await fileSystem.writeFile(output, content);
+        fileSystem.writeFile(output, content)
+          .catch(e => console.error(e))
+          .finally(() => res.end())
+        ;
       }
     });
   } else {
+    const stream = (await fileSystem.write(output)).stream;
+    stream.on('done', () => res.end());
     req
-    .on('end', () => res.end())
-    .pipe((await fileSystem.write(output)).stream);
+    .pipe(stream);
   }
 }));
 
