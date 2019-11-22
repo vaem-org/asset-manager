@@ -25,6 +25,8 @@ import { Router, json } from 'express';
 import crypto from 'crypto';
 import { URL } from 'url';
 import { Mutex } from 'async-mutex';
+import { promisify } from 'util';
+import { rmdir } from 'fs';
 import fixKeys from '@/util/fix-keys';
 import {
   getSeekable,
@@ -42,7 +44,7 @@ import { socketio } from '@/util/socketio';
 import { getSignedUrl } from '@/util/url-signer';
 import { startEncoders } from '@/util/azure-instances';
 import { getStreamInfo } from '@/util/stream';
-import { promisify } from 'util';
+import { waitFor } from '@/util/upload-queue';
 
 const execFile = promisify(_execFile);
 
@@ -181,6 +183,17 @@ if (autoScaleEncoders) {
 const assetDone = async asset => {
   console.log(`Asset has completed: ${asset._id}`);
 
+  // remove temporary directory when necessary
+  if (!config.destinationIsLocal) {
+    setTimeout(() => {
+      rmdir(`${config.root}/var/tmp/${asset._id}`, err => {
+        if (err) {
+          console.warn(`Unable to remove temporary directory for ${asset._id}`);
+        }
+      });
+    }, 5000);
+  }
+
   try {
     await masterPlaylist(asset._id);
 
@@ -214,7 +227,6 @@ async function updateStream({ assetId, data }) {
   asset.markModified('bitrates');
 
   // store output resolution
-
   const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
 
   // ffprobe first bitrate
@@ -346,7 +358,7 @@ encoderIO.on('connection', function (socket) {
     });
 
     socket.on('m3u8', data => {
-      (async () => {
+      const handleFile = async () => {
         const asset = await updateStream({
           assetId: data.asset,
           data
@@ -359,9 +371,23 @@ encoderIO.on('connection', function (socket) {
         }
 
         globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']))
-      })().catch(e => {
-        console.error(e);
-      });
+      };
+
+      if (config.destinationIsLocal) {
+        handleFile()
+          .catch(e => {
+            console.error(e);
+          });
+      } else {
+        // handle file when upload has completed
+        const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
+
+        waitFor(`/${data.asset}/${data.asset}.${bitrates[0]}.m3u8`).then(() => {
+          handleFile()
+          .catch(e => console.error(e))
+          ;
+        })
+      }
     });
 
     socket.on('disconnect', () => {

@@ -56,6 +56,7 @@ if (authUrl) {
 }
 
 const source = `${root}/var/uploads`;
+const destinationFS = process.env.DESTINATION_FS || `file://${root}/var/output`;
 const config = merge({
   port,
   host: '0.0.0.0',
@@ -79,7 +80,8 @@ const config = merge({
 
   base: process.env.BASE,
 
-  destinationFileSystem: fileSystemFromURL(process.env.DESTINATION_FS || `file://${root}/var/output`),
+  destinationFileSystem: fileSystemFromURL(destinationFS),
+  destinationIsLocal: destinationFS.startsWith('file://'),
   sourceFileSystem: fileSystemFromURL(process.env.SOURCE_FS || `file://${source}`),
 
   bunnyCDN: process.env.BUNNYCDN_AUTHENTICATIONKEY ? {
