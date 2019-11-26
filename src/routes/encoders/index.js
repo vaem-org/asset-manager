@@ -466,7 +466,6 @@ router.post('/start-job', json(), api(async req => {
 
     if (!config.separateAudio && (audio || asset.videoParameters.hasAudio)) {
       audioArguments = [
-        ...(audio ? ['-i', audio] : []),
         '-map', audioMap,
         ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
         '-c:a', 'libfdk_aac',
@@ -494,13 +493,7 @@ router.post('/start-job', json(), api(async req => {
       arguments: [
         '-seekable', getSeekable(source),
         '-i', source,
-
-        // output
-        '-f', 'hls',
-        '-hls_list_size', 0,
-        '-hls_playlist_type', 'vod',
-        '-hls_time', 2,
-        ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
+        ...(audio ? ['-i', audio] : []),
 
         // video options
         '-map', '0:v',
@@ -516,7 +509,14 @@ router.post('/start-job', json(), api(async req => {
         '-bufsize', bitrateString,
 
         // audio options
-        ...audioArguments
+        ...audioArguments,
+
+        // output
+        '-f', 'hls',
+        '-hls_list_size', 0,
+        '-hls_playlist_type', 'vod',
+        '-hls_time', 2,
+        ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
       ]
     })
   }
