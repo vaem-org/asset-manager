@@ -492,9 +492,9 @@ router.post('/start-job', json(), api(async req => {
     .reverse()
   ;
 
-  let audioMap = '0:a';
+  let audioMap = audio ? '1:a' : '0:a';
 
-  if (stereoMap) {
+  if (stereoMap && !audio) {
     audioMap = stereoMap.map ? stereoMap.map : '[aout]';
   }
 
@@ -515,8 +515,9 @@ router.post('/start-job', json(), api(async req => {
 
     let audioArguments = [];
 
-    if (!config.separateAudio && asset.videoParameters.hasAudio) {
+    if (!config.separateAudio && (audio || asset.videoParameters.hasAudio)) {
       audioArguments = [
+        ...(audio ? ['-i', audio] : []),
         '-map', audioMap,
         ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
         '-c:a', 'libfdk_aac',
