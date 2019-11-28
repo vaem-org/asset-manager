@@ -514,6 +514,7 @@ router.post('/start-job', json(), api(async req => {
     };
 
     let audioArguments = [];
+    let useVarStreamMap = false;
 
     if (!config.separateAudio && (audio || asset.videoParameters.hasAudio)) {
       audioArguments = [
@@ -536,7 +537,9 @@ router.post('/start-job', json(), api(async req => {
       audioArguments = [
         ...audioJob['arguments'],
         '-var_stream_map', `v:0,name:${bitrateString} ${audioJob.varStreamMap}`
-      ]
+      ];
+
+      useVarStreamMap = true;
     }
 
     todo.push({
@@ -568,7 +571,7 @@ router.post('/start-job', json(), api(async req => {
         '-hls_playlist_type', 'vod',
         '-hls_time', 2,
         ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
-        '-hls_segment_filename', `${outputBase}/${basename}.%v.%05d.ts`,
+        '-hls_segment_filename', `${outputBase}/${basename}.${useVarStreamMap ? '%v' : bitrateString}.%05d.ts`,
         job.m3u8,
       ]
     })

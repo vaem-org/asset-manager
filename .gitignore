@@ -39,7 +39,7 @@ node_modules
 
 /var/**
 !**/.keep
-src/bin/sandbox.js
+src/bin/commands/sandbox.js
 .DS_Store
 src/bin/test.js
 docker-compose.override.yml
