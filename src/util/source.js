@@ -186,12 +186,19 @@ export async function guessChannelLayout(source) {
 /**
  * Perform a first pass for audio normalization and return the audio filter string
  * @param {string} source
- * @param {[]} parameters
+ * @param {string} [map]
+ * @param {string} [filter_complex]
  * @return {Promise<string>}
  */
-export async function getNormalizeParameters(source, parameters = ['-map', '0:1']) {
+export async function getNormalizeParameters({ source, map, filter_complex }) {
+  const filter = 'loudnorm=print_format=json';
+  const parameters = filter_complex ?
+    ['-filter_complex', filter_complex + ',[aout]' + filter] :
+    ['-filter:a', filter, '-map', map]
+  ;
+
   const { stderr } = await execFile('ffmpeg',
-    ['-hide_banner', '-i', source, '-filter:a', 'loudnorm=print_format=json', '-f', 'null', ...parameters, '-']);
+    ['-hide_banner', '-i', source, '-f', 'null', ...parameters, '-']);
 
   const parsed = JSON.parse(stderr.split('\n').slice(-13).join('\n'));
 

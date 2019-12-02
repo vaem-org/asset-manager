@@ -34,12 +34,11 @@ router.get('/', api(async req => {
 
   const { stereo } = item.audioStreams || await sourceUtil.guessChannelLayout(source);
 
-  return await getNormalizeParameters(
+  return await getNormalizeParameters({
     source,
-    stereo.length > 1 ?
-      ['-filter_complex', `[0:${stereo[0]}][0:${stereo[1]}]amerge=inputs=2[aout]`, '-map [aout]'] :
-      ['-map', `0:${stereo[0]}`]
-  );
+    map: stereo.length === 1 ? `0:${stereo[0]}` : null,
+    filter_complex: stereo.length > 1 ? `[0:${stereo[0]}][0:${stereo[1]}]amerge=inputs=2[aout]` : null
+  });
 }));
 
 export default router
