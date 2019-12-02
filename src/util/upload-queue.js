@@ -29,14 +29,33 @@ let processing = false;
 
 const ensured = new Set();
 
-const ensureDir = async dirname => {
+let current = null;
+
+async function ensureDir(dirname) {
   if (ensured.has(dirname)) {
     return;
   }
 
   await config.destinationFileSystem.ensureDir(dirname);
   ensured.add(dirname);
-};
+}
+
+async function upload(source, destination) {
+  current = destination;
+  const { stream } = await config.destinationFileSystem.write(destination);
+  await new Promise((accept, reject) => {
+    const input = createReadStream(source)
+    .on('error', reject);
+
+    stream
+    .on('error', reject)
+    .on('done', accept)
+    ;
+
+    input.pipe(stream);
+  });
+  current = null;
+}
 
 async function next() {
   if (queue.length === 0) {
@@ -47,21 +66,27 @@ async function next() {
 
   const filename = queue.shift();
   await ensureDir(dirname(filename));
-  const { stream } = await config.destinationFileSystem.write(filename);
 
   console.log(`Uploading ${filename}`);
   const tempFilename = `${config.root}/var/tmp${filename}`;
 
-  await (new Promise((accept, reject) => {
-    stream
-      .on('done', accept)
-      .on('error', reject)
-    ;
+  let tries = 10;
+  let done = false;
+  while(tries > 0 && !done) {
+    try {
+      await upload(tempFilename, filename);
+      done = true;
+    } catch (e) {
+      tries--;
 
-    createReadStream(tempFilename)
-      .on('error', reject)
-      .pipe(stream);
-  }));
+      console.info(`Retrying ${filename} (${e.toString()}`);
+      // wait for 2 seconds and try again
+      await (new Promise(accept => setTimeout(accept, 2000)));
+    }
+  }
+  if (!done) {
+    throw `Unable to upload ${filename}`;
+  }
 
   unlink(tempFilename, err => {
     if (err) {
@@ -96,11 +121,15 @@ export function addToQueue(filename) {
  * @returns {Promise}
  */
 export async function waitFor(filename) {
-  try {
-    await config.destinationFileSystem.get(filename);
-    return;
-  }
-  catch (e) {
+  if (current !== filename) {
+    try {
+      const item = await config.destinationFileSystem.get(filename);
+      if (item) {
+        return;
+      }
+    }
+    catch (e) {
+    }
   }
 
   return new Promise(accept => {
