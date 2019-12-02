@@ -25,7 +25,7 @@ const queue = [];
 
 export const events = new EventEmitter();
 
-let processing = false;
+let processing = 0;
 
 const ensured = new Set();
 
@@ -57,10 +57,9 @@ async function upload(source, destination) {
 
 async function next() {
   if (queue.length === 0) {
-    processing = false;
+    processing--;
     return;
   }
-  processing = true;
 
   const filename = queue.shift();
   await ensureDir(dirname(filename));
@@ -105,7 +104,8 @@ async function next() {
 export function addToQueue(filename) {
   queue.push(filename);
 
-  if (!processing) {
+  if (processing < 2) {
+    processing++;
     next()
       .catch(e => {
         console.error(`Error uploading file: ${e.toString()}`);
