@@ -41,7 +41,6 @@ async function ensureDir(dirname) {
 }
 
 async function upload(source, destination) {
-  current = destination;
   const { stream } = await config.destinationFileSystem.write(destination);
   await new Promise((accept, reject) => {
     const input = createReadStream(source)
@@ -54,7 +53,6 @@ async function upload(source, destination) {
 
     input.pipe(stream);
   });
-  current = null;
 }
 
 async function next() {
@@ -70,6 +68,7 @@ async function next() {
   console.log(`Uploading ${filename}`);
   const tempFilename = `${config.root}/var/tmp${filename}`;
 
+  current = filename;
   let tries = 10;
   let done = false;
   while(tries > 0 && !done) {
@@ -94,6 +93,7 @@ async function next() {
     }
   });
 
+  current = null;
   events.emit(filename);
   return next();
 }
