@@ -253,6 +253,8 @@ async function updateStream({ assetId, data }) {
  */
 const getEncoderClass = encoder => _.map(encoder.info.cpus, 'model').join(', ').replace(/\./g, '-');
 
+const handleFileMutex = new Mutex();
+
 encoderIO.on('connection', function (socket) {
   console.log('New connection');
 
@@ -320,7 +322,8 @@ encoderIO.on('connection', function (socket) {
     });
 
     socket.on('m3u8', data => {
-      (async () => {
+      const handleFile = async () => {
+        const release = await handleFileMutex.acquire();
         const asset = await updateStream({
           assetId: data.asset,
           data
@@ -333,9 +336,24 @@ encoderIO.on('connection', function (socket) {
         }
 
         globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']))
-      })().catch(e => {
-        console.error(e);
-      });
+        release();
+      };
+
+      if (config.destinationIsLocal) {
+        handleFile()
+          .catch(e => {
+            console.error(e);
+          });
+      } else {
+        // handle file when upload has completed
+        const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
+
+        waitFor(`/${data.asset}/${data.asset}.${bitrates[0]}.m3u8`).then(() => {
+          handleFile()
+          .catch(e => console.error(e))
+          ;
+        })
+      }
     });
 
     socket.on('disconnect', () => {
