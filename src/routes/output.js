@@ -20,14 +20,18 @@ import config from '@/config';
 
 import path from 'path';
 import { Router } from 'express';
+import { fileSystemFromURL } from '@vaem-util/filesystem';
 import { catchExceptions } from '~/util/express-helpers';
 import { verifySignature } from '@/util/url-signer';
+import { addToQueue } from '@/util/upload-queue';
 
 const ensured = new Set();
 
 const router = new Router();
 
-const fileSystem = config.destinationFileSystem;
+const fileSystem = config.destinationIsLocal ? config.destinationFileSystem : fileSystemFromURL(
+  `file://${config.root}/var/tmp`
+);
 
 const ensureDir = async dirname => {
   if (ensured.has(dirname)) {
@@ -51,6 +55,12 @@ router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, 
 
   await ensureDir(path.dirname(output));
 
+  const handleFile = () => {
+    if (!config.destinationIsLocal) {
+      addToQueue(output);
+    }
+  };
+
   if (output.endsWith('.m3u8')) {
     const buffers = [];
     req.on('data',  buffer => buffers.push(buffer));
@@ -58,17 +68,26 @@ router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, 
       console.error(error);
       res.end();
     });
-    req.on('end', async () => {
-      res.end();
+    req.on('end', () => {
       const content = Buffer.concat(buffers).toString();
       if (content.indexOf('#EXT-X-ENDLIST') !== -1) {
-        await fileSystem.writeFile(output, content);
+        fileSystem.writeFile(output, content)
+          .catch(e => console.error(e))
+          .finally(() => {
+            res.end();
+            handleFile();
+          })
+        ;
       }
     });
   } else {
+    const stream = (await fileSystem.write(output)).stream;
+    stream.on('done', () => {
+      res.end();
+      handleFile();
+    });
     req
-    .on('end', () => res.end())
-    .pipe((await fileSystem.write(output)).stream);
+      .pipe(stream);
   }
 }));
 

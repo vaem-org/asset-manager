@@ -9,3 +9,10 @@ services:
       - 48489:27017
     volumes:
       - data:/data/db
+
+  admin:
+    image: vaem/admin-ui
+    ports:
+      - 8080:80
+    environment:
+      - "VUE_APP_API_URL=${BASE}"
