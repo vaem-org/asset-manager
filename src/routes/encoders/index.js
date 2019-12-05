@@ -519,12 +519,20 @@ router.post('/start-job', json(), api(async req => {
 
     let audioArguments = [];
     let useVarStreamMap = false;
+    const filterComplex = [];
+
+    if (file.loudNorm) {
+      filterComplex.push(file.loudNorm);
+    }
 
     if (!config.separateAudio && (audio || asset.videoParameters.hasAudio)) {
+      if (stereoMap && stereoMap.filter_complex) {
+        filterComplex.push(stereoMap.filter_complex);
+      }
+
       audioArguments = [
         ...(audio ? ['-i', audio] : []),
         '-map', audioMap,
-        ...(stereoMap && stereoMap.filter_complex ? ['-filter_complex', stereoMap.filter_complex] : []),
         '-c:a', 'libfdk_aac',
         '-ac', 2,
         '-b:a', '128k',
@@ -568,6 +576,8 @@ router.post('/start-job', json(), api(async req => {
 
         // audio options
         ...audioArguments,
+
+        ...(filterComplex.length ? ['-filter_complex', filterComplex.join(',')] : []),
 
         // output
         '-method', 'PUT',

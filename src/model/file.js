@@ -26,7 +26,8 @@ const schema = new mongoose.Schema({
     state: {type: String, enum: ['prepared', 'idle', 'uploading', 'complete'], default: 'idle'},
     uploaded: {type: Number, default: 0},
     asset: {type: mongoose.Schema.Types.ObjectId, ref: 'Asset'},
-    audioStreams: {type: Object}
+    audioStreams: {type: Object},
+    loadNorm: String
   },
   {
     toObject: {virtuals: true},

@@ -83,7 +83,8 @@ async function next() {
     }
   }
   if (!done) {
-    throw `Unable to upload ${filename}`;
+    console.error(`Unable to upload ${filename}`);
+    process.exit(1);
   }
 
   unlink(tempFilename, err => {
