@@ -362,19 +362,27 @@ encoderIO.on('connection', function (socket) {
     socket.on('m3u8', data => {
       const handleFile = async () => {
         const release = await handleFileMutex.acquire();
-        const asset = await updateStream({
-          assetId: data.asset,
-          data
-        });
 
-        const todoBitrates = _.map(asset.jobs, 'bitrate').flat();
-        if (_.difference(todoBitrates, asset.bitrates).length === 0) {
-          asset.state = 'processed';
-          await assetDone(asset)
+        try {
+          const asset = await updateStream({
+            assetId: data.asset,
+            data
+          });
+
+          const todoBitrates = _.map(asset.jobs, 'bitrate').flat();
+          if (_.difference(todoBitrates, asset.bitrates).length === 0) {
+            asset.state = 'processed';
+            await assetDone(asset)
+          }
+
+          globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']));
         }
-
-        globalIO.emit('job-completed', _.pick(asset, ['_id', 'bitrates', 'jobs', 'state']))
-        release();
+        catch (e) {
+          console.error(e);
+        }
+        finally {
+          release();
+        }
       };
 
       if (config.destinationIsLocal) {
