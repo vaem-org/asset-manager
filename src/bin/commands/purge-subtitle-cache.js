@@ -15,7 +15,7 @@ sywac.command('purge-subtitle-cache <assetId>', async ({ assetId }) => {
         url: `https://${config.bunnyCDN.hostname}.b-cdn.net/${assetId}/subtitles/${name}`
       },
       headers: {
-        AccessKey: config.bunnyCDN.authenticationKey
+        AccessKey: config.bunnyCDN.apiKey
       }
     });
     bar.update(++i);

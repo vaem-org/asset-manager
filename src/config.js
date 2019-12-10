@@ -90,7 +90,8 @@ const config = merge({
     hostname: process.env.BUNNYCDN_HOSTNAME,
     username: process.env.BUNNYCDN_USERNAME,
     password: process.env.BUNNYCDN_PASSWORD,
-    storageZoneName: process.env.BUNNYCDN_STORAGEZONENAME
+    storageZoneName: process.env.BUNNYCDN_STORAGEZONENAME,
+    apiKey: process.env.BUNNYCDN_API_KEY
   } : null,
 
   azureInstances: {
