@@ -31,22 +31,7 @@ const ensured = new Set();
 
 let current = null;
 
-const existing = {
-  dirname: '',
-  files: new Set()
-};
-
 async function ensureDir(dirname) {
-  if (existing.dirname !== dirname) {
-    existing.dirname = dirname;
-    existing.files.clear();
-
-    const entries = await config.destinationFileSystem.list(dirname);
-    for(let entry of entries) {
-      existing.files.add(`${dirname}/${entry.name}`);
-    }
-  }
-
   if (ensured.has(dirname)) {
     return;
   }
@@ -70,16 +55,6 @@ async function upload(source, destination) {
   });
 }
 
-const getTempfileName = filename => `${config.root}/var/tmp${filename}`;
-
-function removeFile(filename) {
-  unlink(filename, err => {
-    if (err) {
-      console.warn(`Unable to remove ${filename}`);
-    }
-  });
-}
-
 async function next() {
   if (queue.length === 0) {
     processing--;
@@ -89,16 +64,12 @@ async function next() {
   const filename = queue.shift();
   await ensureDir(dirname(filename));
 
-  const tempFilename = getTempfileName(filename);
+  console.log(`Uploading ${filename}`);
+  const tempFilename = `${config.root}/var/tmp${filename}`;
 
   current = filename;
   let tries = 10;
-  let done = existing.files.has(filename);
-
-  if (!done) {
-    console.log(`Uploading ${filename}`);
-  }
-
+  let done = false;
   while(tries > 0 && !done) {
     try {
       await upload(tempFilename, filename);
@@ -111,15 +82,16 @@ async function next() {
       await (new Promise(accept => setTimeout(accept, 2000)));
     }
   }
-
   if (!done) {
     console.error(`Unable to upload ${filename}`);
     process.exit(1);
-  } else {
-    existing.files.add(filename);
   }
 
-  removeFile(tempFilename);
+  unlink(tempFilename, err => {
+    if (err) {
+      console.warn(`Unable to remove ${tempFilename}`);
+    }
+  });
 
   current = null;
   events.emit(filename);
@@ -131,12 +103,6 @@ async function next() {
  * @param {String} filename
  */
 export function addToQueue(filename) {
-  if (existing.files.has(filename)) {
-    removeFile(getTempfileName(filename));
-    events.emit(filename);
-    return;
-  }
-
   queue.push(filename);
 
   if (processing < 2) {
