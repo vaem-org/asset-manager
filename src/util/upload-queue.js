@@ -64,7 +64,6 @@ async function next() {
   const filename = queue.shift();
   await ensureDir(dirname(filename));
 
-  console.log(`Uploading ${filename}`);
   const tempFilename = `${config.root}/var/tmp${filename}`;
 
   current = filename;
