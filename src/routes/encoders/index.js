@@ -293,25 +293,38 @@ const getEncoderClass = encoder => _.map(encoder.info.cpus, 'model').join(', ').
 
 const handleFileMutex = new Mutex();
 
+const disconnected = new Set();
+
 encoderIO.on('connection', function (socket) {
   console.log('New connection');
 
   socket.on('request-encoder-id', (data, callback) => {
-    const id = data.encoderId && !encoders[data.encoderId] ? data.encoderId : (encoderId++);
+    const id = data.encoderId && (disconnected.has(data.encoderId) ||!encoders[data.encoderId]) ? data.encoderId : (encoderId++);
 
     if (data.token !== config.encoderToken) {
       return callback(null);
     }
 
-    encoders[id] = {
-      id,
-      currentlyProcessing: {},
-      info: {},
-      state: {
-        status: 'idle'
-      },
-      progress: {}
-    };
+    const reconnect = disconnected.has(id);
+    if (reconnect) {
+      console.log(`Reconnection for ${id}`);
+      disconnected.delete(id);
+    } else {
+      encoders[id] = {
+        id,
+        currentlyProcessing: {},
+        info: {},
+        state: {
+          status: 'idle'
+        },
+        progress: {}
+      };
+
+      if (encoder2Job[id]) {
+        delete encoder2Job[id];
+      }
+    }
+
     sockets[id] = socket;
 
     let initialized = false;
@@ -403,24 +416,29 @@ encoderIO.on('connection', function (socket) {
     });
 
     socket.on('disconnect', () => {
-      console.log('Lost connection');
-      delete encoders[id];
-      delete sockets[id];
-      browserIO.emit('removed', { id: id });
+      disconnected.add(id);
+      console.log(`Lost connection for ${id}`);
+      setTimeout(() => {
+        if (disconnected.has(id)) {
+          console.log(`Removing connection for ${id}`);
+          disconnected.delete(id);
+          delete encoders[id];
+          delete sockets[id];
+          browserIO.emit('removed', { id: id });
+        }
+      }, 5000);
     });
 
-    browserIO.emit('new', {
-      id: id,
-      data: encoders[id]
-    });
+    if (!reconnect) {
+      browserIO.emit('new', {
+        id: id,
+        data: encoders[id]
+      });
+    }
 
     callback({
       encoderId: id
     });
-
-    if (encoder2Job[id]) {
-      delete encoder2Job[id];
-    }
   });
 });
 
