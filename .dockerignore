@@ -5,3 +5,4 @@ var
 dist
 .env
 config/local.js
+src/bin/commands/sandbox.js
