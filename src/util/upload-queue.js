@@ -93,7 +93,8 @@ async function next() {
   });
 
   current = null;
-  events.emit(filename);
+  process.nextTick(() => events.emit(filename));
+
   return next();
 }
 
