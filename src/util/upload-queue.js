@@ -29,7 +29,7 @@ let processing = 0;
 
 const ensured = new Set();
 
-let current = null;
+const current = new Set();
 
 async function ensureDir(dirname) {
   if (ensured.has(dirname)) {
@@ -66,7 +66,7 @@ async function next() {
 
   const tempFilename = `${config.root}/var/tmp${filename}`;
 
-  current = filename;
+  current.add(filename);
   let tries = 10;
   let done = false;
   while(tries > 0 && !done) {
@@ -92,7 +92,7 @@ async function next() {
     }
   });
 
-  current = null;
+  current.delete(filename);
   process.nextTick(() => {
     if (filename.endsWith('.m3u8')) {
       console.log(`Emitting event for ${filename}`);
@@ -127,7 +127,7 @@ export function addToQueue(filename) {
  * @returns {Promise}
  */
 export async function waitFor(filename) {
-  if (current !== filename) {
+  if (current.has(filename)) {
     try {
       const item = await config.destinationFileSystem.get(filename);
       if (item) {
