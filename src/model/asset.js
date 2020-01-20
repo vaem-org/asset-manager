@@ -41,7 +41,8 @@ const schema = new Schema({
   hls_enc_key: String,
   hls_enc_iv: String,
   deleted: Boolean,
-  public: Boolean
+  public: Boolean,
+  videoFilter: String
 });
 
 let labelsCache = {};

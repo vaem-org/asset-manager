@@ -464,6 +464,7 @@ router.post('/start-job', json(), api(async req => {
 
   let basename = source && path.basename(source);
   let audio = req.body.audio;
+  let videoFilter = req.body.vf;
 
   let asset;
 
@@ -476,6 +477,7 @@ router.post('/start-job', json(), api(async req => {
     }
     source = getSource(asset.file ? asset.file.name : asset.source);
     audio = asset.audio;
+    videoFilter = asset.videoFilter;
 
     basename = path.basename(source);
     videoParameters = asset.videoParameters;
@@ -488,6 +490,7 @@ router.post('/start-job', json(), api(async req => {
       source,
       audio,
       file,
+      videoFilter,
       hls_enc_key: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null,
       hls_enc_iv: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null
     });
@@ -598,7 +601,7 @@ router.post('/start-job', json(), api(async req => {
         '-pix_fmt', 'yuv420p',
         '-g', 2 * Math.ceil(framerate),
         '-x264opts', 'no-scenecut',
-        '-vf', (req.body.vf ? req.body.vf + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
+        '-vf', (videoFilter ? videoFilter + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
         '-b:v', bitrateString,
         '-maxrate', bitrateString,
         '-bufsize', bitrateString,
