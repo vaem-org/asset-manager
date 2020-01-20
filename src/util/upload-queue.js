@@ -93,7 +93,12 @@ async function next() {
   });
 
   current = null;
-  process.nextTick(() => events.emit(filename));
+  process.nextTick(() => {
+    if (filename.endsWith('.m3u8')) {
+      console.log(`Emitting event for ${filename}`);
+    }
+    events.emit(filename);
+  });
 
   return next();
 }

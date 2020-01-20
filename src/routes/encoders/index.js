@@ -407,7 +407,10 @@ encoderIO.on('connection', function (socket) {
         // handle file when upload has completed
         const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
 
-        waitFor(`/${data.asset}/${data.asset}.${bitrates[0]}.m3u8`).then(() => {
+        const filename = `/${data.asset}/${data.asset}.${bitrates[0]}.m3u8`;
+        console.log(`Waiting for ${filename}`);
+        waitFor(filename).then(() => {
+          console.log(`Handling ${filename}`);
           handleFile()
           .catch(e => console.error(e))
           ;
