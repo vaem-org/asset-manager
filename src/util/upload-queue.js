@@ -127,7 +127,8 @@ export function addToQueue(filename) {
  * @returns {Promise}
  */
 export async function waitFor(filename) {
-  if (!current.has(filename)) {
+  if (!current.has(filename) && !queue.find(filename2 => filename === filename2)) {
+    console.log(`Waiting for ${filename} which is not queued`);
     try {
       const item = await config.destinationFileSystem.get(filename);
       if (item) {
