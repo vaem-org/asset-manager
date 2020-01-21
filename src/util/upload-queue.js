@@ -127,7 +127,7 @@ export function addToQueue(filename) {
  * @returns {Promise}
  */
 export async function waitFor(filename) {
-  if (current.has(filename)) {
+  if (!current.has(filename)) {
     try {
       const item = await config.destinationFileSystem.get(filename);
       if (item) {
