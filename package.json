@@ -25,6 +25,7 @@
     "aws-cloudfront-sign": "^2.2.0",
     "axios": "^0.19.0",
     "basic-auth": "^2.0.0",
+    "cli-progress": "^3.1.0",
     "cors": "^2.8.4",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
@@ -54,7 +55,6 @@
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "babel-plugin-module-resolver": "^4.0.0",
-    "cli-progress": "^3.1.0",
     "nodemon": "^2.0.2"
   }
 }
