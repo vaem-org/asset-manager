@@ -563,7 +563,6 @@ router.post('/start-job', json(), api(async req => {
       }
 
       audioArguments = [
-        ...(audio ? ['-i', audio] : []),
         '-map', audioMap,
         '-c:a', 'libfdk_aac',
         '-ac', 2,
