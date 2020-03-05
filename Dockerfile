@@ -13,12 +13,13 @@ COPY . /app
 RUN yarn build
 
 FROM node:12.12.0-alpine
-COPY --from=ffmpeg / /
 
 # add mono for running Subtitle Edit for subtitle conversion
 RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main musl\>1.1.20 && \
     apk add --no-cache mono libgdiplus ttf-liberation --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
     apk add --no-cache xvfb
+
+COPY --from=ffmpeg / /
 
 COPY ./lib/xvfb-run /usr/bin
 

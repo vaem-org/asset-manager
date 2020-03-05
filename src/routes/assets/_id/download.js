@@ -49,8 +49,9 @@ router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) 
   const timestamp = moment().add(8, 'hours').valueOf();
   const signature = computeSignature(req.params.id, timestamp);
 
-  const videoUrl = `${req.protocol}://${req.get('host')}/streams/${timestamp}/${signature}/${videoStream.filename}`;
-  const audioUrl = audioStream && `${req.protocol}://${req.get('host')}/streams/${timestamp}/${signature}/${audioStream.filename}`;
+  const host = req.headers['x-forwarded-host'] ? req.hostname : req.get('host');
+  const videoUrl = `${req.protocol}://${host}/streams/${timestamp}/${signature}/${videoStream.filename}`;
+  const audioUrl = audioStream && `${req.protocol}://${host}/streams/${timestamp}/${signature}/${audioStream.filename}`;
 
   const child = spawn('ffmpeg', [
     '-v', 'error',
