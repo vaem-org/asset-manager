@@ -24,6 +24,7 @@ import moment from 'moment';
 import { Asset } from '@/model/asset';
 import _ from 'lodash';
 import slug from 'slug';
+import config from '@/config';
 
 const router = new Router({
   mergeParams: true
@@ -50,8 +51,9 @@ router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) 
   const signature = computeSignature(req.params.id, timestamp);
 
   const host = req.headers['x-forwarded-host'] ? req.hostname : req.get('host');
-  const videoUrl = `${req.protocol}://${host}/streams/${timestamp}/${signature}/${videoStream.filename}`;
-  const audioUrl = audioStream && `${req.protocol}://${host}/streams/${timestamp}/${signature}/${audioStream.filename}`;
+  const base = config.base || `${req.protocol}://${host}`;
+  const videoUrl = `${base}/streams/${timestamp}/${signature}/${videoStream.filename}`;
+  const audioUrl = audioStream && `${base}/streams/${timestamp}/${signature}/${audioStream.filename}`;
 
   const child = spawn('ffmpeg', [
     '-v', 'error',
