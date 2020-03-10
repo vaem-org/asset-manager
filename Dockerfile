@@ -481,12 +481,13 @@ RUN \
 
 ADD package.json /app/package.json
 ADD yarn.lock /app/yarn.lock
+ADD .babelrc /app/.babelrc
 
 WORKDIR /app
 
 RUN NODE_ENV=development yarn install
 
-COPY . /app
+COPY src /app/src
 
 RUN yarn build
 
@@ -498,21 +499,26 @@ COPY --from=build /opt/ffmpeg /opt/ffmpeg
 RUN apk add --no-cache musl xvfb python ttf-liberation
 RUN apk add --no-cache libgdiplus mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
-#ENV LD_LIBRARY_PATH=/opt/ffmpeg/lib
-
 COPY ./lib/xvfb-run /usr/bin
-
-COPY . /app
-COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/dist /app/dist
 
 WORKDIR /app
 
 ENV NODE_ENV=production FONTCONFIG_PATH=/etc/fonts
 
-RUN rm -rv src/ && \
-    yarn install --production && \
-    yarn cache clean && \
+ADD package.json /app/package.json
+ADD yarn.lock /app/yarn.lock
+
+RUN yarn install -e production
+
+RUN yarn cache clean && \
     ln -s dist/bin bin
+
+# copy all non-build files
+COPY config /app/config
+COPY CHECKS /app/CHECKS
+COPY lib /app/lib
+
+# copy build files
+COPY --from=build /app/dist /app/dist
 
 CMD ["yarn", "start"]
