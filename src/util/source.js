@@ -198,7 +198,11 @@ export async function getNormalizeParameters({ source, map, filter_complex }) {
   ;
 
   const { stderr } = await execFile('ffmpeg',
-    ['-hide_banner', '-i', source, '-f', 'null', ...parameters, '-']);
+    ['-hide_banner', '-i', source, '-f', 'null', ...parameters, '-'], {
+      env: {
+        LD_LIBRARY_PATH: '/opt/ffmpeg/lib'
+      }
+    });
 
   const parsed = JSON.parse(stderr.split('\n').slice(-13).join('\n'));
 

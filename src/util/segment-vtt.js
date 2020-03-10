@@ -27,7 +27,12 @@ const execFile = util.promisify(child_process.execFile);
 
 const run = args => new Promise((accept, reject) => {
   console.log(`ffmpeg ${args.map(cmd => `"${cmd}"`).join(' ')}`);
-  child_process.spawn('ffmpeg', args, {stdio: 'inherit'})
+  child_process.spawn('ffmpeg', args, {
+    stdio: 'inherit',
+    env: {
+      LD_LIBRARY_PATH: '/opt/ffmpeg/lib'
+    }
+  })
     .on('close', code => {
       if (code === 0) {
         return accept();

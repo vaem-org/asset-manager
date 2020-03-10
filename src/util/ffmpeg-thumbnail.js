@@ -28,7 +28,10 @@ const createThumbnail = (source, destination, time) => new Promise((accept, reje
     '-v', 'error',
     destination
   ], {
-    stdio: 'inherit'
+    stdio: 'inherit',
+    env: {
+      LD_LIBRARY_PATH: '/opt/ffmpeg/lib'
+    }
   })
   .on('close', code => {
     if (code !== 0) {

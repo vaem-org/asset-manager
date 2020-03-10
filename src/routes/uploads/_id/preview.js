@@ -99,7 +99,10 @@ router.post('/', api(async req => {
     '-hls_time', 2,
     `http://localhost:${config.port}/uploads/${req.params.id}/preview/${uuid}/stream.m3u8`
   ], {
-    stdio: ['ignore', 'inherit', 'inherit']
+    stdio: ['ignore', 'inherit', 'inherit'],
+    env: {
+      LD_LIBRARY_PATH: '/opt/ffmpeg/lib'
+    }
   });
 
   child.on('close', code => {

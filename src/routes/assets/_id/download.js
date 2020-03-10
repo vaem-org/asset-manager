@@ -67,7 +67,10 @@ router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) 
     '-f', 'mpegts',
     '-'
   ], {
-    stdio: ['ignore', 'pipe', 'inherit']
+    stdio: ['ignore', 'pipe', 'inherit'],
+    env: {
+      LD_LIBRARY_PATH: '/opt/ffmpeg/lib'
+    }
   });
 
   res.setHeader('content-disposition', `attachment; filename="${slug(asset.title)}.ts"`);
