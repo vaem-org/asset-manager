@@ -32,6 +32,9 @@ app.use(cors({
   credentials: true
 }));
 
+process.env.PATH = `/opt/ffmpeg/bin:${process.env.PATH}`;
+process.env.LD_LIBRARY_PATH = '/opt/ffmpeg/lib';
+
 app.set('trust proxy', true);
 
 app.get('/_alive', (req, res) => res.end('alive'));
