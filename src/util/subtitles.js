@@ -30,7 +30,13 @@ import { getStreamInfo } from '@/util/stream';
 const outputDir = `${config.root}/var/subtitles`;
 
 const run = (cmd, args) => new Promise((accept, reject) => {
-  childProcess.spawn(cmd, args, { stdio: 'inherit' }).on('close', code => {
+  childProcess.spawn(cmd, args, {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      LD_LIBRARY_PATH: null
+    }
+  }).on('close', code => {
     if (code === 0) {
       accept();
     } else {
