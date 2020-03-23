@@ -60,7 +60,7 @@ const convertSubrip = async (source, destination) => {
  * @param {String} sourceFile
  * @param {String} lang
  */
-const convert = async (assetId, sourceFile, lang) => {
+export async function convert(assetId, sourceFile, lang) {
   const vtt = sourceFile.replace(/\.[^.]+$/, '.vtt');
   const ext = sourceFile.replace(/^.*\.([^.]+)$/, '$1');
   const destination = `${outputDir}/${assetId}.${lang}.vtt`;
@@ -119,8 +119,7 @@ const convert = async (assetId, sourceFile, lang) => {
   item.markModified('subtitles');
   await item.save();
 
-  await segmentVtt(`http://127.0.0.1:${config.port}${source.streamUrl.replace('.m3u8', '.235k.m3u8')}`, assetId, lang);
+  await segmentVtt(`http://127.0.0.1:${config.port}${source.streamUrl.replace('.m3u8',
+    '.235k.m3u8')}`, assetId, lang);
   console.log('Segmenting VTT successful');
-};
-
-export { convert };
+}
