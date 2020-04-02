@@ -465,6 +465,7 @@ router.post('/start-job', json(), api(async req => {
   let basename = source && path.basename(source);
   let audio = req.body.audio;
   let videoFilter = req.body.vf;
+  let skip = req.body.ss;
 
   let asset;
 
@@ -478,6 +479,7 @@ router.post('/start-job', json(), api(async req => {
     source = getSource(asset.file ? asset.file.name : asset.source);
     audio = asset.audio;
     videoFilter = asset.videoFilter;
+    skip = asset.skip;
 
     basename = path.basename(source);
     videoParameters = asset.videoParameters;
@@ -491,6 +493,7 @@ router.post('/start-job', json(), api(async req => {
       audio,
       file,
       videoFilter,
+      skip,
       hls_enc_key: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null,
       hls_enc_iv: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null
     });
@@ -589,6 +592,7 @@ router.post('/start-job', json(), api(async req => {
       ...job,
       arguments: [
         '-seekable', getSeekable(source),
+        ...(skip ? ['-ss', skip] : []),
         '-i', source,
         ...(audio ? ['-i', audio] : []),
 
