@@ -556,7 +556,7 @@ router.post('/start-job', json(), api(async req => {
     let useVarStreamMap = false;
     const filterComplex = [];
 
-    if (file.loudNorm) {
+    if (file && file.loudNorm) {
       filterComplex.push(file.loudNorm);
     }
 
