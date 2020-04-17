@@ -512,7 +512,7 @@ router.post('/start-job', json(), api(async req => {
 
   const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 16*3600)}`;
 
-  const outputBase = `${config.base}/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
+  const outputBase = `${config.outputBase}/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
 
   const { stereoMap } = await getChannelMapping(file, source);
 

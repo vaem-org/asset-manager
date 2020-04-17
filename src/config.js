@@ -80,6 +80,7 @@ const config = merge({
 
   base: process.env.BASE,
   sourceBase: process.env.SOURCE_BASE || `${process.env.BASE}/source`,
+  outputBase: process.env.OUTPUT_BASE || process.env.BASE,
 
   destinationFileSystem: fileSystemFromURL(destinationFS),
   destinationIsLocal: destinationFS.startsWith('file://'),
