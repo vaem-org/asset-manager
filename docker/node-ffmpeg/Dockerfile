@@ -477,3 +477,9 @@ RUN \
         cd tools && \
         make qt-faststart && \
         cp qt-faststart ${PREFIX}/bin
+
+FROM        base AS release
+
+ENV         LD_LIBRARY_PATH=/usr/local/lib
+
+COPY --from=build /opt /opt
