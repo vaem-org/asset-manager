@@ -17,7 +17,6 @@
  */
 
 import mongoose from 'mongoose';
-import timestamps from 'mongoose-timestamp';
 import * as fileType from '../util/file-type';
 
 const schema = new mongoose.Schema({
@@ -31,10 +30,9 @@ const schema = new mongoose.Schema({
   },
   {
     toObject: {virtuals: true},
-    toJSON: {virtuals: true}
+    toJSON: {virtuals: true},
+    timestamps: true
   });
-
-schema.plugin(timestamps);
 
 schema.virtual('type').get(function () {
   if (fileType.isVideo(this.name)) {

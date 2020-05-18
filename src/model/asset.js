@@ -22,8 +22,6 @@ import { Schema, model } from 'mongoose';
 import _ from 'lodash';
 
 const schema = new Schema({
-  updatedAt: {type: Date, default: Date.now},
-  createdAt: {type: Date, default: Date.now},
   labels: [String],
   basename: String,
   title: String,
@@ -44,6 +42,8 @@ const schema = new Schema({
   public: Boolean,
   videoFilter: String,
   ss: String
+}, {
+  timestamps: true
 });
 
 let labelsCache = {};
@@ -72,9 +72,6 @@ schema.methods.removeFiles = function () {
 const Asset = model('Asset', schema);
 
 Asset.schema.pre('save', function (next) {
-  if (this.isModified()) {
-    this.updatedAt = new Date();
-  }
   labelsCache = {};
 
   next();
