@@ -62,44 +62,51 @@ async function next() {
     return;
   }
 
-  const filename = queue.shift();
-  await ensureDir(dirname(filename));
+  await Promise.all([
+    (async () => {
+      const filename = queue.shift();
+      await ensureDir(dirname(filename));
 
-  const tempFilename = `${config.root}/var/tmp${filename}`;
+      const tempFilename = `${config.root}/var/tmp${filename}`;
 
-  current.add(filename);
-  let tries = 10;
-  let done = false;
-  while(tries > 0 && !done) {
-    try {
-      await upload(tempFilename, filename);
-      done = true;
-    } catch (e) {
-      tries--;
+      current.add(filename);
+      let tries = 10;
+      let done = false;
+      while(tries > 0 && !done) {
+        try {
+          await upload(tempFilename, filename);
+          done = true;
+        } catch (e) {
+          tries--;
 
-      console.info(`Retrying ${filename} (${e.toString()}`);
-      // wait for 2 seconds and try again
-      await (new Promise(accept => setTimeout(accept, 2000)));
-    }
-  }
-  if (!done) {
-    console.error(`Unable to upload ${filename}`);
-    process.exit(1);
-  }
+          console.info(`Retrying ${filename} (${e.toString()}`);
+          // wait for 2 seconds and try again
+          await (new Promise(accept => setTimeout(accept, 2000)));
+        }
+      }
+      if (!done) {
+        console.error(`Unable to upload ${filename}`);
+        process.exit(1);
+      }
 
-  unlink(tempFilename, err => {
-    if (err) {
-      console.warn(`Unable to remove ${tempFilename}`);
-    }
-  });
+      unlink(tempFilename, err => {
+        if (err) {
+          console.warn(`Unable to remove ${tempFilename}`);
+        }
+      });
 
-  current.delete(filename);
-  process.nextTick(() => {
-    if (filename.endsWith('.m3u8')) {
-      console.log(`Emitting event for ${filename}`);
-    }
-    events.emit(filename);
-  });
+      current.delete(filename);
+      process.nextTick(() => {
+        if (filename.endsWith('.m3u8')) {
+          console.log(`Emitting event for ${filename}`);
+        }
+        events.emit(filename);
+      });
+    })(),
+
+    new Promise(accept => setTimeout(accept, 500))
+  ])
+
 
   return next();
 }
