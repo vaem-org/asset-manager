@@ -17,7 +17,7 @@
  */
 
 import { Router } from 'express';
-import { api, verify } from '@/util/express-helpers';
+import { api, verify } from '@/lib/express-helpers';
 
 const router = new Router();
 

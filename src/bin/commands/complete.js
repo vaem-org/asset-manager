@@ -18,7 +18,7 @@
 
 import sywac from 'sywac';
 import { Asset } from '@/model/asset';
-import masterPlaylist from '@/util/master-playlist'; sywac;
+import masterPlaylist from '@/lib/master-playlist'; sywac;
 
 sywac.command('complete <assetId>', async ({ assetId }) => {
   const asset = await Asset.findById(assetId);

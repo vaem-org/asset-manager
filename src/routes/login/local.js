@@ -19,8 +19,8 @@
 import config from '@/config';
 import jwt from 'jsonwebtoken';
 import { Router, json } from 'express';
-import { api } from '@/util/express-helpers';
-import { getTokens } from '@/util/authentication';
+import { api } from '@/lib/express-helpers';
+import { getTokens } from '@/lib/authentication';
 
 const router = new Router();
 

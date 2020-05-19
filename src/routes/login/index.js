@@ -17,7 +17,7 @@
  */
 
 import { Router } from 'express';
-import { api } from '@/util/express-helpers';
+import { api } from '@/lib/express-helpers';
 import config from '@/config';
 
 const router = new Router();

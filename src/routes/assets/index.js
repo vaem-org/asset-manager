@@ -19,10 +19,10 @@
 import _ from 'lodash';
 import { Router, json } from 'express';
 
-import { api, verify } from '~/util/express-helpers';
+import { api, verify } from '~/lib/express-helpers';
 
 import { Asset } from '~/model/asset';
-import { listDocuments } from '~/util/list-documents';
+import { listDocuments } from '~/lib/list-documents';
 
 const router = new Router({});
 

@@ -27,24 +27,24 @@ import { URL } from 'url';
 import { Mutex } from 'async-mutex';
 import { promisify } from 'util';
 import { rmdir } from 'fs';
-import fixKeys from '@/util/fix-keys';
+import fixKeys from '@/lib/fix-keys';
 import {
   getSeekable,
   getSource,
   getVideoParameters,
   getAudioJob,
   getChannelMapping
-} from '@/util/source';
-import { api, verify } from '@/util/express-helpers';
+} from '@/lib/source';
+import { api, verify } from '@/lib/express-helpers';
 import * as settings from '@/model/settings';
 import { File } from '@/model/file';
 import { Asset } from '@/model/asset';
-import masterPlaylist from '@/util/master-playlist';
-import { socketio } from '@/util/socketio';
-import { getSignedUrl } from '@/util/url-signer';
-import { startEncoders } from '@/util/azure-instances';
-import { getStreamInfo } from '@/util/stream';
-import { waitFor } from '@/util/upload-queue';
+import masterPlaylist from '@/lib/master-playlist';
+import { socketio } from '@/lib/socketio';
+import { getSignedUrl } from '@/lib/url-signer';
+import { startEncoders } from '@/lib/azure-instances';
+import { getStreamInfo } from '@/lib/stream';
+import { waitFor } from '@/lib/upload-queue';
 
 const execFile = promisify(_execFile);
 

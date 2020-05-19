@@ -21,9 +21,9 @@ import config from '@/config';
 import path from 'path';
 import { Router } from 'express';
 import { fileSystemFromURL } from '@vaem-util/filesystem';
-import { catchExceptions } from '~/util/express-helpers';
-import { verifySignature } from '@/util/url-signer';
-import { addToQueue } from '@/util/upload-queue';
+import { catchExceptions } from '~/lib/express-helpers';
+import { verifySignature } from '@/lib/url-signer';
+import { addToQueue } from '@/lib/upload-queue';
 
 const ensured = new Set();
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { api, verify } from '@/util/express-helpers';
+import { api, verify } from '@/lib/express-helpers';
 import { File } from '@/model/file';
-import { getSource } from '@/util/source';
+import { getSource } from '@/lib/source';
 
 const router = new Router({
   mergeParams: true

@@ -18,7 +18,7 @@
 
 import { Asset } from '@/model/asset';
 import moment from 'moment';
-import { computeSignature } from '@/util/url-signer';
+import { computeSignature } from '@/lib/url-signer';
 import _ from 'lodash';
 
 export async function getStreamInfo(assetId) {

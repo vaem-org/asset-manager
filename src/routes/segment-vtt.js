@@ -16,33 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '@/config';
+import * as fse from 'fs-extra';
+import { dirname } from 'path';
 import { Router } from 'express';
-import { catchExceptions } from '@/util/express-helpers';
-import { verifySignature } from '@/util/url-signer';
+import { catchExceptions } from '@/lib/express-helpers';
+import { verifySignature } from '@/lib/url-signer';
+import config from '@/config';
+import { addToQueue } from '@/lib/upload-queue';
 
 const router = new Router();
 
-const uploadQueue = [];
-let uploading = false;
-
-async function uploadNext() {
-  uploading = true;
-  const { output, data } = uploadQueue.shift();
-
-  await config.destinationFileSystem.writeFile(output, data);
-  await (new Promise(accept => setTimeout(accept, 250)));
-
-  if (uploadQueue.length > 0) {
-    uploadNext()
-      .catch(e => console.error(e.toString()));
-  } else {
-    uploading = false;
-  }
-}
-
 router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
   if (!['PUT', 'POST'].includes(req.method)) {
     return next();
   }
@@ -79,10 +63,17 @@ router.use('/:timestamp/:signature', catchExceptions(async (req, res, next) => {
   }
 
   if (data) {
-    uploadQueue.push({ output, data});
-    if (!uploading) {
-      uploadNext().catch(e => console.error(e));
+    // write to temporary storage
+    const filename = `${config.root}/var/tmp${output}`;
+    try {
+      await fse.writeFile(filename, data);
     }
+    catch(e) {
+      await fse.ensureDir(dirname(filename));
+      await fse.writeFile(filename, data);
+    }
+
+    addToQueue(output);
   }
 
   res.end();

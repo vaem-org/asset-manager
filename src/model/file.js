@@ -17,7 +17,7 @@
  */
 
 import mongoose from 'mongoose';
-import * as fileType from '../util/file-type';
+import * as fileType from '../lib/file-type';
 
 const schema = new mongoose.Schema({
     name: {type: String, unique: true},

@@ -21,7 +21,7 @@ import _ from 'lodash';
 import util from 'util';
 import config from '../config';
 import {Asset} from '../model/asset';
-import { computeSignature } from '@/util/url-signer';
+import { computeSignature } from '@/lib/url-signer';
 
 const execFile = util.promisify(child_process.execFile);
 

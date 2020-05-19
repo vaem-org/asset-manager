@@ -17,7 +17,7 @@
  */
 
 import { json, Router } from 'express';
-import { api, validObjectId, verify } from '@/util/express-helpers';
+import { api, validObjectId, verify } from '@/lib/express-helpers';
 import { Asset } from '@/model/asset';
 
 const router = new Router({

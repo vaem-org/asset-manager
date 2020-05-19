@@ -20,8 +20,8 @@ import config from '@/config';
 import jwt from 'jsonwebtoken';
 import { Router, json } from 'express';
 import { OAuth2Client } from 'google-auth-library';
-import { api, catchExceptions } from '@/util/express-helpers';
-import { getTokens } from '@/util/authentication';
+import { api, catchExceptions } from '@/lib/express-helpers';
+import { getTokens } from '@/lib/authentication';
 
 const router = new Router();
 

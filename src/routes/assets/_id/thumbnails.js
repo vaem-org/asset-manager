@@ -19,10 +19,10 @@
 import config from '@/config';
 import fs from 'fs-extra';
 import _ from 'lodash';
-import { api, catchExceptions, verify } from '@/util/express-helpers';
+import { api, catchExceptions, verify } from '@/lib/express-helpers';
 import { Asset } from '@/model/asset';
-import { getStreamInfo } from '@/util/stream';
-import { createThumbnail } from '@/util/ffmpeg-thumbnail';
+import { getStreamInfo } from '@/lib/stream';
+import { createThumbnail } from '@/lib/ffmpeg-thumbnail';
 import sharp from 'sharp';
 import { Router } from 'express';
 import { createHmac } from 'crypto'

@@ -30,10 +30,10 @@ import { createReadStream, access, constants } from 'fs';
 
 import querystring from 'querystring';
 import { Asset } from '~/model/asset';
-import { api, catchExceptions, validObjectId, verify } from '~/util/express-helpers';
-import { verifySignature} from '@/util/url-signer';
-import { getSignedUrl } from '~/util/bunnycdn';
-import { getStreamInfo } from '@/util/stream';
+import { api, catchExceptions, validObjectId, verify } from '~/lib/express-helpers';
+import { verifySignature} from '@/lib/url-signer';
+import { getSignedUrl } from '~/lib/bunnycdn';
+import { getStreamInfo } from '@/lib/stream';
 
 const exists = filename => new Promise((accept) => {
   access(filename, constants.R_OK, err => accept(!err));

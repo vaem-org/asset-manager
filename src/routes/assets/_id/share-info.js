@@ -17,9 +17,9 @@
  */
 
 import { Router, json } from 'express';
-import { api } from '@/util/express-helpers';
-import { verifySignature } from '@/util/url-signer';
-import { getStreamInfo } from '@/util/stream';
+import { api } from '@/lib/express-helpers';
+import { verifySignature } from '@/lib/url-signer';
+import { getStreamInfo } from '@/lib/stream';
 
 const router = new Router({
   mergeParams: true

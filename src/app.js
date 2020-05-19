@@ -22,9 +22,9 @@ import glob from 'glob';
 import path from 'path';
 import cors from 'cors';
 import _ from 'lodash';
-import { initMongoose } from '~/util/mongoose';
-import { app, server as socketIOServer } from './util/socketio';
-import { init as azureInstancesInit } from '@/util/azure-instances';
+import { initMongoose } from '~/lib/mongoose';
+import { app, server as socketIOServer } from './lib/socketio';
+import { init as azureInstancesInit } from '@/lib/azure-instances';
 import config from '@/config';
 
 app.use(cors({

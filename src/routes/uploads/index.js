@@ -22,10 +22,10 @@ import { Router } from 'express';
 import _ from 'lodash';
 import { join } from 'path';
 
-import { api, catchExceptions, verify } from '@/util/express-helpers';
+import { api, catchExceptions, verify } from '@/lib/express-helpers';
 import { File } from '@/model/file';
-import { socketio } from '@/util/socketio';
-import { listDocuments } from '@/util/list-documents';
+import { socketio } from '@/lib/socketio';
+import { listDocuments } from '@/lib/list-documents';
 
 const io = socketio.of('/uploads', null);
 

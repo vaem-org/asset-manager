@@ -17,9 +17,9 @@
  */
 
 import { json, Router } from 'express';
-import { api, verify } from '@/util/express-helpers';
+import { api, verify } from '@/lib/express-helpers';
 import { File } from '@/model/file';
-import { socketio } from '@/util/socketio';
+import { socketio } from '@/lib/socketio';
 
 const router = new Router({
   mergeParams: true

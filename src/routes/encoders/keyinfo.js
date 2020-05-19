@@ -1,8 +1,8 @@
 import config from '@/config';
 import { Router } from 'express';
-import { catchExceptions } from '@/util/express-helpers';
+import { catchExceptions } from '@/lib/express-helpers';
 import { Asset } from '@/model/asset';
-import { getSignedUrl, verifySignature } from '@/util/url-signer';
+import { getSignedUrl, verifySignature } from '@/lib/url-signer';
 
 const router = new Router();
 

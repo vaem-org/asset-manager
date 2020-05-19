@@ -18,8 +18,8 @@
 
 import { json, Router } from 'express';
 import moment from 'moment';
-import { api, verify } from '@/util/express-helpers';
-import { computeSignature } from '@/util/url-signer';
+import { api, verify } from '@/lib/express-helpers';
+import { computeSignature } from '@/lib/url-signer';
 
 const router = new Router({
   mergeParams: true

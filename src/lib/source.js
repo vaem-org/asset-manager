@@ -21,7 +21,7 @@ import _ from 'lodash';
 import util from 'util';
 import config from '../config';
 import getParams from './get-params';
-import { getSignedUrl } from '@/util/url-signer';
+import { getSignedUrl } from '@/lib/url-signer';
 
 const execFile = util.promisify(child_process.execFile);
 

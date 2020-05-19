@@ -22,13 +22,13 @@ import genuuid from 'uuid/v4';
 import _ from 'lodash';
 import { Types } from 'mongoose';
 import { EventEmitter } from 'events'
-import { api } from '@/util/express-helpers';
+import { api } from '@/lib/express-helpers';
 import {
   getChannelMapping,
   getSeekable,
   getSource,
   getVideoParameters,
-} from '@/util/source';
+} from '@/lib/source';
 import config from '@/config';
 import { File } from '@/model/file';
 

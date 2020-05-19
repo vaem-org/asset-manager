@@ -18,7 +18,7 @@
 
 import config from '@/config';
 import { Router } from 'express';
-import { catchExceptions, validObjectId, verify } from '@/util/express-helpers';
+import { catchExceptions, validObjectId, verify } from '@/lib/express-helpers';
 import { File } from '@/model/file';
 
 const router = new Router({

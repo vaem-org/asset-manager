@@ -19,8 +19,8 @@
 import config from '@/config';
 import rangeParser from 'range-parser';
 import { Router } from 'express';
-import { catchExceptions, verify } from '~/util/express-helpers';
-import { verifySignature } from '@/util/url-signer';
+import { catchExceptions, verify } from '~/lib/express-helpers';
+import { verifySignature } from '@/lib/url-signer';
 
 const router = new Router();
 

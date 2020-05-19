@@ -1,5 +1,5 @@
 /*
- * VAEM - Asset manager 
+ * VAEM - Asset manager
  * Copyright (C) 2019  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,11 +19,11 @@
 import config from '@/config';
 import { Router } from 'express';
 import fs from 'fs-extra';
-import * as fileType from '@/util/file-type';
-import { convert as subtitleConvert } from '@/util/subtitles';
-import { api, catchExceptions, verify } from '@/util/express-helpers';
+import * as fileType from '@/lib/file-type';
+import { convert as subtitleConvert } from '@/lib/subtitles';
+import { api, catchExceptions, verify } from '@/lib/express-helpers';
 import { Asset } from '@/model/asset';
-import { getSignedUrl, verifySignature } from '@/util/url-signer';
+import { getSignedUrl, verifySignature } from '@/lib/url-signer';
 
 const router = new Router({
   mergeParams: true

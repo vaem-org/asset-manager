@@ -17,9 +17,9 @@
  */
 
 import { Router } from 'express';
-import { api, verify } from '@/util/express-helpers';
-import * as sourceUtil from '@/util/source';
-import { getNormalizeParameters } from '@/util/source';
+import { api, verify } from '@/lib/express-helpers';
+import * as sourceUtil from '@/lib/source';
+import { getNormalizeParameters } from '@/lib/source';
 import { File } from '@/model/file';
 
 const router = new Router({

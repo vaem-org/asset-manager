@@ -19,7 +19,7 @@
 import config from '@/config';
 import sywac from 'sywac';
 import moment from 'moment';
-import { computeSignature } from '@/util/url-signer';
+import { computeSignature } from '@/lib/url-signer';
 
 import _ from 'lodash';
 import { execFile as _execFile } from 'child_process';

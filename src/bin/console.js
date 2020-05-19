@@ -2,7 +2,7 @@
 import sywac from 'sywac';
 import mongoose from 'mongoose';
 import { sync as glob } from 'glob';
-import { initMongoose } from '@/util/mongoose';
+import { initMongoose } from '@/lib/mongoose';
 
 process.env.PATH = `/opt/ffmpeg/bin:${process.env.PATH}`;
 process.env.LD_LIBRARY_PATH = '/opt/ffmpeg/lib';

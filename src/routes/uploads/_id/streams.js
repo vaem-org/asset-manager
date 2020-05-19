@@ -17,10 +17,10 @@
  */
 
 import { Router } from 'express';
-import { api, verify } from '@/util/express-helpers';
-import * as sourceUtil from '@/util/source';
+import { api, verify } from '@/lib/express-helpers';
+import * as sourceUtil from '@/lib/source';
 import _ from 'lodash';
-import { guessChannelLayout } from '@/util/source';
+import { guessChannelLayout } from '@/lib/source';
 import { File } from '@/model/file';
 
 const router = new Router({

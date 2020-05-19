@@ -16,10 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { api, catchExceptions, verify } from '@/util/express-helpers';
+import { api, catchExceptions, verify } from '@/lib/express-helpers';
 import { spawn } from 'child_process';
 import { Router } from 'express';
-import { computeSignature, verifySignature } from '@/util/url-signer';
+import { computeSignature, verifySignature } from '@/lib/url-signer';
 import moment from 'moment';
 import { Asset } from '@/model/asset';
 import _ from 'lodash';

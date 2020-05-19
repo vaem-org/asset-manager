@@ -20,8 +20,8 @@ import config from '@/config';
 import { Router } from 'express';
 import { basename, dirname } from 'path';
 import { createWriteStream, unlink, ensureDir } from 'fs-extra';
-import { api, verify } from '@/util/express-helpers';
-import { convert } from '@/util/subtitles';
+import { api, verify } from '@/lib/express-helpers';
+import { convert } from '@/lib/subtitles';
 import { File } from '@/model/file';
 
 const router = new Router({

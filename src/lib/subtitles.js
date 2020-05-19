@@ -25,7 +25,7 @@ import util from 'util';
 
 import segmentVtt from './segment-vtt';
 import { Asset } from '~/model/asset';
-import { getStreamInfo } from '@/util/stream';
+import { getStreamInfo } from '@/lib/stream';
 
 const outputDir = `${config.root}/var/subtitles`;
 
