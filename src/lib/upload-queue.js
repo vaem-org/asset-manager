@@ -104,7 +104,7 @@ async function next() {
       });
     })(),
 
-    new Promise(accept => setTimeout(accept, 500))
+    new Promise(accept => setTimeout(accept, 1000/config.uploadRateLimit*2))
   ])
 
 

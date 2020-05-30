@@ -109,7 +109,8 @@ const config = merge({
   slackHook: process.env.SLACK_HOOK,
 
   separateAudio: process.env.SEPARATE_AUDIO === '1',
-  sourceAccelRedirect: process.env.SOURCE_ACCEL_REDIRECT
+  sourceAccelRedirect: process.env.SOURCE_ACCEL_REDIRECT,
+  uploadRateLimit: parseInt(process.env.UPLOAD_CONCURRENCY, 10) || 8
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;
