@@ -399,10 +399,12 @@ encoderIO.on('connection', function (socket) {
       };
 
       if (config.destinationIsLocal) {
-        handleFile()
+        setTimeout(() => {
+          handleFile()
           .catch(e => {
             console.error(e);
           });
+        }, 2000);
       } else {
         // handle file when upload has completed
         const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
