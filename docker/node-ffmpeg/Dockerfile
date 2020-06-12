@@ -512,6 +512,6 @@ RUN \
 
 FROM        base AS release
 
-ENV         LD_LIBRARY_PATH=/usr/local/lib
+ENV LD_LIBRARY_PATH=/opt/ffmpeg/lib:/opt/ffmpeg/lib64
 
 COPY --from=build /opt /opt
