@@ -162,23 +162,18 @@ const encoderDone = id => {
   console.log(`Encoder ${id} done.`);
   processQueue()
     .catch(e => console.error(e));
-};
 
-// check for idle encoders
-if (autoScaleEncoders) {
-  setInterval(() => {
-    if (queue.length !== 0) {
-      return;
-    }
-
-    Object.values(encoders).forEach(encoder => {
-      if (encoder.state.status === 'idle') {
-        console.log(`Quitting encoder ${encoder.id}`);
-        sockets[encoder.id].emit('quit');
+  if (autoScaleEncoders) {
+    setTimeout(() => {
+      const encoder = encoders[id];
+      if (!encoder || encoder.state?.status !== 'idle') {
+        return;
       }
-    });
-  }, 5000);
-}
+
+      sockets[encoder.id].emit('quit');
+    }, 20000);
+  }
+};
 
 const assetDone = async asset => {
   console.log(`Asset has completed: ${asset._id}`);
