@@ -585,6 +585,8 @@ router.post('/start-job', json(), api(async req => {
       useVarStreamMap = true;
     }
 
+    const copy = req.body.copyMaxVariant && i === 0;
+
     todo.push({
       ...job,
       arguments: [
@@ -593,23 +595,27 @@ router.post('/start-job', json(), api(async req => {
         '-i', source,
         ...(audio ? ['-i', audio] : []),
 
-        // video options
-        '-map', '0:v',
-        '-vcodec', 'libx264',
-        '-vprofile', 'high',
-        '-level', '4.1',
-        '-pix_fmt', 'yuv420p',
-        '-g', 2 * Math.ceil(framerate),
-        '-x264opts', 'no-scenecut',
-        '-vf', (videoFilter ? videoFilter + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
-        '-b:v', bitrateString,
-        '-maxrate', bitrateString,
-        '-bufsize', bitrateString,
+        ...copy ? [
+          '-c', 'copy',
+        ] : [
+          // video options
+          '-map', '0:v',
+          '-vcodec', 'libx264',
+          '-vprofile', 'high',
+          '-level', '4.1',
+          '-pix_fmt', 'yuv420p',
+          '-g', 2 * Math.ceil(framerate),
+          '-x264opts', 'no-scenecut',
+          '-vf', (videoFilter ? videoFilter + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
+          '-b:v', bitrateString,
+          '-maxrate', bitrateString,
+          '-bufsize', bitrateString,
 
-        // audio options
-        ...audioArguments,
+          // audio options
+          ...audioArguments,
 
-        ...(filterComplex.length ? ['-filter_complex', filterComplex.join(',')] : []),
+          ...(filterComplex.length ? ['-filter_complex', filterComplex.join(',')] : []),
+        ],
 
         // output
         '-method', 'PUT',
