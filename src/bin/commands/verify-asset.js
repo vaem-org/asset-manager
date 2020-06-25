@@ -82,12 +82,13 @@ sywac.command('verify-asset <assetId>', {
         const timestamp = moment().add(8, 'hours').valueOf();
         const signature = computeSignature(assetId, timestamp);
         const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${entry.filename}`;
-        console.info(`Checking duration for ${entry.bitrate || `${entry.bandwidth / 1024}k`}`);
+        const bitrate = entry.filename.split('.')[1];
+        console.info(`Checking duration for ${bitrate}`);
         const duration = await getDuration(videoUrl);
         if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2) {
-          console.error(`Duration for bitrate ${entry.bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
+          console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
         } else {
-          good.push(entry.bitrate);
+          good.push(bitrate);
         }
       }
       asset.bitrates = good;
