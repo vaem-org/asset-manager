@@ -81,12 +81,12 @@ export async function createEncoders() {
   created = true;
 }
 
-export async function startEncoders() {
+export async function startEncoders({ numInstances }) {
   if (!created) {
     await createEncoders();
   }
 
-  await Promise.all(_.range(config.azureInstances.numInstances).map(index => client.containerGroups.start(
+  await Promise.all(_.range(numInstances).map(index => client.containerGroups.start(
     config.azureInstances.resourceGroup,
     `encoder${index}`
   )));

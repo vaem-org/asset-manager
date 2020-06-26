@@ -79,12 +79,18 @@ async function processQueue() {
 
   const release = await queueMutex.acquire();
 
-  if (Object.keys(encoders).length === 0 && autoScaleEncoders && !creatingEncoders) {
+  const numEncoders = Object.keys(encoders).length;
+  if (numEncoders < config.azureInstances.numInstances && autoScaleEncoders && !creatingEncoders) {
     // create encoders
     creatingEncoders = true;
 
     console.info('Creating encoder instances');
-    await startEncoders();
+    const numInstances = Math.min(queue.length-numEncoders, config.azureInstances.numInstances);
+    if (numInstances > 0) {
+      await startEncoders({
+        numInstances
+      });
+    }
 
     creatingEncoders = false;
   }
