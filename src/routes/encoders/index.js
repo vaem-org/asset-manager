@@ -45,6 +45,7 @@ import { getSignedUrl } from '@/lib/url-signer';
 import { startEncoders } from '@/lib/azure-instances';
 import { getStreamInfo } from '@/lib/stream';
 import { waitFor } from '@/lib/upload-queue';
+import { verifyAsset } from '@/lib/verify-asset';
 
 const execFile = promisify(_execFile);
 
@@ -198,18 +199,20 @@ const assetDone = async asset => {
   try {
     await masterPlaylist(asset._id);
 
-    globalIO.emit('info', `Encoding asset "${asset.title}" completed`);
+    if (await verifyAsset({ assetId: asset._id })) {
+      globalIO.emit('info', `Encoding asset "${asset.title}" completed`);
 
-    if (config.slackHook) {
-      axios.post(config.slackHook, {
-        text: `Transcoding asset complete: "${asset.title}"`
-      }).catch(e => {
-        console.error(`Unable to use Slack hook, ${e.toString()}`)
-      });
+      if (config.slackHook) {
+        axios.post(config.slackHook, {
+          text: `Transcoding asset complete: "${asset.title}"`
+        }).catch(e => {
+          console.error(`Unable to use Slack hook, ${e.toString()}`)
+        });
+      }
+
+      asset.state = 'processed';
+      await asset.save();
     }
-
-    asset.state = 'processed';
-    await asset.save();
   }
   catch (e) {
     console.log(e);
@@ -596,7 +599,13 @@ router.post('/start-job', json(), api(async req => {
     todo.push({
       ...job,
       arguments: [
+        // http options
         '-seekable', getSeekable(source),
+        // '-reconnect_at_eof', 1,
+        '-reconnect_streamed', 1,
+        '-reconnect_delay_max', 60,
+        '-multiple_requests', 1,
+
         ...(skip ? ['-ss', skip] : []),
         '-i', source,
         ...(audio ? ['-i', audio] : []),

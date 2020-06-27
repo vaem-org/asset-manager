@@ -16,29 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '@/config';
 import sywac from 'sywac';
-import moment from 'moment';
-import { computeSignature } from '@/lib/url-signer';
-
-import _ from 'lodash';
-import { execFile as _execFile } from 'child_process';
-import { promisify } from 'util';
-
-import { Asset } from '@/model/asset';
-
-const execFile = promisify(_execFile);
-const getDuration = async source => {
-  const { stdout } = await execFile('ffprobe', [
-    '-print_format', 'json',
-    '-show_format',
-    source
-  ]);
-
-  const json = JSON.parse(stdout.toString());
-
-  return parseFloat(_.get(json, 'format.duration'));
-};
+import { verifyAsset } from '@/lib/verify-asset';
 
 sywac.command('verify-asset <assetId>', {
   setup(sywac) {
@@ -49,54 +28,7 @@ sywac.command('verify-asset <assetId>', {
   },
 
   async run({ assetId, ...opts }) {
-    const asset = await Asset.findById(assetId);
-
-    if (!asset) {
-      throw 'Item not found';
-    }
-
-    if (asset.bitrates.length !== (asset.numStreams || asset.jobs.length)) {
-      console.error(`Not all jobs are completed: ${_.difference(_.map(asset.jobs, 'maxrate'),
-        asset.bitrates).join(', ')} are missing`);
-      process.exit(1);
-    }
-
-    console.info('Verifying file count');
-
-    const entries = await config.destinationFileSystem.list(`/${assetId}`);
-    const counts = _.countBy(entries, ({ name }) => name.split('.')[1]);
-
-    const max = _.max(_.values(counts));
-
-    const faulty = _.keys(_.omit(counts, ['m3u8', 'undefined']))
-    .filter(bitrate => Math.abs(counts[bitrate] - max) >= 5);
-    if (faulty.length > 0) {
-      console.warn(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
-    }
-    asset.bitrates = _.difference(asset.bitrates, faulty);
-
-    if (!opts['count-only']) {
-      const good = [];
-      // verify durations of all bitrates
-      for (let entry of [...asset.streams, ...asset.audioStreams]) {
-        const timestamp = moment().add(8, 'hours').valueOf();
-        const signature = computeSignature(assetId, timestamp);
-        const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${entry.filename}`;
-        const bitrate = entry.filename.split('.')[1];
-        console.info(`Checking duration for ${bitrate}`);
-        const duration = await getDuration(videoUrl);
-        if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2) {
-          console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
-        } else {
-          good.push(bitrate);
-        }
-      }
-      asset.bitrates = good;
-    }
-
-    await asset.save();
-
-    if (asset.bitrates.length === asset.jobs.length) {
+    if (! (await verifyAsset({ assetId, countOnly: opts['count-only'] }))) {
       console.info('Asset has been verified successfully');
     }
   }

@@ -42,7 +42,6 @@ async function ensureDir(dirname) {
 
 async function upload(source, destination) {
   const { stream } = await config.destinationFileSystem.write(destination);
-  console.log(`Uploading ${destination}`);
   await new Promise((accept, reject) => {
     const input = createReadStream(source)
     .on('error', reject);
