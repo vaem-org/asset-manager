@@ -68,7 +68,11 @@ export async function createEncoders() {
             resources: {
               requests: {
                 cpu: config.azureInstances.numCPUs,
-                memoryInGB: 1
+                memoryInGB: 1,
+                gpu: {
+                  count: 1,
+                  sku: 'K80'
+                }
               }
             }
           }],

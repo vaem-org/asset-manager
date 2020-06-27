@@ -102,7 +102,7 @@ const config = merge({
     secret: process.env.AZURE_SECRET,
     tenantId: process.env.AZURE_TENANT_ID,
     numInstances: 4,
-    numCPUs: 4
+    numCPUs: 1
   },
 
   encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex'),
