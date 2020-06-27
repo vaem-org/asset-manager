@@ -57,6 +57,7 @@ if (authUrl) {
 
 const source = `${root}/var/uploads`;
 const destinationFS = process.env.DESTINATION_FS || `file://${root}/var/output`;
+const hwAcceleration = process.env.HW_ACCEL === '1';
 const config = merge({
   port,
   host: '0.0.0.0',
@@ -96,13 +97,14 @@ const config = merge({
   } : null,
 
   azureInstances: {
-    image: 'vaem/encoder',
+    image: hwAcceleration ? 'vaem/encoder:nvidia' : 'vaem/encoder',
     resourceGroup: process.env.AZURE_RESOURCE_GROUP,
     clientId: process.env.AZURE_CLIENT_ID,
     secret: process.env.AZURE_SECRET,
     tenantId: process.env.AZURE_TENANT_ID,
-    numInstances: 4,
-    numCPUs: 1
+    numInstances: 1,
+    numCPUs: hwAcceleration ? 1 : 4,
+    numGPUs: hwAcceleration ? 1 : 0
   },
 
   encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex'),
@@ -110,7 +112,8 @@ const config = merge({
 
   separateAudio: process.env.SEPARATE_AUDIO === '1',
   sourceAccelRedirect: process.env.SOURCE_ACCEL_REDIRECT,
-  uploadRateLimit: parseInt(process.env.UPLOAD_CONCURRENCY, 10) || 8
+  uploadRateLimit: parseInt(process.env.UPLOAD_CONCURRENCY, 10) || 8,
+  hwAcceleration
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;

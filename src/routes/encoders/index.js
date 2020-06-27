@@ -615,7 +615,11 @@ router.post('/start-job', json(), api(async req => {
         ] : [
           // video options
           '-map', '0:v',
-          '-vcodec', 'libx264',
+          ...config.hwAcceleration ? [
+            '-vcodec', 'h264_nvenc'
+          ] : [
+            '-vcodec', 'libx264'
+          ],
           '-vprofile', 'high',
           '-level', '4.1',
           '-pix_fmt', 'yuv420p',
@@ -625,6 +629,7 @@ router.post('/start-job', json(), api(async req => {
           '-b:v', bitrateString,
           '-maxrate', bitrateString,
           '-bufsize', bitrateString,
+          '-preset', 'slow',
 
           // audio options
           ...audioArguments,
@@ -720,7 +725,7 @@ router.delete('/jobs/:index', api(async req => {
 router.get('/docker', api(async req => {
   const parsed = new URL(config.base);
   parsed.username = process.env.ENCODER_TOKEN;
-  return `docker run --name encoder -d --rm -e ASSETMANAGER_URL=${parsed.toString()} vaem/encoder`;
+  return `docker run --gpus all --name encoder -d --rm -e ASSETMANAGER_URL=${parsed.toString()} vaem/encoder:nvidia`;
 }));
 
 browserIO.on('connection', socket => {

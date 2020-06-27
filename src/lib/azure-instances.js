@@ -70,7 +70,7 @@ export async function createEncoders() {
                 cpu: config.azureInstances.numCPUs,
                 memoryInGB: 1,
                 gpu: {
-                  count: 1,
+                  count: config.azureInstances.numGPUs,
                   sku: 'K80'
                 }
               }
