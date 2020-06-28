@@ -26,7 +26,6 @@ import crypto from 'crypto';
 import { URL } from 'url';
 import { Mutex } from 'async-mutex';
 import { promisify } from 'util';
-import { rmdir } from 'fs';
 import fixKeys from '@/lib/fix-keys';
 import {
   getSeekable,
@@ -186,7 +185,7 @@ const assetDone = async asset => {
   console.log(`Asset has completed: ${asset._id}`);
 
   try {
-    await masterPlaylist(asset._id);
+    await asset.save();
 
     if (await verifyAsset({ assetId: asset._id })) {
       globalIO.emit('info', `Encoding asset "${asset.title}" completed`);
@@ -198,9 +197,6 @@ const assetDone = async asset => {
           console.error(`Unable to use Slack hook, ${e.toString()}`)
         });
       }
-
-      asset.state = 'processed';
-      await asset.save();
     }
   }
   catch (e) {
