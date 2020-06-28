@@ -25,6 +25,7 @@ import { execFile as _execFile } from 'child_process';
 
 import { Asset } from '@/model/asset';
 import { computeSignature } from '@/lib/url-signer';
+import masterPlaylist from '@/lib/master-playlist';
 
 const execFile = promisify(_execFile);
 const getDuration = async source => {
@@ -53,10 +54,15 @@ export async function verifyAsset({ assetId, countOnly=false }) {
   }
 
   if (asset.bitrates.length !== (asset.numStreams || asset.jobs.length)) {
-    console.error(`Not all jobs are completed: ${_.difference(_.map(asset.jobs, 'maxrate'),
+    console.warn(`Not all jobs are completed: ${_.difference(_.map(asset.jobs, 'bitrate'),
       asset.bitrates).join(', ')} are missing`);
-    process.exit(1);
   }
+
+  const prevState = asset.state;
+
+  // remove duplicate streams
+  asset.streams = _.uniqBy(asset.streams, 'filename');
+  console.log(asset.streams);
 
   console.info('Verifying file count');
 
@@ -88,10 +94,18 @@ export async function verifyAsset({ assetId, countOnly=false }) {
         good.push(bitrate);
       }
     }
-    asset.bitrates = good;
+    asset.bitrates = _.uniq(good);
+  }
+
+  if (asset.bitrates.length === asset.jobs.length) {
+    asset.state = 'processed';
   }
 
   await asset.save();
+
+  if (prevState !== 'processed' && asset.state === 'processed') {
+    await masterPlaylist(asset._id);
+  }
 
   return asset.bitrates.length === asset.jobs.length;
 }

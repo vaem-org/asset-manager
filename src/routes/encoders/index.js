@@ -249,7 +249,9 @@ async function updateStream({ assetId, data }) {
       .filter(value => value)
     ;
 
-    asset.streams.push({
+    asset.streams = _.uniqBy([
+      ...asset.streams,
+      {
       filename: `${assetId}.${bitrates[0]}.m3u8`,
       bandwidth: parseInt(bitrates[0]) * 1024,
       resolution:
@@ -258,7 +260,7 @@ async function updateStream({ assetId, data }) {
           `${stream.width}x${stream.height}`
       ,
       codec: 'avc1.640029'
-    });
+    }], 'filename');
   }
 
   if (data.bitrate instanceof Array) {
