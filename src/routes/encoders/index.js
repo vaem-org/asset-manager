@@ -185,17 +185,6 @@ const encoderDone = id => {
 const assetDone = async asset => {
   console.log(`Asset has completed: ${asset._id}`);
 
-  // remove temporary directory when necessary
-  if (!config.destinationIsLocal) {
-    setTimeout(() => {
-      rmdir(`${config.root}/var/tmp/${asset._id}`, err => {
-        if (err) {
-          console.warn(`Unable to remove temporary directory for ${asset._id}`);
-        }
-      });
-    }, 5000);
-  }
-
   try {
     await masterPlaylist(asset._id);
 
