@@ -103,9 +103,7 @@ export async function verifyAsset({ assetId, countOnly=false }) {
 
   await asset.save();
 
-  if (prevState !== 'processed' && asset.state === 'processed') {
-    await masterPlaylist(asset._id);
-  }
+  await masterPlaylist(asset._id);
 
   return asset.bitrates.length === asset.jobs.length;
 }
