@@ -18,6 +18,7 @@
 
 import {createHash} from 'crypto';
 import config from '@/config';
+import axios from 'axios';
 
 export function getSignedUrl(path, expires) {
   const digest = createHash('md5')
@@ -32,4 +33,15 @@ export function getSignedUrl(path, expires) {
   ;
 
   return `https://${config.bunnyCDN.hostname}.b-cdn.net${path}?token=${token}&expires=${expires}`;
+}
+
+export async function purgeCache(path) {
+  await axios.post('https://bunnycdn.com/api/purge', null, {
+    params: {
+      url: `https://${config.bunnyCDN.hostname}.b-cdn.net${path}`
+    },
+    headers: {
+      AccessKey: config.bunnyCDN.apiKey
+    }
+  });
 }

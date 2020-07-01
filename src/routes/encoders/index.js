@@ -26,7 +26,6 @@ import crypto from 'crypto';
 import { URL } from 'url';
 import { Mutex } from 'async-mutex';
 import { promisify } from 'util';
-import { rmdir } from 'fs';
 import fixKeys from '@/lib/fix-keys';
 import {
   getSeekable,
@@ -185,19 +184,8 @@ const encoderDone = id => {
 const assetDone = async asset => {
   console.log(`Asset has completed: ${asset._id}`);
 
-  // remove temporary directory when necessary
-  if (!config.destinationIsLocal) {
-    setTimeout(() => {
-      rmdir(`${config.root}/var/tmp/${asset._id}`, err => {
-        if (err) {
-          console.warn(`Unable to remove temporary directory for ${asset._id}`);
-        }
-      });
-    }, 5000);
-  }
-
   try {
-    await masterPlaylist(asset._id);
+    await asset.save();
 
     if (await verifyAsset({ assetId: asset._id })) {
       globalIO.emit('info', `Encoding asset "${asset.title}" completed`);
@@ -209,9 +197,6 @@ const assetDone = async asset => {
           console.error(`Unable to use Slack hook, ${e.toString()}`)
         });
       }
-
-      asset.state = 'processed';
-      await asset.save();
     }
   }
   catch (e) {
@@ -260,7 +245,9 @@ async function updateStream({ assetId, data }) {
       .filter(value => value)
     ;
 
-    asset.streams.push({
+    asset.streams = _.uniqBy([
+      ...asset.streams,
+      {
       filename: `${assetId}.${bitrates[0]}.m3u8`,
       bandwidth: parseInt(bitrates[0]) * 1024,
       resolution:
@@ -269,7 +256,7 @@ async function updateStream({ assetId, data }) {
           `${stream.width}x${stream.height}`
       ,
       codec: 'avc1.640029'
-    });
+    }], 'filename');
   }
 
   if (data.bitrate instanceof Array) {
@@ -601,7 +588,6 @@ router.post('/start-job', json(), api(async req => {
       arguments: [
         // http options
         '-seekable', getSeekable(source),
-        // '-reconnect_at_eof', 1,
         '-reconnect_streamed', 1,
         '-reconnect_delay_max', 60,
         '-multiple_requests', 1,
