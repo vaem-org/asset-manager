@@ -38,7 +38,6 @@ import { api, verify } from '@/lib/express-helpers';
 import * as settings from '@/model/settings';
 import { File } from '@/model/file';
 import { Asset } from '@/model/asset';
-import masterPlaylist from '@/lib/master-playlist';
 import { socketio } from '@/lib/socketio';
 import { getSignedUrl } from '@/lib/url-signer';
 import { startEncoders } from '@/lib/azure-instances';
