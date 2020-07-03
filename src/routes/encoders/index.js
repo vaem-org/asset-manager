@@ -388,26 +388,17 @@ encoderIO.on('connection', function (socket) {
         }
       };
 
-      if (config.destinationIsLocal) {
-        setTimeout(() => {
-          handleFile()
-          .catch(e => {
-            console.error(e);
-          });
-        }, 2000);
-      } else {
-        // handle file when upload has completed
-        const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
+      // handle file when upload has completed
+      const bitrates = data.bitrate instanceof Array ? data.bitrate : [data.bitrate];
 
-        const filename = `/${data.asset}/${data.asset}.${bitrates[0]}.m3u8`;
-        console.log(`Waiting for ${filename}`);
-        waitFor(filename).then(() => {
-          console.log(`Handling ${filename}`);
-          handleFile()
-          .catch(e => console.error(e))
-          ;
-        })
-      }
+      const filename = `/${data.asset}/${data.asset}.${bitrates[0]}.m3u8`;
+      console.log(`Waiting for ${filename}`);
+      waitFor(filename).then(() => {
+        console.log(`Handling ${filename}`);
+        handleFile()
+        .catch(e => console.error(e))
+        ;
+      })
     });
 
     socket.on('disconnect', () => {

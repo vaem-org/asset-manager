@@ -23,7 +23,7 @@ import { Router } from 'express';
 import { fileSystemFromURL } from '@vaem-util/filesystem';
 import { catchExceptions } from '~/lib/express-helpers';
 import { verifySignature } from '@/lib/url-signer';
-import { addToQueue } from '@/lib/upload-queue';
+import { addToQueue, events as uploadEvents } from '@/lib/upload-queue';
 import { purgeCache } from '@/lib/bunnycdn';
 
 const ensured = new Set();
@@ -59,6 +59,8 @@ router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, 
   const handleFile = () => {
     if (!config.destinationIsLocal) {
       addToQueue(output);
+    } else {
+      uploadEvents.emit(output);
     }
 
     if (output.endsWith('.m3u8') && config.bunnyCDN) {

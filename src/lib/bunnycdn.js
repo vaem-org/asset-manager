@@ -36,7 +36,7 @@ export function getSignedUrl(path, expires) {
 }
 
 export async function purgeCache(path) {
-  if (config.bunnyCDN) {
+  if (!config.bunnyCDN) {
     return;
   }
 
