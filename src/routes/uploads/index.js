@@ -21,6 +21,7 @@ import fs from 'fs-extra';
 import { Router } from 'express';
 import _ from 'lodash';
 import { join } from 'path';
+import moment from 'moment';
 
 import { api, catchExceptions, verify } from '@/lib/express-helpers';
 import { File } from '@/model/file';
@@ -82,6 +83,7 @@ router.get('/', api(async req => {
 
     await File.deleteMany({
       name: { $not: { $in: files.map(file => file.path) } },
+      updatedAt: { $lt: moment().subtract(60, 'seconds')},
       state: { $ne: 'prepared' }
     });
   }
@@ -121,12 +123,10 @@ router.put('/:name', catchExceptions(async (req, res) => {
     file.uploaded = offset + numBytes;
     file.save();
 
-    setTimeout(() => {
-      io.emit('progress', file);
-      return res.json({
-        id: file._id
-      });
-    }, 1000);
+    io.emit('progress', file);
+    return res.json({
+      id: file._id
+    });
   };
 
   const output = await fileSystem.write(name, {
