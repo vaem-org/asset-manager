@@ -601,7 +601,12 @@ router.post('/start-job', json(), api(async req => {
           '-pix_fmt', 'yuv420p',
           '-g', 2 * Math.ceil(framerate),
           '-x264opts', 'no-scenecut',
-          '-vf', (videoFilter ? videoFilter + '[out];[out]' : '') + `scale=${width}:trunc(ow/dar/2)*2`,
+          '-vf',
+            (videoFilter ? videoFilter + '[out];[out]' : '') +
+            (config.hwAcceleration ?
+              `hwupload_cuda,scale_npp=${width}:trunc(ow/dar/2)*2,hwdownload,format=yuv420p` :
+              `scale=${width}:trunc(ow/dar/2)*2`
+            ),
           '-b:v', bitrateString,
           '-maxrate', bitrateString,
           '-bufsize', bitrateString,
