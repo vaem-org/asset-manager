@@ -623,7 +623,6 @@ router.post('/start-job', json(), api(async req => {
         ],
 
         // output
-        '-method', 'PUT',
         '-f', 'hls',
         '-hls_list_size', 0,
         '-hls_playlist_type', 'vod',

@@ -36,6 +36,10 @@ export function getSignedUrl(path, expires) {
 }
 
 export async function purgeCache(path) {
+  if (config.bunnyCDN) {
+    return;
+  }
+
   await axios.post('https://bunnycdn.com/api/purge', null, {
     params: {
       url: `https://${config.bunnyCDN.hostname}.b-cdn.net${path}`

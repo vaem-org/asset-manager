@@ -26,6 +26,7 @@ import { execFile as _execFile } from 'child_process';
 import { Asset } from '@/model/asset';
 import { computeSignature } from '@/lib/url-signer';
 import masterPlaylist from '@/lib/master-playlist';
+import { purgeCache } from '@/lib/bunnycdn';
 
 const execFile = promisify(_execFile);
 const getDuration = async source => {
@@ -58,8 +59,6 @@ export async function verifyAsset({ assetId, countOnly=false }) {
       asset.bitrates).join(', ')} are missing`);
   }
 
-  const prevState = asset.state;
-
   // remove duplicate streams
   asset.streams = _.uniqBy(asset.streams, 'filename');
   console.log(asset.streams);
@@ -82,6 +81,7 @@ export async function verifyAsset({ assetId, countOnly=false }) {
     const good = [];
     // verify durations of all bitrates
     for (let entry of [...asset.streams, ...asset.audioStreams]) {
+      await purgeCache(`/${asset._id}/${entry.filename}`);
       const timestamp = moment().add(8, 'hours').valueOf();
       const signature = computeSignature(assetId, timestamp);
       const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${entry.filename}`;

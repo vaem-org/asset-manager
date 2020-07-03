@@ -41,7 +41,9 @@ export async function createEncoders() {
 
   console.log('Creating instances');
 
-  const list = await client.containerGroups.list();
+  const list = (await client.containerGroups.list())
+    .filter(({ id }) => id.split('/')[4] === config.azureInstances.resourceGroup)
+  ;
 
   const existing = _.map(list.filter(item => item.name.startsWith('encoder')), item => parseInt(item.name.replace(/^encoder/, ''), 10));
 
@@ -69,10 +71,10 @@ export async function createEncoders() {
               requests: {
                 cpu: config.azureInstances.numCPUs,
                 memoryInGB: 1,
-                gpu: {
+                gpu: config.azureInstances.numGPUs >= 1 ? {
                   count: config.azureInstances.numGPUs,
                   sku: 'K80'
-                }
+                } : null
               }
             }
           }],
