@@ -120,11 +120,13 @@ router.put('/:name', catchExceptions(async (req, res) => {
     file.state = file.uploaded === file.size ? 'complete' : 'idle';
     file.uploaded = offset + numBytes;
     file.save();
-    io.emit('progress', file);
 
-    return res.json({
-      id: file._id
-    });
+    setTimeout(() => {
+      io.emit('progress', file);
+      return res.json({
+        id: file._id
+      });
+    }, 1000);
   };
 
   const output = await fileSystem.write(name, {
