@@ -261,6 +261,9 @@ router.get([
     // skip
   }
 
+  // reverse StreamItems so playlist is started with highest bitrate
+  m3u.items.StreamItem.reverse();
+
   m3u.items.PlaylistItem.forEach(stream => {
     if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
       stream.set('uri',
