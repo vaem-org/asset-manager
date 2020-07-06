@@ -25,6 +25,8 @@ const root = fs.realpathSync(`${__dirname}/..`);
 
 const port = parseInt(process.env.PORT) || 5000;
 
+console.log(parseInt(process.env.AZURE_INSTANCES) || 4);
+
 const merge = (object, files) => {
   files.forEach(file => Object.assign(object, fs.existsSync(file) ? require(file) : {}));
   return object;
@@ -102,7 +104,7 @@ const config = merge({
     clientId: process.env.AZURE_CLIENT_ID,
     secret: process.env.AZURE_SECRET,
     tenantId: process.env.AZURE_TENANT_ID,
-    numInstances: 1,
+    numInstances: parseInt(process.env.AZURE_INSTANCES) || 4,
     numCPUs: hwAcceleration ? 1 : 4,
     numGPUs: hwAcceleration ? 1 : 0
   },
