@@ -578,6 +578,7 @@ router.post('/start-job', json(), api(async req => {
       arguments: [
         // http options
         '-seekable', getSeekable(source),
+        '-reconnect', 1,
         '-reconnect_streamed', 1,
         '-reconnect_delay_max', 60,
         '-multiple_requests', 1,
