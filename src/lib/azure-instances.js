@@ -21,7 +21,7 @@ import _ from 'lodash';
 
 import { ContainerInstanceManagementClient } from '@azure/arm-containerinstance';
 import { loginWithServicePrincipalSecretWithAuthResponse } from '@azure/ms-rest-nodeauth';
-import { URL } from "url";
+import { URL } from 'url';
 
 /**
  * @var ContainerInstanceManagementClient
@@ -123,7 +123,7 @@ export async function init() {
     auth.tenantId
   );
 
-  const subscriptionId = creds.subscriptions[0].id;
+  const subscriptionId = auth.subscriptionId || creds.subscriptions[0].id;
   client = new ContainerInstanceManagementClient(
     creds.credentials,
     subscriptionId

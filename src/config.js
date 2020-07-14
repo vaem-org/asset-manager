@@ -106,7 +106,8 @@ const config = merge({
     tenantId: process.env.AZURE_TENANT_ID,
     numInstances: parseInt(process.env.AZURE_INSTANCES) || 4,
     numCPUs: hwAcceleration ? 1 : 4,
-    numGPUs: hwAcceleration ? 1 : 0
+    numGPUs: hwAcceleration ? 1 : 0,
+    subscriptionId: process.env.AZURE_SUBSCRIPTION_ID
   },
 
   encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex'),

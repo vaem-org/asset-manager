@@ -41,7 +41,11 @@ const schema = new Schema({
   deleted: Boolean,
   public: Boolean,
   videoFilter: String,
-  ss: String
+  ss: String,
+  externalId: {
+    type: String,
+    index: true
+  }
 }, {
   timestamps: true
 });
