@@ -715,6 +715,17 @@ router.post('/:id/priority', json(), api(async req => {
   });
 }));
 
+router.delete('/:id', api(async req => {
+  if (!sockets[req.params.id]) {
+    throw {
+      status: 404,
+      message: 'Encoder not found'
+    }
+  }
+
+  sockets[req.params.id].emit('quit');
+}));
+
 router.delete('/jobs/:index', api(async req => {
   queue.splice(req.params.index, 1);
   browserIO.emit('queue-update', queue.length);
