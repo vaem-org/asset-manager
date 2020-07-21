@@ -605,7 +605,7 @@ router.post('/start-job', json(), api(async req => {
           '-vf',
             (videoFilter ? videoFilter + '[out];[out]' : '') +
             (config.hwAcceleration ?
-              `hwupload_cuda,scale_npp=${width}:trunc(ow/dar/2)*2,hwdownload,format=yuv420p` :
+              `format=yuv420p,hwupload_cuda,scale_npp=${width}:trunc(ow/dar/2)*2,hwdownload` :
               `scale=${width}:trunc(ow/dar/2)*2`
             ),
           '-b:v', bitrateString,
@@ -706,7 +706,7 @@ router.delete('/jobs/:index', api(async req => {
 router.get('/docker', api(async req => {
   const parsed = new URL(config.base);
   parsed.username = process.env.ENCODER_TOKEN;
-  return `docker run --gpus all --name encoder -d --rm -e ASSETMANAGER_URL=${parsed.toString()} vaem/encoder:nvidia`;
+  return `docker run ${config.hwAcceleration ? '--gpus all' : ''} --name encoder -d --rm -e ASSETMANAGER_URL=${parsed.toString()} vaem/encoder${config.hwAcceleration ? ':nnvidia' : ''}`;
 }));
 
 browserIO.on('connection', socket => {
