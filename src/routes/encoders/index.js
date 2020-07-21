@@ -26,6 +26,7 @@ import crypto from 'crypto';
 import { URL } from 'url';
 import { Mutex } from 'async-mutex';
 import { promisify } from 'util';
+import byLine from 'byline';
 import fixKeys from '@/lib/fix-keys';
 import {
   getSeekable,
@@ -359,6 +360,22 @@ encoderIO.on('connection', function (socket) {
         if (event === 'state' && ['idle', 'error'].indexOf(data.status) !== -1) {
           encoderDone(id);
         }
+      });
+    });
+
+    // pipe stdout and stderr
+    const lineStreams = {
+      stdout: byLine(),
+      stderr: byLine()
+    };
+
+    ['stdout', 'stderr'].forEach(pipe => {
+      socket.on(pipe, data => {
+        lineStreams[pipe].write(data);
+      });
+
+      lineStreams[pipe].on('data', line => {
+        console[pipe === 'stdout' ? 'info' : 'error'](`encoder${encoderId}: ${line}`);
       });
     });
 
