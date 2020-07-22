@@ -53,10 +53,26 @@ export async function createEncoders() {
 
   await Promise.all(_.difference(_.range(config.azureInstances.numInstances), existing).map(async index => {
     console.info(`Creating encoder${index}`);
+
+    const {
+      shareName,
+      storageAccountKey,
+      storageAccountName
+    } = config.azureInstances;
+
     return client.containerGroups.createOrUpdate(
       config.azureInstances.resourceGroup,
       `encoder${index}`,
       {
+        volumes: storageAccountKey ? [{
+          name: 'source',
+          azureFile: {
+            shareName,
+            storageAccountKey,
+            storageAccountName,
+            readOnly: true
+          }
+        }] : [],
         containers: [
           {
             image: config.azureInstances.image,
@@ -76,7 +92,14 @@ export async function createEncoders() {
                   sku: 'K80'
                 } : null
               }
-            }
+            },
+            volumeMounts: storageAccountKey ? [
+              {
+                mountPath: '/app/var/uploads',
+                name: 'source',
+                readOnly: true
+              }
+            ] : []
           }],
         osType: 'Linux',
         location: 'WestEurope',

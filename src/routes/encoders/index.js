@@ -595,10 +595,12 @@ router.post('/start-job', json(), api(async req => {
       arguments: [
         // http options
         '-seekable', getSeekable(source),
+        ...config.localSource ? [] : [
         '-reconnect', 1,
         '-reconnect_streamed', 1,
         '-reconnect_delay_max', 60,
-        '-multiple_requests', 1,
+        '-multiple_requests', 1
+        ],
 
         ...(skip ? ['-ss', skip] : []),
         '-i', source,
@@ -734,7 +736,7 @@ router.delete('/jobs/:index', api(async req => {
 router.get('/docker', api(async req => {
   const parsed = new URL(config.base);
   parsed.username = process.env.ENCODER_TOKEN;
-  return `docker run ${config.hwAcceleration ? '--gpus all' : ''} --name encoder -d --rm -e ASSETMANAGER_URL=${parsed.toString()} vaem/encoder${config.hwAcceleration ? ':nnvidia' : ''}`;
+  return `docker run ${config.hwAcceleration ? '--gpus all' : ''} --name encoder -d --rm -e ASSETMANAGER_URL=${parsed.toString()} vaem/encoder${config.hwAcceleration ? ':nvidia' : ''}`;
 }));
 
 browserIO.on('connection', socket => {

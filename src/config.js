@@ -88,6 +88,7 @@ const config = merge({
   destinationFileSystem: fileSystemFromURL(destinationFS),
   destinationIsLocal: destinationFS.startsWith('file://'),
   sourceFileSystem: fileSystemFromURL(process.env.SOURCE_FS || `file://${source}`),
+  localSource: process.env.LOCAL_SOURCE || process.env.AZURE_STORAGE_ACCOUNT_KEY,
 
   bunnyCDN: process.env.BUNNYCDN_AUTHENTICATIONKEY ? {
     authenticationKey: process.env.BUNNYCDN_AUTHENTICATIONKEY,
@@ -107,7 +108,10 @@ const config = merge({
     numInstances: parseInt(process.env.AZURE_INSTANCES) || 4,
     numCPUs: hwAcceleration ? 1 : 4,
     numGPUs: hwAcceleration ? 1 : 0,
-    subscriptionId: process.env.AZURE_SUBSCRIPTION_ID
+    subscriptionId: process.env.AZURE_SUBSCRIPTION_ID,
+    storageAccountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+    storageAccountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
+    shareName: process.env.AZURE_SHARE_NAME
   },
 
   encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex'),

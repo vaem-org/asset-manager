@@ -29,9 +29,6 @@ const execFile = util.promisify(child_process.execFile);
  * Check the http seekable option for given source
  */
 export function getSeekable(source) {
-  if (!/^https?:/.exec(source)) {
-    return undefined;
-  }
   return /\.mxf$/i.exec(source) ? 0 : -1;
 }
 
@@ -42,6 +39,10 @@ export function getSeekable(source) {
 export function getSource(source) {
   if (/^https?:/.exec(source)) {
     return source;
+  }
+
+  if (config.localSource) {
+    return `${config.source}/${source}`;
   }
 
   const url = '/' + source.split('/').map(encodeURIComponent).join('/');
