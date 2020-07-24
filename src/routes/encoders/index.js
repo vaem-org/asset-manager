@@ -45,6 +45,7 @@ import { startEncoders } from '@/lib/azure-instances';
 import { getStreamInfo } from '@/lib/stream';
 import { waitFor } from '@/lib/upload-queue';
 import { verifyAsset } from '@/lib/verify-asset';
+import { getLiveStreamArguments } from '@/lib/live-streams';
 
 const execFile = promisify(_execFile);
 
@@ -744,5 +745,59 @@ browserIO.on('connection', socket => {
     console.log('Browser disconnected');
   });
 });
+
+router.post('/live/:assetId/start', api(async req => {
+  const asset = await Asset.findById(req.params.assetId);
+  if (!asset) {
+    throw {
+      status: 404,
+      message: `Asset ${req.params.assetId} not found`
+    }
+  }
+
+  const sortedEncoders = _.orderBy(
+    _.map(
+      encoders,
+      (obj, id) => _.extend({}, obj, { id: id })
+    ),
+    'info.priority', 'desc'
+  );
+
+  const freeEncoder = _.find(sortedEncoders, encoder => {
+    return !encoder2Job[encoder.id] && encoder.state.status === 'idle';
+  });
+
+  if (!freeEncoder) {
+    throw {
+      status: 404,
+      message: 'No free encoder found'
+    }
+  }
+
+  const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 16*3600)}`;
+
+  const outputBase = `${config.outputBase}/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
+
+  const { video, profiles, ...result } = await getLiveStreamArguments({
+    hlsKeyInfoFile,
+    outputBase,
+    source: asset.sourceRTMP,
+    base: config.base,
+    assetId: asset._id
+  });
+
+  // give encoder his job
+  const response = await new Promise((accept) => {
+    sockets[freeEncoder.id].emit('new-job', {
+      arguments: result.arguments,
+      videoParameters: {},
+      width: video.width,
+      bitrate: profiles[0].bitrate,
+      source: asset.sourceRTMP
+    }, accept);
+  });
+
+  console.log('Response from encoder: ', response);
+}));
 
 export default router;

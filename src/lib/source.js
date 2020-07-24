@@ -49,6 +49,26 @@ export function getSource(source) {
   return `${config.sourceBase}${getSignedUrl(url, 16 * 3600)}`;
 }
 
+export async function ffprobe(source) {
+  return new Promise((accept, reject) => execFile('ffprobe', [
+    '-v', 'error',
+    '-print_format', 'json',
+    '-show_format',
+    '-show_streams',
+    source
+  ], (error, stdout) => {
+    if (error) {
+      return reject(error);
+    }
+
+    try {
+      accept(JSON.parse(stdout));
+    } catch (e) {
+      accept('Unable to parse ffprobe output');
+    }
+  }));
+}
+
 /**
  * Get video parameters
  * @param {String} source
@@ -67,22 +87,8 @@ export async function getVideoParameters(source, audioStreams = null) {
 
   let monoChannels = [];
   const downmix = [];
-  let stdout;
 
-  try {
-    ({ stdout } = await execFile('ffprobe', getParams({
-      v: 'error',
-      print_format: 'json',
-      show_format: true,
-      show_streams: true,
-      seekable: getSeekable(source),
-    }).concat([source])));
-  }
-  catch (e) {
-    throw `ffprobe failed with ${e.stderr || e.toString()}`
-  }
-
-  const sourceParameters = JSON.parse(stdout);
+  const sourceParameters = await ffprobe(source);
 
   result['bitrate'] = sourceParameters['format']['bit_rate'] / 1024;
   let hasAudio = false;

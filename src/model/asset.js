@@ -45,7 +45,9 @@ const schema = new Schema({
   externalId: {
     type: String,
     index: true
-  }
+  },
+  live: Boolean,
+  sourceRTMP: String
 }, {
   timestamps: true
 });

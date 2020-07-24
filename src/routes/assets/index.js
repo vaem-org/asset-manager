@@ -18,9 +18,10 @@
 
 import _ from 'lodash';
 import { Router, json } from 'express';
+import crypto from 'crypto';
 
+import config from '@/config';
 import { api, verify } from '~/lib/express-helpers';
-
 import { Asset } from '~/model/asset';
 import { listDocuments } from '~/lib/list-documents';
 
@@ -69,6 +70,20 @@ router.post('/remove', json(), api(async req => {
   }
 
   return true;
+}));
+
+router.post('/', json(), api(async req => {
+  const asset = new Asset({
+    ...req.body,
+    live: true,
+    state: 'new',
+    hls_enc_key: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null,
+    hls_enc_iv: config.hlsEnc ? crypto.randomBytes(16).toString('hex') : null
+  });
+
+  await asset.save();
+
+  return asset._id;
 }));
 
 export default router;

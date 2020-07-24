@@ -49,7 +49,7 @@ router.get('/', verify, api(async req => {
     }
   }
 
-  const duration = asset.videoParameters.duration;
+  const duration = asset.videoParameters?.duration || 0;
 
   const getUrl = time =>
     `/assets/${req.params.id}/thumbnails/${getSignature(req.params.id, time)}/${time}.jpg`;
