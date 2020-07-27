@@ -19,6 +19,7 @@
 import config from '@/config';
 import path from 'path';
 import { Asset } from '~/model/asset';
+import { purgeCache } from '@/lib/bunnycdn';
 
 const masterPlaylist = async assetId => {
   const asset = await Asset.findById(assetId);
@@ -53,6 +54,8 @@ const masterPlaylist = async assetId => {
     `${basename}/${basename}.m3u8`,
     masterPlaylist.join('\n')
   );
+
+  await purgeCache(`/${basename}/${basename}.m3u8`);
 };
 
 export default masterPlaylist;
