@@ -82,10 +82,15 @@ export async function verifyAsset({ assetId, countOnly=false }) {
     // verify durations of all bitrates
     for (let entry of [...asset.streams, ...asset.audioStreams]) {
       await purgeCache(`/${asset._id}/${entry.filename}`);
+      const bitrate = entry.filename.split('.')[1];
+
+      if (!asset.bitrates.includes(bitrate)) {
+        continue;
+      }
+
       const timestamp = moment().add(8, 'hours').valueOf();
       const signature = computeSignature(assetId, timestamp);
       const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${entry.filename}`;
-      const bitrate = entry.filename.split('.')[1];
       console.info(`Checking duration for ${bitrate}`);
       const duration = await getDuration(videoUrl);
       if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2) {
