@@ -35,13 +35,14 @@ export function getSeekable(source) {
 /**
  * Get an absolute path for given source
  * @param {string} source
+ * @param {boolean} forceHttp force making use of http link
  */
-export function getSource(source) {
+export function getSource(source, forceHttp=false) {
   if (/^https?:/.exec(source)) {
     return source;
   }
 
-  if (config.localSource) {
+  if (config.localSource && !forceHttp) {
     return `${config.source}/${source}`;
   }
 

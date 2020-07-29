@@ -15,7 +15,7 @@ router.get('/', verify, api(async req => {
     }
   }
 
-  return getSource(file.name);
+  return getSource(file.name, true);
 }));
 
 export default router;

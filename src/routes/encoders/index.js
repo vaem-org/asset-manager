@@ -645,6 +645,7 @@ router.post('/start-job', json(), api(async req => {
         '-hls_playlist_type', 'vod',
         '-hls_time', 2,
         ...(config.hlsEnc ? ['-hls_key_info_file', hlsKeyInfoFile] : []),
+        '-method', 'PUT',
         '-hls_segment_filename', `${outputBase}/${basename}.${useVarStreamMap ? '%v' : bitrateString}.%05d.ts`,
         job.m3u8,
       ]
