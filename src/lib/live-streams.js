@@ -19,6 +19,8 @@
 import { get } from 'lodash';
 import { ffprobe } from '@/lib/source';
 
+export const listSize = 10;
+
 /**
  *
  * @param {String} source
@@ -48,23 +50,19 @@ export async function getLiveStreamArguments({
 
   const profiles = [
     {
-      width: video.width,
-      copy: true,
-      bitrate: Math.floor(video.bit_rate / 1024) + 'k',
-      bandwidth: video.bit_rate
+      width: 1920,
+      bitrate: '2500k',
+      bandwidth: 2500000
     },
-    ...[
-      {
-        width: 720,
-        bitrate: '1000k',
-        bandwidth: 1000000,
-        copy: true
-      }
-    ].filter(({ width }) => width <= video.width)
-  ];
+    {
+      width: 720,
+      bitrate: '1000k',
+      bandwidth: 1000000,
+    }
+  ].filter(({ width }) => width <= video.width)
+  ;
 
-  const chunkSize = 0.5;
-  const listSize = 5;
+  const chunkSize = 1;
 
   return {
     profiles,

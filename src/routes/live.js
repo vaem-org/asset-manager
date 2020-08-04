@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import { catchExceptions } from '@/lib/express-helpers';
 import { verifySignature } from '@/lib/url-signer';
 import { Asset } from '@/model/asset';
+import { listSize } from '@/lib/live-streams';
 
 const router = new Router({
   mergeParams: true
@@ -38,7 +39,7 @@ router.put( '/:timestamp/:signature/:assetId/:name', catchExceptions(async (req,
     if (req.params.name.endsWith('.ts')) {
       files.push(req.params.name);
 
-      if (files.length > 6) {
+      if (files.length > listSize+2) {
         const drop = files.shift();
         delete buffers[drop];
       }

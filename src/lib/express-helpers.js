@@ -34,7 +34,9 @@ export function api(fn) {
       res.status(exception.status || 500).json(
         _.isPlainObject(exception) ? exception : exception.toString()
       );
-      console.error(exception);
+      if (!exception.status || exception.status >= 500) {
+        console.error(exception);
+      }
     })
   };
 }
@@ -49,7 +51,9 @@ export function catchExceptions(fn) {
     fn(req, res, next)
     .catch(exception => {
       res.status(exception.status || 500).json(_.isPlainObject(exception) ? exception : exception.toString());
-      console.error(exception);
+      if (!exception.status || exception.status >= 500) {
+        console.error(exception);
+      }
     });
   };
 }
