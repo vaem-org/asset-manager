@@ -798,7 +798,34 @@ router.post('/live/:assetId/start', api(async req => {
     }, accept);
   });
 
+  encoder2Job[freeEncoder.id] = {
+    assetId: asset._id.toString()
+  }
   console.log('Response from encoder: ', response);
+}));
+
+router.post('/live/:assetId/stop', api(async req => {
+  const asset = await Asset.findById(req.params.assetId);
+  if (!asset) {
+    throw {
+      status: 404,
+      message: `Asset ${req.params.assetId} not found`
+    }
+  }
+
+  // TODO: make stream available as VOD
+  const encoder = Object.entries(encoder2Job)
+  .find(([, { assetId }]) => assetId === req.params.assetId)?.[0];
+
+  if (!encoder) {
+    throw {
+      status: 404
+    }
+  }
+
+  delete encoder2Job[encoder];
+
+  sockets[encoder].emit('stop');
 }));
 
 export default router;
