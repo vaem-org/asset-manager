@@ -32,7 +32,7 @@ export async function getStreamInfo(assetId) {
   const signature = computeSignature(assetId, timestamp);
 
   return {
-    streamUrl: `/streams/${timestamp}/${signature}/${assetId}.m3u8`,
+    streamUrl: item.live ? `/live/${timestamp}/${signature}/${assetId}/${assetId}.m3u8` : `/streams/${timestamp}/${signature}/${assetId}.m3u8`,
     subtitles: _.mapValues(_.pickBy(item.subtitles), (enabled, language) => `/streams/${timestamp}/${signature}/${assetId}.${language}.vtt`)
   }
 }

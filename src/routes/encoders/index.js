@@ -775,9 +775,9 @@ router.post('/live/:assetId/start', api(async req => {
     }
   }
 
-  const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(`/${asset._id}`, 16*3600)}`;
+  const hlsKeyInfoFile = `${config.base}/encoders/keyinfo${getSignedUrl(asset._id, 16*3600, false)}/${asset._id}`;
 
-  const outputBase = `${config.outputBase}/output${getSignedUrl(`/${asset._id}`, 16*3600)}`;
+  const outputBase = `${config.outputBase}/live${getSignedUrl(asset._id, 16*3600, false)}/${asset._id}`;
 
   const { video, profiles, ...result } = await getLiveStreamArguments({
     hlsKeyInfoFile,
@@ -786,6 +786,14 @@ router.post('/live/:assetId/start', api(async req => {
     base: config.base,
     assetId: asset._id
   });
+
+  asset.bitrates = profiles.map(({ bitrate }) => bitrate);
+  asset.streams = profiles;
+  asset.videoParameters = {
+    width: video.width,
+    height: video.height
+  }
+  await asset.save();
 
   // give encoder his job
   const response = await new Promise((accept) => {
@@ -813,7 +821,6 @@ router.post('/live/:assetId/stop', api(async req => {
     }
   }
 
-  // TODO: make stream available as VOD
   const encoder = Object.entries(encoder2Job)
   .find(([, { assetId }]) => assetId === req.params.assetId)?.[0];
 
