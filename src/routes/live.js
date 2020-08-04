@@ -10,6 +10,23 @@ const router = new Router({
 });
 
 const assets = {};
+
+async function getAsset(id) {
+  if (!assets[id]) {
+    const asset = await Asset.findById(id);
+    assets[id] = {
+      asset,
+      buffers: {},
+      files: [],
+      validPlaylists: new Set(asset.bitrates.map(
+        bitrate => `${id}.${bitrate}.m3u8`
+      ))
+    }
+  }
+
+  return assets[id];
+}
+
 const events = new EventEmitter();
 
 router.put( '/:timestamp/:signature/:assetId/:name', catchExceptions(async (req, res) => {
@@ -17,19 +34,7 @@ router.put( '/:timestamp/:signature/:assetId/:name', catchExceptions(async (req,
     return res.status(403).end();
   }
 
-  if (!assets[req.params.assetId]) {
-    const asset = await Asset.findById(req.params.assetId);
-    assets[req.params.assetId] = {
-      asset,
-      buffers: {},
-      files: [],
-      validPlaylists: new Set(asset.bitrates.map(
-        bitrate => `${req.params.assetId}.${bitrate}.m3u8`
-      ))
-    }
-  }
-
-  const { buffers, files } = assets[req.params.assetId];
+  const { buffers, files } = await getAsset(req.params.assetId);
 
   const data = [];
   req.on('data', buf => data.push(buf));
@@ -56,13 +61,14 @@ router.get('/:timestamp/:signature/:assetId/:assetId.m3u8', catchExceptions(asyn
     return next();
   }
 
-  if (!assets[req.params.assetId]) {
+  const data = await getAsset(req.params.assetId);
+  if (!data) {
     throw {
       status: 404
     }
   }
 
-  const { validPlaylists, asset, buffers } = assets[req.params.assetId];
+  const { validPlaylists, buffers, asset } = data;
 
   // check for all m3u8s
   const waitFor = Array.from(validPlaylists)
