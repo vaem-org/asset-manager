@@ -79,6 +79,7 @@ router.get('/:timestamp/:signature/:assetId/:assetId.m3u8', catchExceptions(asyn
   await Promise.all(waitFor.map(file => new Promise(accept => events.on(file, accept))));
 
   res.header('Content-Type', 'application/vnd.apple.mpegurl');
+  res.header('Cache-Control', 'public, max-age=31536000');
   res.end([
     '#EXTM3U',
     '#EXT-X-VERSION:3',
@@ -99,6 +100,8 @@ router.get('/:timestamp/:signature/:assetId/:name', catchExceptions(async (req, 
       status: 404
     }
   }
+
+  res.header('Cache-Control', `public, max-age=${req.params.name.endsWith('.ts') ? 31536000 : 1}`)
 
   const { buffers, validPlaylists } = assets[req.params.assetId];
 
