@@ -161,14 +161,21 @@ async function processQueue() {
  * Called when an encoder is done
  * @param id
  */
-const encoderDone = id => {
+async function encoderDone(id) {
   if (encoder2Job[id]) {
+    const { assetId, live } = encoder2Job[id];
+
+    if (live) {
+      const asset = await Asset.findById(assetId);
+      asset.state = 'new';
+      await asset.save();
+    }
+
     delete encoder2Job[id];
   }
 
   console.log(`Encoder ${id} done.`);
-  processQueue()
-    .catch(e => console.error(e));
+  await processQueue()
 
   if (autoScaleEncoders) {
     setTimeout(() => {
@@ -180,7 +187,7 @@ const encoderDone = id => {
       sockets[encoder.id].emit('quit');
     }, 20000);
   }
-};
+}
 
 const assetDone = async asset => {
   console.log(`Asset has completed: ${asset._id}`);
@@ -359,7 +366,8 @@ encoderIO.on('connection', function (socket) {
         }
 
         if (event === 'state' && ['idle', 'error'].indexOf(data.status) !== -1) {
-          encoderDone(id);
+          encoderDone(id)
+          .catch(e => console.error(e));
         }
       });
     });
@@ -807,7 +815,8 @@ router.post('/live/:assetId/start', api(async req => {
   });
 
   encoder2Job[freeEncoder.id] = {
-    assetId: asset._id.toString()
+    assetId: asset._id.toString(),
+    live: true
   }
   console.log('Response from encoder: ', response);
 }));
