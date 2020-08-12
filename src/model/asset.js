@@ -18,14 +18,15 @@
 
 import config from '@/config';
 
-import { Schema, model } from 'mongoose';
+import axios from 'axios';
+import { model, Schema } from 'mongoose';
 import _ from 'lodash';
 
 const schema = new Schema({
   labels: [String],
   basename: String,
   title: String,
-  state: {type: String, enum: ['new', 'processing', 'processed'], default: 'new'},
+  state: { type: String, enum: ['new', 'processing', 'processed'], default: 'new' },
   bitrates: [String],
   streams: [{}],
   audioStreams: [{}],
@@ -33,7 +34,7 @@ const schema = new Schema({
   jobs: [{}],
   numStreams: Number,
   source: String,
-  file: {type: Schema.Types.ObjectId, ref: 'File'},
+  file: { type: Schema.Types.ObjectId, ref: 'File' },
   audio: String,
   subtitles: {},
   hls_enc_key: String,
@@ -58,7 +59,8 @@ schema.statics.getLabels = async () => {
   }
 
   const items = await Asset.find({}, 'labels');
-  labelsCache.data = _.sortBy(_.uniq(_.flatten(_.map(items, 'labels'))), name => name.toLowerCase());
+  labelsCache.data = _.sortBy(_.uniq(_.flatten(_.map(items, 'labels'))),
+    name => name.toLowerCase());
   labelsCache.timestamp = Date.now();
   return labelsCache.data;
 };
@@ -73,16 +75,26 @@ schema.methods.removeFiles = function () {
   this.deleted = true;
 };
 
-const Asset = model('Asset', schema);
-
-Asset.schema.pre('save', function (next) {
+schema.pre('save', function (next) {
   labelsCache = {};
 
   next();
 });
 
-Asset.schema.post('remove', item => {
+schema.post('remove', item => {
   item.removeFiles();
 });
 
-export {Asset};
+if (config.webhook) {
+  schema.post('save', doc => {
+    console.log('Asset saved');
+    axios.post(config.webhook, {
+      action: 'asset-saved',
+      id: doc._id
+    }).catch(e => {
+      console.error(`An error occured trying to call webhook: ${e?.response?.data}`)
+    });
+  });
+}
+
+export const Asset = model('Asset', schema);
