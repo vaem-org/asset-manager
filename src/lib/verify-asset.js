@@ -92,7 +92,13 @@ export async function verifyAsset({ assetId, countOnly=false }) {
       const signature = computeSignature(assetId, timestamp);
       const videoUrl = `${config.base}/streams/${timestamp}/${signature}/${entry.filename}`;
       console.info(`Checking duration for ${bitrate}`);
-      const duration = await getDuration(videoUrl);
+      let duration;
+      try {
+        duration = await getDuration(videoUrl);
+      }
+      catch (e) {
+        duration = 0;
+      }
       if (Math.abs(asset.videoParameters.duration - Math.floor(duration)) > 2) {
         console.error(`Duration for bitrate ${bitrate} (${duration}) differs from source (${asset.videoParameters.duration}).`);
       } else {
