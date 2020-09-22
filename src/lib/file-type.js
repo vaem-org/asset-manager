@@ -18,7 +18,7 @@
 
 import path from 'path';
 
-const isVideo = filename => ['.mxf', '.mov', '.mkv', '.mpg', '.mp4', '.264', '.avi', '.ts'].indexOf(path.extname(filename).toLowerCase()) !== -1;
+const isVideo = filename => ['.mxf', '.mov', '.mkv', '.mpg', '.mp4', '.264', '.avi', '.ts', '.vob'].indexOf(path.extname(filename).toLowerCase()) !== -1;
 const isSubtitle = filename => ['.890', '.stl', '.pac', '.srt', '.vtt'].indexOf(path.extname(filename).toLowerCase()) !== -1;
 
 export {isVideo, isSubtitle};
