@@ -102,7 +102,7 @@ export async function createEncoders() {
             ] : []
           }],
         osType: 'Linux',
-        location: 'WestEurope',
+        location: config.azureInstances.location,
         restartPolicy: 'Never'
       }
     )
