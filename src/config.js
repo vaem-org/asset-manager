@@ -109,7 +109,8 @@ const config = merge({
     subscriptionId: process.env.AZURE_SUBSCRIPTION_ID,
     storageAccountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
     storageAccountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
-    shareName: process.env.AZURE_SHARE_NAME
+    shareName: process.env.AZURE_SHARE_NAME,
+    location: process.env.AZURE_LOCATION || 'WestEurope'
   },
 
   encoderToken: process.env.ENCODER_TOKEN || randomBytes(16).toString('hex'),
@@ -118,7 +119,8 @@ const config = merge({
   separateAudio: process.env.SEPARATE_AUDIO === '1',
   sourceAccelRedirect: process.env.SOURCE_ACCEL_REDIRECT,
   uploadRateLimit: parseInt(process.env.UPLOAD_CONCURRENCY, 10) || 8,
-  hwAcceleration
+  hwAcceleration,
+  webhook: process.env.WEBHOOK
 }, [`${root}/config/local.js`, `${__dirname}/../var/config.js`]);
 
 export default config;
