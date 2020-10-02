@@ -19,8 +19,9 @@
 import config from '@/config';
 
 import path from 'path';
+import { createWriteStream } from 'fs';
+import { ensureDir as _ensureDir } from 'fs-extra';
 import { Router } from 'express';
-import { fileSystemFromURL } from '@vaem-util/filesystem';
 import { catchExceptions } from '~/lib/express-helpers';
 import { verifySignature } from '@/lib/url-signer';
 import { addToQueue, events as uploadEvents } from '@/lib/upload-queue';
@@ -30,16 +31,16 @@ const ensured = new Set();
 
 const router = new Router();
 
-const fileSystem = config.destinationIsLocal ? config.destinationFileSystem : fileSystemFromURL(
-  `file://${config.root}/var/tmp`
-);
+const destination =
+  config.destinationIsLocal ? config.destinationFileSystem.usedRoot : `/${config.root}/var/tmp`
+;
 
 const ensureDir = async dirname => {
   if (ensured.has(dirname)) {
     return;
   }
 
-  await fileSystem.ensureDir(dirname);
+  await _ensureDir(destination + '/' + dirname);
   ensured.add(dirname);
 };
 
@@ -71,11 +72,12 @@ router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, 
     }
   };
 
-  const stream = (await fileSystem.write(output)).stream;
-  stream.on('done', () => {
+  const stream = createWriteStream(destination + '/' + output);
+  req.on('end', () => {
     res.end();
     handleFile();
   });
+
   req
     .pipe(stream);
 }));

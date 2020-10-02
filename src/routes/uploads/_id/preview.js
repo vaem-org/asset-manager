@@ -18,7 +18,7 @@
 
 import { Router } from 'express';
 import { spawn } from 'child_process';
-import genuuid from 'uuid/v4';
+import { v4 as genuuid } from 'uuid';
 import _ from 'lodash';
 import { Types } from 'mongoose';
 import { EventEmitter } from 'events'
