@@ -71,13 +71,25 @@ router.use( '/:timestamp/:signature/:assetId', catchExceptions(async (req, res, 
     }
   };
 
-  const stream = (await fileSystem.write(output)).stream;
-  stream.on('done', () => {
-    res.end();
-    handleFile();
-  });
-  req
+  if (output.endsWith('.m3u8')) {
+    // only upload complete m3u8's
+    let m3u8 = '';
+    req.on('data', buffer => m3u8 += buffer.toString());
+    req.on('end', () => {
+      res.end();
+      if (m3u8.includes('#EXT-X-ENDLIST')) {
+        fileSystem.writeFile(output, m3u8).then(handleFile);
+      }
+    });
+  } else {
+    const stream = (await fileSystem.write(output)).stream;
+    stream.on('done', () => {
+      res.end();
+      handleFile();
+    });
+    req
     .pipe(stream);
+  }
 }));
 
 export default router;
