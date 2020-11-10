@@ -65,7 +65,7 @@ const port = process.env.PORT || 5000;
 (async () => {
   await initMongoose();
 
-  if (config.azureInstances.clientId) {
+  if (config.azure.clientId) {
     await azureInstancesInit();
   }
 

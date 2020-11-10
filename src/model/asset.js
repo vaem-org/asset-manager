@@ -23,6 +23,11 @@ import { model, Schema } from 'mongoose';
 import _ from 'lodash';
 
 const schema = new Schema({
+  provider: {
+    type: String,
+    enum: ['default', 'azure'],
+    default: 'default'
+  },
   labels: [String],
   basename: String,
   title: String,

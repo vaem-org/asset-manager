@@ -11,6 +11,15 @@
     "@azure/ms-rest-js" "^1.1.0"
     tslib "^1.9.3"
 
+"@azure/arm-mediaservices@^8.0.0":
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/@azure/arm-mediaservices/-/arm-mediaservices-8.0.0.tgz#c5548275ba2865f950ed378787de24a1c209ce85"
+  integrity sha512-4TrItVJg6pf54nI1rbyUrW5eQmWR/MVsBi1DxHjowhkXrvTNmIUIO6gPaq6+pkJ/S3uZIbfihJpJHN2MatK0dg==
+  dependencies:
+    "@azure/ms-rest-azure-js" "^2.0.1"
+    "@azure/ms-rest-js" "^2.0.4"
+    tslib "^1.10.0"
+
 "@azure/ms-rest-azure-env@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@azure/ms-rest-azure-env/-/ms-rest-azure-env-2.0.0.tgz#45809f89763a480924e21d3c620cd40866771625"
@@ -23,6 +32,14 @@
   dependencies:
     "@azure/ms-rest-js" "^1.8.10"
     tslib "^1.9.3"
+
+"@azure/ms-rest-azure-js@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@azure/ms-rest-azure-js/-/ms-rest-azure-js-2.0.1.tgz#fa1b38f039b3ee48a9e086a88c8a5b5b7776491c"
+  integrity sha512-5e+A710O7gRFISoV4KI/ZyLQbKmjXxQZ1L8Z/sx7jSUQqmswjTnN4yyIZxs5JzfLVkobU0rXxbi5/LVzaI8QXQ==
+  dependencies:
+    "@azure/ms-rest-js" "^2.0.4"
+    tslib "^1.10.0"
 
 "@azure/ms-rest-js@^1.1.0", "@azure/ms-rest-js@^1.8.10":
   version "1.8.15"

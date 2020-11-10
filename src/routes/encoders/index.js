@@ -60,7 +60,7 @@ const encoders = {};
 const sockets = {};
 let encoderId = 1;
 
-const autoScaleEncoders = !!config.azureInstances.clientId;
+const autoScaleEncoders = config.azure.numInstances > 0;
 
 let queue = [];
 /**
@@ -80,12 +80,12 @@ async function processQueue() {
   const release = await queueMutex.acquire();
 
   const numEncoders = Object.keys(encoders).length;
-  if (numEncoders < config.azureInstances.numInstances && autoScaleEncoders && !creatingEncoders) {
+  if (numEncoders < config.azure.numInstances && autoScaleEncoders && !creatingEncoders) {
     // create encoders
     creatingEncoders = true;
 
     console.info('Creating encoder instances');
-    const numInstances = Math.min(queue.length-numEncoders, config.azureInstances.numInstances);
+    const numInstances = Math.min(queue.length-numEncoders, config.azure.numInstances);
     if (numInstances > 0) {
       await startEncoders({
         numInstances

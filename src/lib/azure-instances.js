@@ -42,7 +42,7 @@ export async function createEncoders() {
   console.log('Creating instances');
 
   const list = (await client.containerGroups.list())
-    .filter(({ id }) => id.split('/')[4] === config.azureInstances.resourceGroup)
+    .filter(({ id }) => id.split('/')[4] === config.azure.resourceGroup)
   ;
 
   const existing = _.map(list.filter(item => item.name.startsWith('encoder')), item => parseInt(item.name.replace(/^encoder/, ''), 10));
@@ -51,17 +51,17 @@ export async function createEncoders() {
   parsed.username = process.env.ENCODER_TOKEN;
   const assetManagerUrl = parsed.toString();
 
-  await Promise.all(_.difference(_.range(config.azureInstances.numInstances), existing).map(async index => {
+  await Promise.all(_.difference(_.range(config.azure.numInstances), existing).map(async index => {
     console.info(`Creating encoder${index}`);
 
     const {
       shareName,
       storageAccountKey,
       storageAccountName
-    } = config.azureInstances;
+    } = config.azure;
 
     return client.containerGroups.createOrUpdate(
-      config.azureInstances.resourceGroup,
+      config.azure.resourceGroup,
       `encoder${index}`,
       {
         volumes: storageAccountKey ? [{
@@ -75,7 +75,7 @@ export async function createEncoders() {
         }] : [],
         containers: [
           {
-            image: config.azureInstances.image,
+            image: config.azure.image,
             environmentVariables: [
               {
                 name: 'ASSETMANAGER_URL',
@@ -85,10 +85,10 @@ export async function createEncoders() {
             name: 'encoder',
             resources: {
               requests: {
-                cpu: config.azureInstances.numCPUs,
+                cpu: config.azure.numCPUs,
                 memoryInGB: 1,
-                gpu: config.azureInstances.numGPUs >= 1 ? {
-                  count: config.azureInstances.numGPUs,
+                gpu: config.azure.numGPUs >= 1 ? {
+                  count: config.azure.numGPUs,
                   sku: 'K80'
                 } : null
               }
@@ -102,7 +102,7 @@ export async function createEncoders() {
             ] : []
           }],
         osType: 'Linux',
-        location: config.azureInstances.location,
+        location: config.azure.location,
         restartPolicy: 'Never'
       }
     )
@@ -116,7 +116,7 @@ export async function startEncoders({ numInstances }) {
   }
 
   await Promise.all(_.range(numInstances).map(index => client.containerGroups.start(
-    config.azureInstances.resourceGroup,
+    config.azure.resourceGroup,
     `encoder${index}`
   )));
 }
@@ -126,16 +126,16 @@ export async function deleteEncoders() {
     throw 'Not initialized';
   }
 
-  await Promise.all(_.range(config.azureInstances.numInstances).map(index =>
+  await Promise.all(_.range(config.azure.numInstances).map(index =>
     client.containerGroups.deleteMethod(
-      config.azureInstances.resourceGroup,
+      config.azure.resourceGroup,
       `encoder${index}`
     )
   ));
 }
 
 export async function init() {
-  const auth = config.azureInstances;
+  const auth = config.azure;
   if (!auth.clientId) {
     return;
   }

@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@azure/arm-containerinstance": "^5.4.0",
+    "@azure/arm-mediaservices": "^8.0.0",
     "@azure/ms-rest-nodeauth": "^3.0.3",
     "@babel/plugin-proposal-optional-chaining": "^7.7.5",
     "@vaem-util/filesystem": "^1.0.1",

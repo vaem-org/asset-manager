@@ -79,7 +79,7 @@ router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) 
   });
 
   req.on('close', () => {
-    child.kill();
+    child.kill('SIGKILL');
   });
 }));
 

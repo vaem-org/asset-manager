@@ -97,7 +97,7 @@ const config = merge({
     apiKey: process.env.BUNNYCDN_API_KEY
   } : null,
 
-  azureInstances: {
+  azure: {
     image: hwAcceleration ? 'vaem/encoder:nvidia' : 'vaem/encoder',
     resourceGroup: process.env.AZURE_RESOURCE_GROUP,
     clientId: process.env.AZURE_CLIENT_ID,
