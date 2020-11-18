@@ -16,14 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { EventEmitter } from 'events';
 import { createReadStream, unlink } from 'fs';
 import { dirname } from 'path';
 import config from '@/config';
 
 const queue = [];
 
-export const events = new EventEmitter();
+export const events = {};
 
 let processing = 0;
 
@@ -99,7 +98,10 @@ async function next() {
         if (filename.endsWith('.m3u8')) {
           console.log(`Emitting event for ${filename}`);
         }
-        events.emit(filename);
+        for(let handler of (events[filename] || [])) {
+          handler();
+        }
+        delete events[filename];
       });
     })(),
 
@@ -147,7 +149,10 @@ export async function waitFor(filename) {
   }
 
   return new Promise(accept => {
-    events.once(filename, accept);
+    events[filename] = [
+      ...events[filename] || [],
+      accept
+    ];
   });
 }
 
