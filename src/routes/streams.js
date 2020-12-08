@@ -27,6 +27,7 @@ import cloudfrontSign from 'aws-cloudfront-sign';
 import path from 'path';
 import moment from 'moment';
 import { createReadStream, access, constants } from 'fs';
+import semver from 'semver';
 
 import querystring from 'querystring';
 import { Asset } from '~/model/asset';
