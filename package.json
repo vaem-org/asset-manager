@@ -43,7 +43,7 @@
     "range-parser": "^1.2.1",
     "sharp": "^0.25.1",
     "slug": "^2.1.1",
-    "socket.io": "^2.0.1",
+    "socket.io": "^2.4.0",
     "sywac": "^1.2.2",
     "throng": "^4.0.0",
     "uuid": "^7.0.2",
