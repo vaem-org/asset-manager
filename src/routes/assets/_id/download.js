@@ -33,22 +33,28 @@ const router = new Router({
 router.get('/', verify, api(async req => {
   const timestamp = Date.now() + 120*1000;
   const signature = computeSignature(req.params.id, timestamp);
-  return `/assets/${req.params.id}/download/${timestamp}/${signature}/stream.ts`;
+  return `/assets/${req.params.id}/download/${timestamp}/${signature}/stream.mp4`;
 }));
 
-router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) => {
-  if (!verifySignature(req, req.params.id)) {
+router.get('/:timestamp/:signature/stream.:format', catchExceptions(async (req, res) => {
+  const { id, format } = req.params;
+  if (!verifySignature(req, id)) {
     throw {
       status: 401
     }
   }
+  if (!['ts', 'mp4'].includes(format)) {
+    throw {
+      status: 404
+    }
+  }
 
-  const asset = await Asset.findById(req.params.id);
+  const asset = await Asset.findById(id);
   const videoStream = _.maxBy(asset.streams, 'bandwidth');
   const audioStream = asset.audioStreams.find(item => item.bitrate === 'aac-128k');
 
   const timestamp = moment().add(8, 'hours').valueOf();
-  const signature = computeSignature(req.params.id, timestamp);
+  const signature = computeSignature(id, timestamp);
 
   const host = req.headers['x-forwarded-host'] ? req.hostname : req.get('host');
   const base = config.base || `${req.protocol}://${host}`;
@@ -64,13 +70,17 @@ router.get('/:timestamp/:signature/stream.ts', catchExceptions(async (req, res) 
       '-map', '1:0',
     ] : []),
     '-c', 'copy',
-    '-f', 'mpegts',
+    '-f', format === 'ts' ? 'mpegts' : 'mp4',
+    ...format==='mp4' ? [
+        '-bsf:a', 'aac_adtstoasc',
+        '-movflags', 'faststart+frag_keyframe+empty_moov',
+      ] : [],
     '-'
   ], {
     stdio: ['ignore', 'pipe', 'inherit']
   });
 
-  res.setHeader('content-disposition', `attachment; filename="${slug(asset.title)}.ts"`);
+  res.setHeader('content-disposition', `attachment; filename="${slug(asset.title)}.${format}"`);
 
   child.stdout.pipe(res);
 

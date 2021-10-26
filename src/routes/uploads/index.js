@@ -73,7 +73,7 @@ router.get('/', api(async req => {
 
       if (byName[stat.path]) {
         file.set({
-          size: stat.size,
+          size: Math.max(file.size, stat.size),
           uploaded: stat.size
         });
       }

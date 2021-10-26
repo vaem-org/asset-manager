@@ -1,4 +1,4 @@
-FROM vaem/node-ffmpeg:12.16.1-alpine as build
+FROM vaem/node-ffmpeg:16.2.0-alpine as build
 
 ADD package.json /app/package.json
 ADD yarn.lock /app/yarn.lock
@@ -12,10 +12,10 @@ COPY src /app/src
 
 RUN yarn build
 
-FROM vaem/node-ffmpeg:12.16.1-alpine
+FROM vaem/node-ffmpeg:16.2.0-alpine
 
 # add mono for running Subtitle Edit for subtitle conversion
-RUN apk add --no-cache musl xvfb python ttf-liberation
+RUN apk add --no-cache musl xvfb python3 ttf-liberation
 RUN apk add --no-cache libgdiplus mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 COPY ./lib/xvfb-run /usr/bin
