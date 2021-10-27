@@ -1,4 +1,5 @@
-FROM vaem/node-ffmpeg:16.2.0-alpine as build
+FROM vaem/node-ffmpeg:16.2.0-alpine as base
+FROM base as build
 
 ADD package.json /app/package.json
 ADD yarn.lock /app/yarn.lock
@@ -12,7 +13,7 @@ COPY src /app/src
 
 RUN yarn build
 
-FROM vaem/node-ffmpeg:16.2.0-alpine
+FROM base
 
 # add mono for running Subtitle Edit for subtitle conversion
 RUN apk add --no-cache musl xvfb python3 ttf-liberation

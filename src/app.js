@@ -33,7 +33,7 @@ app.use(cors({
 }));
 
 process.env.PATH = `/opt/ffmpeg/bin:${process.env.PATH}`;
-process.env.LD_LIBRARY_PATH = '/opt/ffmpeg/lib';
+process.env.LD_LIBRARY_PATH = '/opt/ffmpeg/lib:/opt/ffmpeg/lib64';
 
 app.set('trust proxy', true);
 

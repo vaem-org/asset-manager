@@ -83,7 +83,13 @@ export async function getVideoParameters(source, audioStreams = null) {
     throw `ffprobe failed with ${e.stderr || e.toString()}`
   }
 
-  const sourceParameters = JSON.parse(stdout);
+  let sourceParameters;
+  try {
+    sourceParameters = JSON.parse(stdout);
+  }
+  catch (e) {
+    throw `Unable to parse json: ${stdout}`
+  }
 
   result['bitrate'] = sourceParameters['format']['bit_rate'] / 1024;
   let hasAudio = false;
