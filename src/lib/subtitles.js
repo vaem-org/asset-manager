@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2019  Wouter van de Molengraft
+ * Copyright (C) 2021  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,110 +16,52 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '@/config';
-
-import fs from 'fs-extra';
-import childProcess from 'child_process';
-import captions from 'node-captions';
-import util from 'util';
-
-import segmentVtt from './segment-vtt';
-import { Asset } from '~/model/asset';
-import { getStreamInfo } from '@/lib/stream';
-
-const outputDir = `${config.root}/var/subtitles`;
-
-const run = (cmd, args) => new Promise((accept, reject) => {
-  childProcess.spawn(cmd, args, {
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      LD_LIBRARY_PATH: null
-    }
-  }).on('close', code => {
-    if (code === 0) {
-      accept();
-    } else {
-      reject(`Command "${cmd} ${args.map(value => `"${value}"`).join(' ')}" failed.`);
-    }
-  }).on('error', reject);
-});
-
-const srtParse = util.promisify(captions.srt.parse).bind(captions.srt);
-
-const convertSubrip = async (source, destination) => {
-  const data = await srtParse(
-    (await fs.readFile(source, 'utf-8')).toString());
-
-  await fs.writeFile(destination, captions.vtt.generate(captions.srt.toJSON(data)));
-};
+import { spawn } from 'child_process';
+import { join, extname } from 'path';
+import { randomBytes } from 'crypto';
+import { tmpdir } from 'os';
+import { copyFile, unlink } from 'fs/promises';
+import { config } from '#~/config';
 
 /**
  * Convert a subtitle file
- * @param {String} assetId
- * @param {String} sourceFile
- * @param {String} lang
+ * @param {String} source
+ * @param {String} destination
  */
-export async function convert(assetId, sourceFile, lang) {
-  const vtt = sourceFile.replace(/\.[^.]+$/, '.vtt');
-  const ext = sourceFile.replace(/^.*\.([^.]+)$/, '$1');
-  const destination = `${outputDir}/${assetId}.${lang}.vtt`;
-  const srt = sourceFile.replace(/\.[^.]+$/, '.srt');
+export async function convert(source, destination) {
+  const extension = extname(source);
+  const tempFile = join(tmpdir(), `${randomBytes(4).toString('hex')}${extension}`);
+  await copyFile(source, tempFile);
 
-  const source = await getStreamInfo(assetId, '127.0.0.1');
-
-  if (ext === 'stl') {
-    // convert to srt using python
-    await run('python', [
-      `${config.root}/lib/stl2srt/to_srt.py`,
-      sourceFile,
-      srt
-    ]);
-  } else if (ext !== 'vtt' && ext !== 'srt') {
-    // use subtitle-edit to convert to srt
-    await run('xvfb-run', [
+  await new Promise((accept, reject) => {
+    let stdout = [];
+    let stderr = [];
+    const child = spawn('xvfb-run', [
       '-a',
       'mono',
-      `${config.root}/lib/se355/SubtitleEdit.exe`,
-      '/convert', sourceFile, 'subrip',
+      `${config.root}/lib/subtitleedit-3.6.3/SubtitleEdit.exe`,
+      '/convert', tempFile, 'webvtt',
       '/encoding:utf-8'
-    ]);
-  }
+    ], {
+      stdio: ['inherit', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        LD_LIBRARY_PATH: ''
+      }
+    }).on('close', code => {
+      if (code === 0) {
+        accept();
+      } else {
+        reject(new Error(Buffer.concat(stderr).toString() || Buffer.concat(stdout).toString()));
+      }
+    }).on('error', reject);
 
-  await fs.ensureDir(outputDir);
+    child.stdout.on('data', data => stdout.push(data));
+    child.stderr.on('data', data => stderr.push(data));
+  })
 
-  if (ext !== 'vtt') {
-    // convert srt to vtt
-    console.log('Converting from subrip to webvtt');
-    await convertSubrip(srt, destination);
-    await fs.unlink(srt);
-  } else {
-    await fs.copy(vtt, destination, {
-      overwrite: true
-    });
-  }
-
-  const data = await fs.readFile(destination);
-  await fs.writeFile(destination, data.toString().replace(/{\\.*?}/g, ''));
-
-  await config.destinationFileSystem.ensureDir(`${assetId}/subtitles`);
-  const { stream } = await config.destinationFileSystem.write(
-    `${assetId}/subtitles/${lang}.vtt`
-  );
-
-  fs.createReadStream(destination)
-  .pipe(stream);
-
-  stream.on('error', error => {
-    console.error(`Unable to upload file to destination: ${error.toString()}`);
-  });
-
-  const item = await Asset.findById(assetId);
-  item.subtitles = Object.assign(item.subtitles || {}, { [lang]: true });
-  item.markModified('subtitles');
-  await item.save();
-
-  await segmentVtt(`http://127.0.0.1:${config.port}${source.streamUrl.replace('.m3u8',
-    '.235k.m3u8')}`, assetId, lang);
-  console.log('Segmenting VTT successful');
+  const vttTempfile = tempFile.replace(/\.[^.]+$/, '.vtt');
+  await copyFile(vttTempfile, destination);
+  await unlink(vttTempfile);
+  await unlink(tempFile);
 }

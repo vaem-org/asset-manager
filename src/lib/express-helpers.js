@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2018  Wouter van de Molengraft
+ * Copyright (C) 2021  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import config from '@/config';
-import _ from 'lodash';
-import jwt from 'jsonwebtoken';
-import { Types } from 'mongoose';
+import mongoose from 'mongoose';
 
 /**
  * Wrap an async function into middleware
@@ -27,102 +24,59 @@ import { Types } from 'mongoose';
  * @return {Function}
  */
 export function api(fn) {
-  return (req, res) => {
-    fn(req, res)
-    .then(result => res.json(result))
+  return (req, res, next) => {
+    fn(req, res, next)
+    .then(result => {
+      try {
+        return res.json(result);
+      }
+      catch (e) {
+        console.error(e);
+        return res.status(500).end();
+      }
+    })
     .catch(exception => {
-      res.status(exception.status || 500).json(
-        _.isPlainObject(exception) ? exception : exception.toString()
-      );
+      if (exception?.status) {
+        return res.status(exception.status).json(exception);
+      }
+
       console.error(exception);
+      next(new Error(exception))
     })
   };
 }
 
 /**
- * Wrap an async function into middleware
+ * Basic wrapper
  * @param fn
- * @return {Function}
+ * @return {(function(*=, *=, *=): void)|*}
  */
-export function catchExceptions(fn) {
+export function wrapper(fn) {
   return (req, res, next) => {
     fn(req, res, next)
     .catch(exception => {
-      res.status(exception.status || 500).json(_.isPlainObject(exception) ? exception : exception.toString());
+      if (exception.status) {
+        return res.status(exception.status).json(exception);
+      }
       console.error(exception);
-    });
+      next(new Error(exception))
+    })
   };
 }
 
-
-const getToken = req => {
-  let token = req.headers['authorization'];
-  if (token.startsWith('Bearer ')) {
-    token = token.substr(7);
-  }
-  req._token = token;
-  return jwt.verify(token, config.jwtSecret);
-};
-
 /**
- * Verify JWT token middleware
- * @param req
- * @param res
- * @param next
+ * Helper for getting a document and throw 404 if not found
+ * @param {{}} model
+ * @param {string} id
+ * @return {Promise<{}>}
  */
-export function verify(req, res, next) {
-  if (req.token || process.env.SKIP_AUTH) {
-    return next();
-  }
-
-  if (process.env.API_TOKEN && req.headers['authorization'] === `Bearer ${process.env.API_TOKEN}`) {
-    return next();
-  }
-
-  try {
-    req.token = getToken(req);
-  } catch (e) {
-    return res.status(401).json({
-      status: 401,
-      message: e.name === 'TokenExpiredError' ? 'TokenExpiredError' : 'Unauthorized'
-    });
-  }
-
-  next();
-}
-
-/**
- * middleware for decoding token (without throwing 401)
- * @param req
- * @param res
- * @param next
- */
-export function decodeToken(req, res, next) {
-  if (req.token) {
-    return next();
-  }
-
-  try {
-    req.token = getToken(req);
-  } catch (e) {
-    req.token = null;
-    req.tokenExpired = e.name === 'TokenExpiredError';
-  }
-
-  next();
-}
-
-/**
- * Middleware to check for valid object id
- * @param {String} paramName the name of the route parameter to check
- * @returns {*} an express middleware function
- */
-export function validObjectId(paramName) {
-  return (req, res, next) => {
-    if (!Types.ObjectId.isValid(req.params[paramName])) {
-      return next('route');
-    } else {
-      return next();
+export async function getDocument(model, id) {
+  const doc = mongoose.Types.ObjectId.isValid(id) && await model.findById(id);
+  if (!doc) {
+    throw {
+      status: 404
     }
-  };
+  }
+
+  return doc;
 }

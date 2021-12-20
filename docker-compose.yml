@@ -4,16 +4,8 @@ volumes:
 
 services:
   mongo:
-    image: mongo:4.2.0
+    image: mongo:5.0
     ports:
-      - 48489:27017
+      - "33206:27017"
     volumes:
       - data:/data/db
-
-  admin:
-    image: vaem/admin-ui
-    ports:
-      - 8080:80
-    environment:
-      - "VUE_APP_API_URL=${BASE}"
-      - WEBPACK_BASE_URL=

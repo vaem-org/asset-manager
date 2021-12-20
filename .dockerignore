@@ -1,8 +1,5 @@
-.idea
-.git
-node_modules
-var
-dist
 .env
-config/local.js
-src/bin/commands/sandbox.js
+node_modules
+.idea
+/var/
+.git

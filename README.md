@@ -1,10 +1,10 @@
 # VAEM - Asset manager
 
-A tool for encoding and managing video assets 
+A tool for encoding and managing video assets
 
 ## Getting Started
 
-Start the mongo and memcached services using Docker compose:
+Start the mongo service using Docker compose:
 ```bash
 docker-compose up -d
 ```
@@ -13,20 +13,6 @@ Then start the development server using yarn:
 ```bash
 yarn
 yarn dev
-```
-
-## Deployment
-
-When hosting behind an Nginx proxy, make sure that the timeout and buffer settings do not break proper operation:
-
-```
-proxy_connect_timeout       30000;
-proxy_send_timeout          30000;
-proxy_read_timeout          30000;
-send_timeout                30000;
-
-proxy_request_buffering off;
-proxy_buffering off;
 ```
 
 ## Built With
@@ -40,7 +26,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
 
 ## Authors
 

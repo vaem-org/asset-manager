@@ -1,0 +1,46 @@
+/*
+ * VAEM - Asset manager
+ * Copyright (C) 2021  Wouter van de Molengraft
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import { Router } from 'express';
+import { api, getDocument } from '#~/lib/express-helpers';
+import { getSignedUrl } from '#~/lib/security';
+import { Asset } from '#~/model/Asset/index';
+
+const router = new Router({
+  mergeParams: true
+});
+
+router.post('/', api(async ({ params: { id }, body: { password, expires } }) => {
+  await getDocument(Asset, id);
+  const [,,timestamp,,signature] = getSignedUrl(`/assets/${id}/share/${encodeURIComponent(password)}`, true, Math.floor((parseInt(expires)-Date.now())/1000))
+    .split('/')
+  ;
+
+  return {
+    timestamp,
+    signature
+  }
+}))
+
+router.get('/:password', api(async ({ params: { id } }) => {
+  // Note: password is verified by signed url. No need to verify it here
+  const doc = await getDocument(Asset, id);
+  return doc.playbackInfo;
+}))
+
+export default router;

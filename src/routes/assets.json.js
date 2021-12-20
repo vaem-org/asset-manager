@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2019  Wouter van de Molengraft
+ * Copyright (C) 2021  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,23 +16,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import _ from 'lodash';
 import { Router } from 'express';
-import { api, verify } from '@/lib/express-helpers';
-import { Asset } from '@/model/asset';
+import { api } from '#~/lib/express-helpers';
+import { Asset } from '#~/model/Asset/index';
 
-const router = new Router();
+const router = new Router({
+  mergeParams: true
+});
 
-router.get('', verify, api(async () => {
+router.get('', api(async () => {
   const assets = await Asset.find()
-    .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted', 'videoParameters.duration']);
+    .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted', 'ffprobe.format.duration']);
 
-  return _.mapValues(_.keyBy(assets, '_id'), value => {
-    return {
-      ..._.omit(value.toObject(), ['_id', 'videoParameters']),
-      duration: parseFloat(value.videoParameters.duration)
-    }
-  });
+  return assets.reduce((byId, doc) => {
+    const { _id, ffprobe, ...item } = doc.toObject();
+    return ({
+      ...byId,
+      [_id]: {
+        ...item,
+        duration: ffprobe.format.duration
+      }
+    });
+  }, {});
 }));
 
 export default router;

@@ -1,26 +1,43 @@
 #!/usr/bin/env node
-import sywac from 'sywac';
-import mongoose from 'mongoose';
-import { sync as glob } from 'glob';
-import { initMongoose } from '@/lib/mongoose';
+/*
+ * VAEM - Asset manager
+ * Copyright (C) 2021  Wouter van de Molengraft
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-process.env.PATH = `/opt/ffmpeg/bin:${process.env.PATH}`;
-process.env.LD_LIBRARY_PATH = '/opt/ffmpeg/lib:/opt/ffmpeg/lib64';
+import sywac from 'sywac';
+import glob from 'glob';
+import { basename } from 'path';
+import mongoose from 'mongoose';
+import { config } from '#~/config';
+import { initialisation } from '#~/lib/initialisation';
 
 (async () => {
-  await initMongoose();
+  await initialisation();
 
-  sywac
-    .showHelpByDefault();
-
-  for(let entry of glob(`${__dirname}/commands/*.js`)) {
-    require(entry);
+  for(let file of glob.sync(`${config.root}/src/bin/commands/*.js`)) {
+    // eslint-disable-next-line node/no-unsupported-features/es-syntax
+    const { run, flags } = await import(file);
+    sywac.command(flags || basename(file, '.js'), run);
   }
 
-  await sywac.parseAndExit();
+  return sywac
+    .showHelpByDefault()
+    .parseAndExit()
 })().catch(e => {
-  console.error(e.toString());
+  console.error(e);
+  // eslint-disable-next-line no-process-exit
   process.exit(1);
-}).finally(() => {
-  mongoose.disconnect();
-});
+}).finally(() => mongoose.disconnect());
