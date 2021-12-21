@@ -24,7 +24,9 @@ import { config } from '#~/config';
 
 const router = new Router();
 
-router.post('/', urlencoded(), api(async ({ body: { code, redirect_uri } }) => {
+router.post('/', urlencoded({
+  extended: false
+}), api(async ({ body: { code, redirect_uri } }) => {
   const client = new OAuth2Client({
     clientId: config.auth?.clientId,
     clientSecret: config.auth?.clientSecret,
