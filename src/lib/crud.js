@@ -26,10 +26,14 @@ export async function save (doc) {
     await doc.save();
   }
   catch (e) {
+    if (!e.errors) {
+      console.error(e)
+    }
+
     throw {
       status: 400,
       errors: Object.fromEntries(
-        Object.entries(e.errors)
+        Object.entries(e.errors ?? {})
         .map(([path, {
           kind,
           message,

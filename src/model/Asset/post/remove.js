@@ -16,15 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#~/config';
 import { Job } from '#~/model/Job/index';
 
 export default schema => {
   schema.post('remove', async function() {
-    config.storage.remove(this._id.toString() + '/')
-      .catch(e => {
-        console.warn(`Unable to remove files for ${this._id}: ${e.toString()}`);
-      });
+    this.removeFiles();
 
     // remove any jobs
     await Job.deleteMany({

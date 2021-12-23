@@ -17,7 +17,6 @@
  */
 
 import { randomBytes } from 'crypto';
-import { config } from '#~/config';
 
 export default schema => {
   schema.pre('save', function() {
@@ -25,11 +24,7 @@ export default schema => {
       this.hls_enc_key = randomBytes(16).toString('hex');
       this.hls_enc_iv = randomBytes(16).toString('hex');
     } else if (this.isModified('deleted') && this.deleted) {
-      // unlink files
-      config.storage.remove(this._id.toString())
-      .catch(e => {
-        console.warn(`Unable to remove files for ${this._id}: ${e.toString()}`);
-      });
+      this.removeFiles();
     }
   });
 }

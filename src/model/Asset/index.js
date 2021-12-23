@@ -24,6 +24,7 @@ import createMasterPlaylist from './methods/createMasterPlaylist.js';
 import verify from './methods/verify.js';
 import setSubtitle from './methods/setSubtitle.js';
 import getUrl from './methods/getUrl.js';
+import removeFiles from './methods/removeFiles.js';
 
 import preSave from './pre/save.js';
 import postRemove from './post/remove.js';
@@ -87,5 +88,6 @@ createMasterPlaylist(schema);
 verify(schema);
 setSubtitle(schema);
 getUrl(schema);
+removeFiles(schema);
 
 export const Asset = model('Asset', schema);
