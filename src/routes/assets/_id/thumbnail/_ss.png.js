@@ -31,7 +31,7 @@ const router = new Router({
 
 router.get('/', wrapper(async ({ params: { ss, id } }, res) => {
   const asset = await getDocument(Asset, id);
-  if (!['verified', 'processed'].includes(asset.state)) {
+  if (!['verified', 'processed'].includes(asset.state) || asset.variants.length === 0 || asset.deleted) {
     throw {
       status: 404
     }
@@ -51,6 +51,7 @@ router.get('/', wrapper(async ({ params: { ss, id } }, res) => {
     await new Promise((resolve, reject) => {
       spawn('ffmpeg', [
         '-v', 'error',
+        '-y',
         '-ss', ss,
         '-i', asset.getUrl(asset.highestVariant),
         '-frames:v', 1,
