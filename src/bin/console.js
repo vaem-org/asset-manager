@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
  * VAEM - Asset manager
  * Copyright (C) 2022  Wouter van de Molengraft
@@ -16,7 +18,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#!/usr/bin/env node
 import sywac from 'sywac';
 import glob from 'glob';
 import { basename } from 'path';
