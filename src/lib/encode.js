@@ -81,13 +81,15 @@ export async function encode({ file }) {
     '-i', path,
     // audio merge filter
     ...audio.length > 1 ? [
-      '-filter_complex', audio.map(index => `[0:${index}]`).join('') + 'amerge=inputs=2[aout]'
+      '-filter_complex', `${audio.map(index => `[0:${index}]`).join('')}amerge=inputs=2,asplit=${matchingProfiles.length}${
+    matchingProfiles.map((profile,i) => `[aout${i}]`).join('')
+      }`
     ] : [],
 
-    ...matchingProfiles.flatMap(({ width, bitrate }) => [
+    ...matchingProfiles.flatMap(({ width, bitrate }, i) => [
       ...audio.length > 0 ? [
         // audio options,
-        '-map', audio.length === 1 ? `0:${audio[0]}` : '[aout]',
+        '-map', audio.length === 1 ? `0:${audio[0]}` : `[aout${i}]`,
         '-c:a', 'libfdk_aac',
         '-ac', 2,
         '-b:a', '128k',
