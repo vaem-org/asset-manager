@@ -28,6 +28,7 @@ import removeFiles from './methods/removeFiles.js';
 
 import preSave from './pre/save.js';
 import postRemove from './post/remove.js';
+import postSave from './post/save.js';
 import { getSignedUrl } from '#~/lib/security';
 import { config } from '#~/config';
 
@@ -80,6 +81,7 @@ schema.virtual('playbackInfo').get(function() {
 });
 
 preSave(schema);
+postSave(schema);
 postRemove(schema);
 
 finish(schema);

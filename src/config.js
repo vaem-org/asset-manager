@@ -53,6 +53,11 @@ export const config = {
     .split(',')
     .filter(Boolean),
 
+  webhooks: {
+    finished: process.env.WEBHOOK_FINISHED,
+    saved: process.env.WEBHOOK_SAVED
+  },
+
   /**
    * @type {Storage}
    */

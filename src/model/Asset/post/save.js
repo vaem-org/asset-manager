@@ -20,24 +20,13 @@ import { config } from '#~/config';
 import axios from 'axios';
 
 export default schema => {
-  /**
-   * Finish an asset
-   * @returns {Promise<void>}
-   */
-  schema.methods.finish = async function () {
-    await this.createMasterPlaylist();
-    this.state = 'processed';
-    await this.save();
-    await this.verify();
-
-    // send notification to webhook
-    if (config.webhooks.finished) {
-      axios.post(config.webhooks.finished, {
-        text: `Transcoding asset complete: ${this.title}`
+  schema.post('save', function() {
+    if (config.webhooks.saved) {
+      axios.post(config.webhooks.saved, {
+        id: this._id
       }).catch(e => {
         console.warn(`Unable to post webhook message: ${e.toString()}`);
-      });
+      })
     }
-  };
+  });
 }
-
