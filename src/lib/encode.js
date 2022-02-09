@@ -26,9 +26,10 @@ import { config } from '#~/config';
 /**
  * Create an asset and accompanying job
  * @param {string} file
+ * @param {int[]} audio
  * @return {Promise<void>}
  */
-export async function encode({ file }) {
+export async function encode({ file, audio=null }) {
   const path = `${config.root}/var/files/${file}`;
   const asset = await Asset.findOne({
     file,
@@ -65,7 +66,7 @@ export async function encode({ file }) {
   }
 
   const videoFilter = null;
-  const audio = getAudio(asset.ffprobe.streams);
+  audio = audio ?? getAudio(asset.ffprobe.streams);
 
   const matchingProfiles = Object.entries(profiles)
     .filter(([width]) => width <= videoStream.width)

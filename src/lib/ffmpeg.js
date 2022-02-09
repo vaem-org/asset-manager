@@ -76,7 +76,7 @@ export async function ffprobe(filename) {
 /**
  * Find the streams to use for audio
  * @param {[{}]} streams
- * @return {[int]}>}
+ * @return {[int]}
  */
 export function getAudio(streams) {
   const audioStreams = streams.filter(({ codec_type }) => codec_type === 'audio');

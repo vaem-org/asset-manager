@@ -25,12 +25,13 @@ const router = new Router({
   mergeParams: true
 });
 
-router.post('', api(async ({ params: { id } }) => {
+router.post('', api(async ({ params: { id }, body: { audio } }) => {
   const doc = await getDocument(File, id);
 
   try {
     return await encode({
-      file: doc.name
+      file: doc.name,
+      audio
     })
   }
   catch (e) {
