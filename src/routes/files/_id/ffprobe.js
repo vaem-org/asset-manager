@@ -19,7 +19,7 @@
 import { Router } from 'express';
 import { api, getDocument } from '#~/lib/express-helpers';
 import { File } from '#~/model/File/index';
-import { ffprobe } from '#~/lib/ffmpeg';
+import { ffprobe, getAudio } from '#~/lib/ffmpeg';
 
 const router = new Router({
   mergeParams: true
@@ -27,7 +27,12 @@ const router = new Router({
 
 router.get('/', api(async ({ params: { id } }) => {
   const file = await getDocument(File, id);
-  return ffprobe(file.path);
+  const { streams, format } = await ffprobe(file.path);
+  return {
+    streams,
+    format,
+    audio: getAudio(streams)
+  };
 }));
 
 export default router;
