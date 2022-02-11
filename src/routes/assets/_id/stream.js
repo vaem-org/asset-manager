@@ -17,48 +17,13 @@
  */
 
 import { Router } from 'express';
-import m3u8 from 'm3u8';
 import dayjs from 'dayjs';
 import send from 'send';
 import axios from 'axios';
 import { api, getDocument, wrapper } from '#~/lib/express-helpers';
 import { Asset } from '#~/model/Asset/index';
 import { config } from '#~/config';
-
-/**
- * Parse an m3u8 stream
- * @param {ReadStream} stream
- * @return {Promise<any>}
- */
-const parseM3U8 = stream => new Promise((accept, reject) => {
-  const parser = m3u8.createStream();
-
-  let error = null;
-
-  stream.pipe(parser);
-
-  stream.on('error', err => {
-    error = true;
-    reject(err);
-  });
-
-  parser.on('error', err => {
-    if (error) {
-      return;
-    }
-    error = true;
-    reject(err);
-    parser.end();
-  });
-
-  parser.on('m3u', m3u => {
-    if (error) {
-      return;
-    }
-
-    accept(m3u);
-  });
-});
+import { parseM3U8 } from '#~/lib/m3u8';
 
 const router = new Router({
   mergeParams: true

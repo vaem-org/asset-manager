@@ -59,7 +59,7 @@ export const config = {
   },
 
   /**
-   * @type {Storage}
+   * @type {import('./lib/Storage/index.js').Storage}
    */
   storage: null,
 
