@@ -27,9 +27,14 @@ import { config } from '#~/config';
  * Create an asset and accompanying job
  * @param {string} file
  * @param {int[]} audio
+ * @param {boolean} copyHighestVariant
  * @return {Promise<void>}
  */
-export async function encode({ file, audio=null }) {
+export async function encode({
+  file,
+  audio = null,
+  copyHighestVariant = false
+}) {
   const path = `${config.root}/var/files/${file}`;
   const asset = await Asset.findOne({
     file,
@@ -78,6 +83,8 @@ export async function encode({ file, audio=null }) {
   asset.variants = matchingProfiles.map(({ bitrate }) => bitrate);
   asset.job = job._id;
 
+  const highestVariant = asset.highestVariant;
+
   job['arguments'] = [
     '-i', path,
     // audio merge filter
@@ -87,39 +94,54 @@ export async function encode({ file, audio=null }) {
       }`
     ] : [],
 
-    ...matchingProfiles.flatMap(({ width, bitrate }, i) => [
-      ...audio.length > 0 ? [
-        // audio options,
-        '-map', audio.length === 1 ? `0:${audio[0]}` : `[aout${i}]`,
-        '-c:a', 'libfdk_aac',
-        '-ac', 2,
-        '-b:a', '128k',
-      ] : [],
+    ...matchingProfiles.flatMap(({ width, bitrate }, i) => {
+      return [
+        ...highestVariant === bitrate && copyHighestVariant ? [
+          // copy streams from source
+          ...audio.length > 0 ? [
+            '-map', '0:a',
+            '-c:a', 'copy'
+          ] : [],
 
-      // video options
-      '-map', '0:v',
-      '-vcodec', 'libx264',
-      '-vprofile', 'high',
-      '-level', '4.1',
-      '-pix_fmt', 'yuv420p',
-      '-g', 2 * Math.ceil(framerate),
-      '-x264opts', 'no-scenecut',
-      '-vf',
-      (videoFilter ? videoFilter + '[out];[out]' : '') +
-        `scale=${width}:trunc(ow/dar/2)*2`,
-      '-b:v', bitrate,
-      '-maxrate', bitrate,
-      '-bufsize', bitrate,
-      '-preset', 'slow',
+          '-map', '0:v',
+          '-c', 'copy'
+        ] : [
 
-      // output
-      '-f', 'hls',
-      '-hls_list_size', 0,
-      '-hls_playlist_type', 'vod',
-      '-hls_time', 2,
-      '-hls_segment_filename', `${config.root}/var/output/${asset._id}/${asset._id}.${bitrate}.%05d.ts`,
-      `${config.root}/var/output/${asset._id}/${asset._id}.${bitrate}.m3u8`
-    ])
+          // process audio and video
+          ...audio.length > 0 ? [
+            // audio options,
+            '-map', audio.length === 1 ? `0:${audio[0]}` : `[aout${i}]`,
+            '-c:a', 'libfdk_aac',
+            '-ac', 2,
+            '-b:a', '128k',
+          ] : [],
+
+          // video options
+          '-map', '0:v',
+          '-vcodec', 'libx264',
+          '-vprofile', 'high',
+          '-level', '4.1',
+          '-pix_fmt', 'yuv420p',
+          '-g', 2 * Math.ceil(framerate),
+          '-x264opts', 'no-scenecut',
+          '-vf',
+          (videoFilter ? videoFilter + '[out];[out]' : '') +
+          `scale=${width}:trunc(ow/dar/2)*2`,
+          '-b:v', bitrate,
+          '-maxrate', bitrate,
+          '-bufsize', bitrate,
+          '-preset', 'slow',
+        ],
+
+        // output
+        '-f', 'hls',
+        '-hls_list_size', 0,
+        '-hls_playlist_type', 'vod',
+        '-hls_time', 2,
+        '-hls_segment_filename', `${config.root}/var/output/${asset._id}/${asset._id}.${bitrate}.%05d.ts`,
+        `${config.root}/var/output/${asset._id}/${asset._id}.${bitrate}.m3u8`
+      ];
+    })
   ];
 
   await asset.save();

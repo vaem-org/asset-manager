@@ -25,13 +25,14 @@ const router = new Router({
   mergeParams: true
 });
 
-router.post('', api(async ({ params: { id }, body: { audio } }) => {
+router.post('', api(async ({ params: { id }, body: { audio, copyHighestVariant } }) => {
   const doc = await getDocument(File, id);
 
   try {
     return await encode({
       file: doc.name,
-      audio
+      audio,
+      copyHighestVariant: !!copyHighestVariant
     })
   }
   catch (e) {
