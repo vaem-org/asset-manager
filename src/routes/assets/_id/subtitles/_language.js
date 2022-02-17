@@ -28,9 +28,9 @@ const router = new Router({
   mergeParams: true
 });
 
-router.get('/', wrapper(async ({ params: { language, id } }, res) => {
+router.get('/', wrapper(async ({ params: { language, id }, query: { direct } }, res) => {
   const asset = await getDocument(Asset, id);
-  if (config.cdn) {
+  if (config.cdn && direct !== '1') {
     return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt`, 60));
   }
 
