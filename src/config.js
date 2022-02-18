@@ -58,6 +58,11 @@ export const config = {
     saved: process.env.WEBHOOK_SAVED
   },
 
+  bunny: {
+    apiKey: process.env.BUNNY_APIKEY,
+    hostname: process.env.BUNNY_HOSTNAME
+  },
+
   /**
    * @type {import('./lib/Storage/index.js').Storage}
    */
