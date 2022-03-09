@@ -160,6 +160,9 @@ export async function segmentVtt(assetId, lang) {
 
   // copy files into output
   const outputPath = join(config.root, 'var/output', assetId, 'subtitles');
+  await mkdir(outputPath, {
+    recursive: true
+  });
   for(const file of await readdir(tempPath)) {
     const source = join(tempPath, file);
     const destination = join(outputPath, file);
