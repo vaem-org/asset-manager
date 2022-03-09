@@ -29,7 +29,7 @@ export class Storage {
   /**
    * Upload a file
    * @param {string} path
-   * @param {ReadableStream} stream
+   * @param {module:stream.ReadableStream} stream
    * @returns {Promise<void>}
    */
   async upload(path, stream) {
@@ -39,7 +39,7 @@ export class Storage {
   /**
    * Download a file
    * @param path
-   * @returns {Promise<ReadableStream>}
+   * @returns {Promise<module:stream.ReadableStream>}
    */
   async download(path) {
     throw new Error('Unimplemented')

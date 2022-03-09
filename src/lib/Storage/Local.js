@@ -64,7 +64,7 @@ export class Local extends Storage {
   /**
    *
    * @param path
-   * @returns {Promise<ReadStream>}
+   * @returns {Promise<module:stream.ReadStream>}
    */
   async download(path) {
     const fullPath = this.resolve(path);

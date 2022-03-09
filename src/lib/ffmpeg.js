@@ -18,10 +18,11 @@
 
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { mkdir, readFile, writeFile, readdir, copyFile, rm } from 'fs/promises';
+import { finished } from 'stream/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import { Asset } from '#~/model/Asset/index';
 import { config } from '#~/config';
-import { getSignedUrl } from '#~/lib/security';
+import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js';
 
 /**
  *
@@ -132,50 +133,25 @@ export async function segmentVtt(assetId, lang) {
     throw 'No frames found for asset';
   }
 
-  const tempPath = join(config.root, 'var/tmp/vtt-segments', assetId);
-  await mkdir(tempPath, {
-    recursive: true
-  });
-
-  const base = config.base + getSignedUrl(`/assets/${assetId}/subtitles`, false);
-
-  await run(
-    'ffmpeg',
-    [
-      '-v', 'error',
-      '-y',
-      '-f', 'webvtt',
-      '-i', `${base}/${lang}`,
-      '-f', 'lavfi',
-      '-i', `nullsrc=s=1x1:d=${item.ffprobe.format.duration}`,
-      '-f', 'hls',
-      '-hls_list_size', 0,
-      '-hls_playlist_type', 'vod',
-      '-hls_time', 10,
-      '-hls_segment_filename', `${tempPath}/null.%d.ts`,
-      '-method', 'PUT',
-      '-c', 'copy',
-      `${tempPath}/${lang}.m3u8`
-    ]);
-
-  // copy files into output
+  const stream = await config.storage.download(`${assetId}/subtitles/${lang}.vtt`);
   const outputPath = join(config.root, 'var/output', assetId, 'subtitles');
+  const buffers = [];
+  stream.on('data', buffer => buffers.push(buffer));
+  await finished(stream);
+  const input = Buffer.concat(buffers).toString();
+
   await mkdir(outputPath, {
     recursive: true
   });
-  for(const file of await readdir(tempPath)) {
-    const source = join(tempPath, file);
-    const destination = join(outputPath, file);
-    if (file.endsWith('.vtt')) {
-      const body = await readFile(source, 'utf-8');
-      await writeFile(destination, body.replace(
-        /WEBVTT/g, 'WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:' + pkt_pts + ',LOCAL:00:00:00.000'));
-    } else if (file.endsWith('_vtt.m3u8')) {
-      console.log(destination.replace(/_vtt\.m3u8$/, '.m3u8'));
-      await copyFile(source, destination.replace(/_vtt\.m3u8$/, '.m3u8'));
-    }
+  await writeFile(
+    join(outputPath, `${lang}.m3u8`),
+    hlsSegmentPlaylist(input, 10)
+  );
+
+  for(const { filename, content } of hlsSegment(input, 10, pkt_pts)) {
+    await writeFile(
+      join(outputPath, filename),
+      content
+    );
   }
-  await rm(tempPath, {
-    recursive: true
-  });
 }
