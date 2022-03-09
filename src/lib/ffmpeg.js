@@ -17,6 +17,8 @@
  */
 
 import { spawn } from 'child_process';
+import { join } from 'path';
+import { mkdir, readFile, writeFile, readdir, copyFile, rm } from 'fs/promises';
 import { Asset } from '#~/model/Asset/index';
 import { config } from '#~/config';
 import { getSignedUrl } from '#~/lib/security';
@@ -130,6 +132,11 @@ export async function segmentVtt(assetId, lang) {
     throw 'No frames found for asset';
   }
 
+  const tempPath = join(config.root, 'var/tmp/vtt-segments', assetId);
+  await mkdir(tempPath, {
+    recursive: true
+  });
+
   const base = config.base + getSignedUrl(`/assets/${assetId}/subtitles`, false);
 
   await run(
@@ -145,9 +152,27 @@ export async function segmentVtt(assetId, lang) {
       '-hls_list_size', 0,
       '-hls_playlist_type', 'vod',
       '-hls_time', 10,
-      '-hls_segment_filename', `${base}/segment-vtt/null.%d.ts`,
+      '-hls_segment_filename', `${tempPath}/null.%d.ts`,
       '-method', 'PUT',
       '-c', 'copy',
-      `${base}/segment-vtt/${pkt_pts}/subtitles/${lang}..m3u8`
+      `${tempPath}/${lang}.m3u8`
     ]);
+
+  // copy files into output
+  const outputPath = join(config.root, 'var/output', assetId, 'subtitles');
+  for(const file of await readdir(tempPath)) {
+    const source = join(tempPath, file);
+    const destination = join(outputPath, file);
+    if (file.endsWith('.vtt')) {
+      const body = await readFile(source, 'utf-8');
+      await writeFile(destination, body.replace(
+        /WEBVTT/g, 'WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:' + pkt_pts + ',LOCAL:00:00:00.000'));
+    } else if (file.endsWith('_vtt.m3u8')) {
+      console.log(destination.replace(/_vtt\.m3u8$/, '.m3u8'));
+      await copyFile(source, destination.replace(/_vtt\.m3u8$/, '.m3u8'));
+    }
+  }
+  await rm(tempPath, {
+    recursive: true
+  });
 }

@@ -45,7 +45,7 @@ export default schema => {
       [language]: true
     }
     await this.save();
-    await segmentVtt(this._id, language);
+    await segmentVtt(this._id.toString(), language);
     if (converted) {
       await unlink(converted);
     }
