@@ -22,7 +22,6 @@ import mongoose from 'mongoose';
 import { mkdir, rmdir } from 'fs/promises';
 import { Mutex } from 'async-mutex';
 import { basename } from 'path';
-import { MultiBar, Presets } from 'cli-progress';
 import { Job } from '#~/model/Job/index';
 import { config } from '#~/config';
 import { Asset } from '#~/model/Asset/index';
@@ -68,33 +67,8 @@ async function ready({ connection }) {
   }
 }
 
-const multibar = new MultiBar({
-  hideCursor: true,
-  noTTYOutput: true
-}, Presets.shades_grey);
-const bars = {};
-
-function stopBar(job) {
-  if (!bars[job]) {
-    return;
-  }
-
-  multibar.remove(bars[job]);
-  delete bars[job];
-}
-
 async function progress({ event: { job, out_time_ms }}) {
-  if (!bars[job]) {
-    const duration = parseFloat(
-      (await Job.findById(job).populate('asset')).asset?.ffprobe?.format?.duration
-    );
-    bars[job] = multibar.create(Math.floor(duration));
-  }
   const progress = out_time_ms / 1000 / 1000;
-
-  bars[job].update(Math.floor(progress), {
-    filename: job
-  });
 
   await Job.findOneAndUpdate({
     _id: job
@@ -106,7 +80,6 @@ async function progress({ event: { job, out_time_ms }}) {
 }
 
 async function done({ event: { job: id } }) {
-  stopBar(id);
   console.log(`Job ${id} done`);
   const job = await Job.findById(id).populate('asset');
   if (!job) {
@@ -122,7 +95,6 @@ async function done({ event: { job: id } }) {
 }
 
 async function error({ event: { job, stderr } }) {
-  stopBar(job);
   console.log(`Error for job ${job}: ${stderr}`);
   await Job.findOneAndUpdate({
     _id: job
