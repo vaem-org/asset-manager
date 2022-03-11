@@ -145,12 +145,15 @@ export async function segmentVtt(assetId, lang) {
   });
   await writeFile(
     join(outputPath, `${lang}.m3u8`),
-    hlsSegmentPlaylist(input, 10)
+    hlsSegmentPlaylist(input, 10).replace(
+      /^\d+\.vtt$/mg,
+      (match) => `${lang}.${match}`
+    )
   );
 
   for(const { filename, content } of hlsSegment(input, 10, pkt_pts)) {
     await writeFile(
-      join(outputPath, filename),
+      join(outputPath, `${lang}.${filename}`),
       content
     );
   }

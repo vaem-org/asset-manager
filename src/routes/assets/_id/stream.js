@@ -45,8 +45,8 @@ router.get('/file.key', wrapper(async ({ doc }, res) => {
   res.send(Buffer.from(doc.hls_enc_key, 'hex'));
 }));
 
-router.get('/:assetId.:bitrate.m3u8', wrapper(async ({ doc, params: { id, bitrate } }, res) => {
-  const source =  `/${id}/${id}.${bitrate}.m3u8`
+router.get(['/:assetId.:bitrate.m3u8', '/subtitles/:language.m3u8'], wrapper(async ({ doc, params: { id, bitrate, language } }, res) => {
+  const source =  !language ? `/${id}/${id}.${bitrate}.m3u8` : `/${id}/subtitles/${language}.m3u8`;
   const signedUrl = config.cdn?.getSignedUrl?.(source, 60);
 
   let m3u;
@@ -111,9 +111,9 @@ router.get('/:assetId.m3u8', wrapper(async (req, res) => {
   .pipe(res)
 }))
 
-router.get('/:file', (req, res) => {
-  const { params: { id, file } } = req;
-  send(req, `${config.root}/var/output/${id}/${file}`).pipe(res);
+router.get(['/:file', '/subtitles/:file'], (req, res) => {
+  const { params: { id }, url } = req;
+  send(req, `${config.root}/var/output/${id}/${url}`).pipe(res);
 });
 
 export default router;
