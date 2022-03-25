@@ -158,3 +158,22 @@ export async function segmentVtt(assetId, lang) {
     );
   }
 }
+
+/**
+ * Get the framerate from a ffprobe stream object
+ * @param {{}} stream
+ * @returns {number}
+ */
+export function getFramerate(stream) {
+  const rFrameRate = (stream?.r_frame_rate ?? '')
+    .split('/')
+    .map(i => parseInt(i))
+  ;
+
+  let framerate = 25;
+  if (rFrameRate.length === 2) {
+    framerate = rFrameRate[0] / rFrameRate[1];
+  }
+
+  return framerate;
+}

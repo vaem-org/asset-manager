@@ -18,7 +18,7 @@
 
 import { basename } from 'path';
 import { Asset } from '#~/model/Asset/index';
-import { ffprobe, getAudio } from '#~/lib/ffmpeg';
+import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg';
 import { Job } from '#~/model/Job/index';
 import profiles from '#~/lib/profiles';
 import { config } from '#~/config';
@@ -60,15 +60,7 @@ export async function encode({
   const videoStream = asset.ffprobe.streams
     .find(({ codec_type }) => codec_type === 'video');
 
-  const rFrameRate = (videoStream?.r_frame_rate ?? '')
-    .split('/')
-    .map(i => parseInt(i))
-  ;
-
-  let framerate = 25;
-  if (rFrameRate.length === 2) {
-    framerate = rFrameRate[0] / rFrameRate[1];
-  }
+  const framerate = getFramerate(videoStream);
 
   const videoFilter = null;
   audio = audio ?? getAudio(asset.ffprobe.streams);
