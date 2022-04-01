@@ -25,6 +25,7 @@ import { config } from '#~/config';
 import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg';
 import { spawn } from 'child_process';
 import { getSignedUrl } from '#~/lib/security';
+import { File } from '#~/model/File/index';
 
 const { ObjectId } = mongoose.Types;
 
@@ -50,7 +51,7 @@ router.post('/', api(async ({ params: { id } }) => {
     source
   );
 
-  const video = streams.find(({ code_type }) => code_type === 'video');
+  const video = streams.find(({ codec_type }) => codec_type === 'video');
 
   const framerate = getFramerate(video);
 
@@ -64,7 +65,7 @@ router.post('/', api(async ({ params: { id } }) => {
 
   // start a new ffmpeg process
   const uuid = uuidv4();
-  const base = config.base + getSignedUrl(`/uploads/${id}/preview/${uuid}`, false, 3600*4);
+  const base = config.base + getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600*4);
   const child = spawn('ffmpeg', [
     '-re',
     '-i', source,
@@ -125,7 +126,8 @@ router.post('/', api(async ({ params: { id } }) => {
 }));
 
 router.put('/:uuid/:filename', (req, res, next) => {
-  const process = processes[req.params.uuid];
+  const { uuid, filename } = req.params;
+  const process = processes[uuid];
   if (!process) {
     return next();
   }
@@ -133,10 +135,10 @@ router.put('/:uuid/:filename', (req, res, next) => {
   const buffers = [];
   req.on('data', buf => buffers.push(buf));
   req.on('end', () => {
-    process.buffers[req.params.filename] = Buffer.concat(buffers);
+    process.buffers[filename] = Buffer.concat(buffers);
     res.end();
 
-    process.files.push(req.params.filename);
+    process.files.push(filename);
 
     // remove old files from memory
     if (process.files.length > 5) {
@@ -144,7 +146,7 @@ router.put('/:uuid/:filename', (req, res, next) => {
       delete process.buffers[drop];
     }
 
-    if (req.params.filename.endsWith('.m3u8')) {
+    if (filename.endsWith('.m3u8')) {
       events.emit(req.params.uuid);
     }
   });
