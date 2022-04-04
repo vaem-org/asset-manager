@@ -37,7 +37,7 @@ const processes = {};
 
 const events = new EventEmitter();
 
-router.post('/', api(async ({ params: { id } }) => {
+router.post('/', api(async ({ params: { id }, body: { audio } }) => {
   const item = ObjectId.isValid(id) && await File.findById(id);
   if (!item) {
     throw {
@@ -55,12 +55,12 @@ router.post('/', api(async ({ params: { id } }) => {
 
   const framerate = getFramerate(video);
 
-  const audio = getAudio(streams);
+  audio = audio ?? getAudio(streams);
   let audioMapping = [];
   if (audio.length > 0) {
     audioMapping = audio.length > 1
       ? ['-filter_complex', `${audio.map(index => `[0:${index}]`).join('')}amerge=inputs=2[aout]`, '-map', '[aout]']
-      : ['-map', `0:${audio[0].index}`];
+      : ['-map', `0:${audio[0]}`];
   }
 
   // start a new ffmpeg process
@@ -96,6 +96,7 @@ router.post('/', api(async ({ params: { id } }) => {
   child.on('close', code => {
     console.log(`ffmpeg proces closed with ${code}`);
 
+    events.emit(uuid, 'process exited');
     // clean up after 30 seconds
     setTimeout(() => delete processes[uuid], 30000);
   });
@@ -116,8 +117,17 @@ router.post('/', api(async ({ params: { id } }) => {
     }
   };
 
-  await new Promise(accept => {
-    events.once(uuid, accept);
+  await new Promise((resolve, reject) => {
+    events.once(uuid, err => {
+      if (err) {
+        reject({
+          status: 500,
+          message: 'ffmpeg failed'
+        });
+      } else {
+        resolve();
+      }
+    });
   });
 
   processes[uuid].setTimer();
