@@ -77,6 +77,7 @@ router.post('/', api(async ({ params: { id }, body: { audio } }) => {
     '-bufsize', '3000k',
     '-map', `0:${video.index}`,
     ...audioMapping,
+    '-ac', 2,
     '-vcodec', 'libx264',
     '-vprofile', 'high',
     '-level', '4.1',
