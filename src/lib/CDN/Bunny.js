@@ -26,7 +26,8 @@ export class Bunny extends CDN {
     this.host = url.host;
   }
 
-  getSignedUrl(path, validity) {
+  getSignedUrl(url, validity) {
+    const [path, query] = url.split('?');
     const expires = Math.floor(Date.now()/1000) + validity;
     const digest = createHash('md5')
       .update(this.authenticationKey + path + expires)
@@ -39,6 +40,6 @@ export class Bunny extends CDN {
       .replace(/=/g, '')
     ;
 
-    return `https://${this.host}${path}?token=${token}&expires=${expires}`;
+    return `https://${this.host}${path}?${query ? `${query}&` : ''}token=${token}&expires=${expires}`;
   }
 }

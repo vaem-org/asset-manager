@@ -20,6 +20,7 @@ import { Router } from 'express';
 import { unlink, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { extname } from 'path';
+import { stringify } from 'querystring';
 import { api, getDocument, wrapper } from '#~/lib/express-helpers';
 import { config } from '#~/config';
 import { Asset } from '#~/model/Asset/index';
@@ -31,7 +32,9 @@ const router = new Router({
 router.get('/', wrapper(async ({ params: { language, id }, query: { direct } }, res) => {
   const asset = await getDocument(Asset, id);
   if (config.cdn && direct !== '1') {
-    return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt`, 60));
+    return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt?${stringify({
+      updatedAt: asset.updatedAt.getTime()
+    })}`, 60));
   }
 
   res.setHeader('content-type', 'text/vtt');
