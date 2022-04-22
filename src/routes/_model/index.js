@@ -17,12 +17,15 @@
  */
 
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import { api } from '#~/lib/express-helpers';
 import { getFilter, save } from '#~/lib/crud';
 
 import { Asset } from '#~/model/Asset/index';
 import { Job } from '#~/model/Job/index';
 import { File } from '#~/model/File/index';
+
+const { Types: { ObjectId } } = mongoose;
 
 const router = new Router({
   mergeParams: true
@@ -50,7 +53,9 @@ router.get('/', api(async ({ model, query }, res) => {
     filter: query.filter
   });
 
-  if (query.q) {
+  if (query.q && ObjectId.isValid(query.q)) {
+    filter._id = query.q;
+  } else if (query.q) {
     const searchPaths = model.schema.searchPaths || Object.values(model.schema.paths)
       .filter(({ instance }) => instance === 'String')
       .map(({ path }) => path)
