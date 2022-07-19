@@ -34,7 +34,10 @@ async function ready({ connection }) {
   const release = await mutex.acquire();
   try {
     const job = await Job.findOneAndUpdate({
-      state: 'new'
+      state: 'new',
+      deleted: {
+        $ne: true
+      }
     }, {
       $set: {
         state: 'encoding'
