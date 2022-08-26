@@ -38,7 +38,7 @@
     "google-auth-library": "^7.14.1",
     "jsonwebtoken": "^8.5.1",
     "m3u8": "^0.0.10",
-    "mongoose": "^6.2.9",
+    "mongoose": "^6.4.6",
     "node-webvtt": "^1.9.3",
     "send": "^0.18.0",
     "socket.io": "^4.3.1",
