@@ -52,6 +52,9 @@ async function ready({ connection }) {
         recursive: true
       });
 
+      job.startedAt = new Date();
+      await job.save();
+
       connection.emit('job', {
         job: job._id,
         ffmpegArguments: [
@@ -90,6 +93,7 @@ async function done({ event: { job: id } }) {
   }
   job.state = 'done';
   job.progress = parseFloat(job.asset.ffprobe?.format?.duration);
+  job.completedAt = new Date();
   await job.save();
 
   if (!config.uploadQueue) {

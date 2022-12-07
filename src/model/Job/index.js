@@ -30,7 +30,9 @@ const schema = new Schema({
   arguments: [String],
   state: { type: String, enum: ['new', 'encoding', 'done', 'error'], default: 'new' },
   progress: Number,
-  error: String
+  error: String,
+  startedAt: Date,
+  completedAt: Date
 }, {
   timestamps: true
 });
