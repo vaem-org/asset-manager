@@ -48,6 +48,10 @@ router.use((req, res, next) => {
 });
 
 router.get('/', api(async ({ model, query }, res) => {
+  if (model.synchronise) {
+    await model.synchronise();
+  }
+
   let filter = getFilter({
     model,
     filter: query.filter

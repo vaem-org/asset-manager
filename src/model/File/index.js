@@ -19,7 +19,6 @@
 import mongoose from 'mongoose';
 
 import synchronise from './statics/synchronise.js';
-import monitor from './statics/monitor.js';
 import postRemove from './post/remove.js';
 import preSave from './pre/save.js';
 import { config } from '#~/config';
@@ -52,7 +51,6 @@ schema.virtual('path').get(function() {
 });
 
 synchronise({ schema, root });
-monitor({ schema, root });
 postRemove(schema);
 preSave(schema);
 

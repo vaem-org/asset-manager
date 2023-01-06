@@ -33,8 +33,6 @@ import { File } from '#~/model/File/index';
   });
 
   await File.synchronise();
-  // monitor for file changes
-  File.monitor();
 
   app.use(cors({
     origin: true,
