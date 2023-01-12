@@ -43,7 +43,16 @@ export default ({ schema, root }) => {
       name: {
         $nin: files
       },
-      sourceSize: 0
+      $or: [
+        {
+          sourceSize: 0
+        },
+        {
+          size: {
+            $ne: 0
+          }
+        }
+      ]
     });
   }
 };
