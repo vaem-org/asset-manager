@@ -38,7 +38,7 @@ const { Schema, model, Types: { ObjectId } } = mongoose;
 const schema = new Schema({
   labels: [String],
   title: String,
-  state: { type: String, enum: ['new', 'processing', 'processed', 'verified'], default: 'new' },
+  state: { type: String, enum: ['new', 'processing', 'processed', 'verified', 'error'], default: 'new' },
   ffprobe: {},
   file: String,
   subtitles: {

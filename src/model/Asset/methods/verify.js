@@ -28,20 +28,26 @@ export default schema => {
     console.info('Verifying file count');
 
     const entries = (await config.storage.list(`${this.id}/`))
-    .map(({ name }) => name);
-    const counts = entries.reduce((counts, name) => {
-      const [,variant] = name.split('.');
-      return ({
-        ...counts,
-        [variant]: (counts[variant] ?? 0) + 1
-      });
-    }, {});
+      .map(({ name }) => name);
+
+    const counts = entries
+      .filter(name => {
+        const [,variant] = name.split('.');
+        return variant && variant !== 'm3u8'
+      })
+      .reduce((counts, name) => {
+        const [,variant] = name.split('.');
+        return ({
+          ...counts,
+          [variant]: (counts[variant] ?? 0) + 1
+        });
+      }, {});
 
     const max = Object.values(counts)
-    .reduce((max, count) => Math.max(max, count), 0);
+      .reduce((max, count) => Math.max(max, count), 0);
 
     const faulty = Object.entries(counts)
-    .filter(([variant, count]) => variant !== 'm3u8' && count !== max);
+      .filter(([variant, count]) => variant !== 'm3u8' && count !== max);
 
     if (faulty.length > 0) {
       console.warn(`File count for bitrates ${faulty.join(', ')} differ from maximum.`);
