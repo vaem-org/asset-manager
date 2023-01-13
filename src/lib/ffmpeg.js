@@ -66,6 +66,7 @@ export async function ffprobe(filename) {
       '-print_format', 'json',
       '-show_format',
       '-show_streams',
+      ...filename.toLowerCase().endsWith('.mxf') ? ['-seekable', 0] : [],
       filename
     ])).toString()
     );
