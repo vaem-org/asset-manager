@@ -45,7 +45,7 @@ async function ready({ connection }) {
     });
 
     if (job) {
-      console.log('Sending job to encoder');
+      console.log(`Sending job for asset ${job.asset} to encoder`);
 
       const output = `${config.root}/var/output/${job.asset}`;
       await mkdir(output, {
@@ -68,6 +68,8 @@ async function ready({ connection }) {
         }
       })
     }
+  } catch(e) {
+    console.warn(e);
   } finally {
     release();
   }

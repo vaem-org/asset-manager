@@ -33,9 +33,9 @@ export default ({ schema, root }) => {
     for(const name of files) {
       const { size } = await stat(join(root, name));
       const file = await this.findOne({ name }) || new this({
-        name,
-        size
+        name
       });
+      file.size = size;
       await file.save();
     }
 
