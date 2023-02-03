@@ -33,14 +33,10 @@ const mutex = new Mutex();
 async function ready({ connection }) {
   const release = await mutex.acquire();
   try {
-    const job = await Job.findOneAndUpdate({
+    const job = await Job.findOne({
       state: 'new',
       deleted: {
         $ne: true
-      }
-    }, {
-      $set: {
-        state: 'encoding'
       }
     });
 
@@ -55,18 +51,18 @@ async function ready({ connection }) {
       job.startedAt = new Date();
       await job.save();
 
-      connection.emit('job', {
-        job: job._id,
-        ffmpegArguments: [
-          ...job['arguments'],
-          '-hls_key_info_file', config.base + getSignedUrl(`/assets/${job.asset}/keyinfo`)
-        ]
-      }, response => {
-        if (!response) {
-          job.state = 'new';
-          job.save();
-        }
-      })
+      const response = await new Promise((resolve) => {
+        connection.emit('job', {
+          job: job._id,
+          ffmpegArguments: [
+            ...job['arguments'],
+            '-hls_key_info_file', config.base + getSignedUrl(`/assets/${job.asset}/keyinfo`)
+          ]
+        }, resolve)
+      });
+
+      job.state = response ? 'encoding' : 'new';
+      await job.save();
     }
   } catch(e) {
     console.warn(e);

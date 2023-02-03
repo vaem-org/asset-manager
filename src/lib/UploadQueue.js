@@ -63,7 +63,7 @@ export class UploadQueue extends EventEmitter {
    */
   async upload(file) {
     const name = relative(this.root, file);
-    let tries = 5;
+    let tries = 10;
     let done = false;
     while (tries > 0 && !done) {
       try {
@@ -74,7 +74,7 @@ export class UploadQueue extends EventEmitter {
         done = true;
       }
       catch (e) {
-        await new Promise(accept => setTimeout(accept, 250));
+        await new Promise(accept => setTimeout(accept, 1000));
         console.warn(`Retrying upload of ${name}`);
         tries--;
       }

@@ -17,6 +17,7 @@
  */
 
 import { randomBytes } from 'crypto';
+import { Job } from '#~/model/Job/index';
 
 export default schema => {
   schema.pre('save', function() {
@@ -25,6 +26,11 @@ export default schema => {
       this.hls_enc_iv = randomBytes(16).toString('hex');
     } else if (this.isModified('deleted') && this.deleted) {
       this.removeFiles();
+      Job.deleteMany({
+        asset: this._id
+      }).catch(e => {
+        console.log(`Unable to delete jobs for asset ${e._id}`);
+      });
     }
   });
 }
