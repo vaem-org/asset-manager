@@ -36,7 +36,7 @@
     "glob": "^7.2.0",
     "glob-promise": "^4.2.2",
     "google-auth-library": "^7.14.1",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "m3u8": "^0.0.10",
     "mongoose": "^6.2.9",
     "node-webvtt": "^1.9.3",
