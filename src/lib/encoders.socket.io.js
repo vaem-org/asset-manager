@@ -84,18 +84,24 @@ async function progress({ event: { job, out_time_ms }}) {
 }
 
 async function done({ event: { job: id } }) {
-  console.log(`Job ${id} done`);
-  const job = await Job.findById(id).populate('asset');
-  if (!job) {
-    return;
-  }
-  job.state = 'done';
-  job.progress = parseFloat(job.asset.ffprobe?.format?.duration);
-  job.completedAt = new Date();
-  await job.save();
+  const release = await mutex.acquire();
 
-  if (!config.uploadQueue) {
-    await job.asset.finish();
+  try {
+    console.log(`Job ${id} done`);
+    const job = await Job.findById(id).populate('asset');
+    if (!job) {
+      return;
+    }
+    job.state = 'done';
+    job.progress = parseFloat(job.asset.ffprobe?.format?.duration);
+    job.completedAt = new Date();
+    await job.save();
+
+    if (!config.uploadQueue) {
+      await job.asset.finish();
+    }
+  } finally {
+    release();
   }
 }
 
