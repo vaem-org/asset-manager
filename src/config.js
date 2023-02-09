@@ -63,6 +63,8 @@ export const config = {
     hostname: process.env.BUNNY_HOSTNAME
   },
 
+  subtitleEditApiUrl: process.env.SUBTITLEEDIT_API_URL,
+
   /**
    * @type {import('./lib/Storage/index.js').Storage}
    */
@@ -76,5 +78,5 @@ export const config = {
   /**
    * @type {UploadQueue}
    */
-  uploadQueue: null
+  uploadQueue: null,
 };

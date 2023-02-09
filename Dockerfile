@@ -1,7 +1,5 @@
 FROM vaem/node-ffmpeg:16.13.0-alpine
 
-RUN apk add --no-cache xvfb-run libgdiplus mono ttf-liberation --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
-
 WORKDIR /app
 
 RUN yarn global add pm2
