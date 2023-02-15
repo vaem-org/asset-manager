@@ -18,8 +18,9 @@
 
 import { config } from '#~/config';
 import axios from 'axios';
-import { createReadStream, createWriteStream } from 'fs';
+import { createReadStream } from 'fs';
 import { basename } from 'path';
+import { writeFile } from 'fs/promises';
 
 const { username, origin } = config.subtitleEditApiUrl ? new URL(config.subtitleEditApiUrl) : {};
 
@@ -36,14 +37,13 @@ const api = axios.create({
  * @param {String} destination
  */
 export async function convert(source, destination) {
-  const { data } = await api.post(basename(source), createReadStream(source), {
-    responseType: 'stream'
-  });
+  let data;
 
-  data.pipe(createWriteStream(destination));
+  try {
+    ({ data } = await api.post(basename(source), createReadStream(source)));
+  } catch(e) {
+    throw new Error(`Unable to convert subtitle: ${e.response?.data ?? e}`)
+  }
 
-  await new Promise((resolve, reject) => {
-    data.on('end', resolve);
-    data.on('error', reject);
-  });
+  await writeFile(destination, data);
 }
