@@ -28,12 +28,14 @@ import { config } from '#~/config';
  * @param {string} file
  * @param {int[]} audio
  * @param {boolean} copyHighestVariant
+ * @param {string[]} customAudioFilter
  * @return {Promise<void>}
  */
 export async function encode({
   file,
   audio = null,
-  copyHighestVariant = false
+  copyHighestVariant = false,
+  customAudioFilter = []
 }) {
   const path = `${config.root}/var/files/${file}`;
   const asset = await Asset.findOne({
@@ -98,6 +100,12 @@ export async function encode({
           '-map', '0:v',
           '-c', 'copy'
         ] : [
+          ...customAudioFilter,
+          ...customAudioFilter.length > 0 ? [
+            '-c:a', 'libfdk_aac',
+            '-ac', 2,
+            '-b:a', '128k'
+          ] : [],
 
           // process audio and video
           ...audio.length > 0 ? [

@@ -25,14 +25,19 @@ const router = new Router({
   mergeParams: true
 });
 
-router.post('', api(async ({ params: { id }, body: { audio, copyHighestVariant } }) => {
+router.post('', api(async ({ params: { id }, body: {
+  audio,
+  copyHighestVariant,
+  customAudioFilter = []
+} }) => {
   const doc = await getDocument(File, id);
 
   try {
     return await encode({
       file: doc.name,
       audio,
-      copyHighestVariant: !!copyHighestVariant
+      copyHighestVariant: !!copyHighestVariant,
+      customAudioFilter
     })
   }
   catch (e) {
