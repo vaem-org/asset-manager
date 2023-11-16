@@ -28,7 +28,7 @@ const router = new Router({
 router.post('', api(async ({ params: { id }, body: {
   audio,
   copyHighestVariant,
-  customAudioFilter = []
+  customAudioFilter = null
 } }) => {
   const doc = await getDocument(File, id);
 

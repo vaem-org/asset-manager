@@ -28,14 +28,14 @@ import { config } from '#~/config';
  * @param {string} file
  * @param {int[]} audio
  * @param {boolean} copyHighestVariant
- * @param {string[]} customAudioFilter
+ * @param {?string} customAudioFilter
  * @return {Promise<void>}
  */
 export async function encode({
   file,
   audio = null,
   copyHighestVariant = false,
-  customAudioFilter = []
+  customAudioFilter = null
 }) {
   const path = `${config.root}/var/files/${file}`;
   const asset = await Asset.findOne({
@@ -79,13 +79,18 @@ export async function encode({
 
   const highestVariant = asset.highestVariant;
 
+  const asplit = `${matchingProfiles.length}${
+    matchingProfiles.map((profile, i) => `[aout${i}]`).join('')
+  }`;
+
   job['arguments'] = [
     '-i', path,
     // audio merge filter
-    ...audio.length > 1 ? [
-      '-filter_complex', `${audio.map(index => `[0:${index}]`).join('')}amerge=inputs=2,asplit=${matchingProfiles.length}${
-    matchingProfiles.map((profile,i) => `[aout${i}]`).join('')
-      }`
+    ...!customAudioFilter && audio.length > 1 ? [
+      '-filter_complex', `${audio.map(index => `[0:${index}]`).join('')}amerge=inputs=2,asplit=${asplit}`
+    ] : [],
+    ...customAudioFilter ? [
+      '-filter_complex', `${customAudioFilter},asplit=${asplit}`
     ] : [],
 
     ...matchingProfiles.flatMap(({ width, bitrate }, i) => {
@@ -100,15 +105,8 @@ export async function encode({
           '-map', '0:v',
           '-c', 'copy'
         ] : [
-          ...customAudioFilter,
-          ...customAudioFilter.length > 0 ? [
-            '-c:a', 'libfdk_aac',
-            '-ac', 2,
-            '-b:a', '128k'
-          ] : [],
-
           // process audio and video
-          ...audio.length > 0 ? [
+          ...audio.length > 0 || customAudioFilter ? [
             // audio options,
             '-map', audio.length === 1 ? `0:${audio[0]}` : `[aout${i}]`,
             '-c:a', 'libfdk_aac',
