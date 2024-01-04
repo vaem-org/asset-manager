@@ -29,13 +29,15 @@ import { config } from '#~/config';
  * @param {int[]} audio
  * @param {boolean} copyHighestVariant
  * @param {?string} customAudioFilter
+ * @param {?string} ss
  * @return {Promise<void>}
  */
 export async function encode({
   file,
   audio = null,
   copyHighestVariant = false,
-  customAudioFilter = null
+  customAudioFilter = null,
+  ss = null
 }) {
   const path = `${config.root}/var/files/${file}`;
   const asset = await Asset.findOne({
@@ -84,6 +86,7 @@ export async function encode({
   }`;
 
   job['arguments'] = [
+    ...ss ? ['-ss', ss] : [],
     '-i', path,
     // audio merge filter
     ...!customAudioFilter && audio.length > 1 ? [
