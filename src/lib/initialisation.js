@@ -32,8 +32,6 @@ import { UploadQueue } from '#~/lib/UploadQueue';
  */
 export async function initialisation({ createUploadQueue=false }={}) {
   await mongoose.connect(config.mongoUrl, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     autoIndex: true
   });
 

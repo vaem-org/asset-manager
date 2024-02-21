@@ -1,4 +1,4 @@
-FROM vaem/node-ffmpeg:16.13.0-alpine
+FROM vaem/node-ffmpeg:20.11.1-alpine
 
 WORKDIR /app
 

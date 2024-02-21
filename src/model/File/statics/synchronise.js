@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import glob from 'glob-promise';
+import { glob } from 'glob';
 import { join } from 'path';
 import { stat } from 'fs/promises';
 
