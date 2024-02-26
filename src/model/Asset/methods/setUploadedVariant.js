@@ -32,7 +32,13 @@ export default schema => {
 
     const complete = this.variants.every(variant => this.uploadedVariants.includes(variant));
     if (complete) {
-      await this.finish();
+      setTimeout(() => {
+        this.finish()
+          .catch(e => {
+            console.error(e);
+          })
+        ;
+      }, 5000)
     }
 
     return complete;
