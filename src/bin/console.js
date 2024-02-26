@@ -19,7 +19,7 @@
  */
 
 import sywac from 'sywac';
-import glob from 'glob';
+import { glob } from 'glob';
 import { basename } from 'path';
 import mongoose from 'mongoose';
 import { config } from '#~/config';

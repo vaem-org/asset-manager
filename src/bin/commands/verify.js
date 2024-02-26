@@ -20,11 +20,16 @@ import { Asset } from '#~/model/Asset/index';
 
 export async function run({ assetId }) {
   const asset = await Asset.findById(assetId);
+  const previousState = asset.state;
   console.log(
     await asset.verify() ?
       'Asset verified successfully' :
       'Asset not verified'
   )
+
+  if (previousState !== asset.state && asset.state === 'verified') {
+    await asset.createMasterPlaylist()
+  }
 }
 
 export const flags = 'verify <assetId>'
