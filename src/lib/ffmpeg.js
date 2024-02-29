@@ -129,7 +129,7 @@ export async function segmentVtt(assetId, lang) {
     ])).toString()
   )
 
-  const pkt_pts = frames?.[0]?.pkt_pts;
+  const pkt_pts = frames?.[0]?.pkt_pts ?? frames?.[0]?.pts;
   if (!pkt_pts) {
     throw 'No frames found for asset';
   }
