@@ -23,6 +23,7 @@ import { relative } from 'path';
 import chokidar from 'chokidar';
 import { config } from '#~/config';
 import { unlink } from 'fs/promises';
+import { open } from 'node:fs/promises';
 
 export class UploadQueue extends EventEmitter {
   /**
@@ -43,17 +44,52 @@ export class UploadQueue extends EventEmitter {
    * Start watching for files
    */
   start() {
-    chokidar.watch(this.root, {
-      awaitWriteFinish: true,
-      ignoreInitial: false
-    })
-    .on('add', (path) => {
+    const addToQueue = path => {
       this.queue.push(path);
       if (this.workers < this.concurrency) {
         this.workers++;
         this.process();
       }
-    });
+    };
+
+    /**
+     * Add playlist, but only if it ends with 'x-endlist'
+     * @param {string} path
+     * @param {Stats} stats
+     * @return {Promise<void>}
+     */
+    const addPlaylist = async (path, stats) => {
+      const input = await open(path, 'r');
+      const shouldBe = '#EXT-X-ENDLIST\n';
+      const toRead = shouldBe.length;
+      const { buffer } = await input.read(Buffer.alloc(toRead), 0, toRead, stats.size - toRead);
+      const result = (buffer.toString() === shouldBe);
+      await input.close()
+
+      if (result) {
+        addToQueue(path);
+      }
+    };
+
+    chokidar.watch(this.root, {
+      awaitWriteFinish: true,
+      ignoreInitial: false
+    })
+    .on('add', (path, stats) => {
+      if (!path.endsWith('.m3u8')) {
+        addToQueue(path)
+      } else {
+        addPlaylist(path, stats)
+          .catch(e => console.error(e))
+      }
+    })
+      .on('change', (path, stats) => {
+        if (path.endsWith('.m3u8')) {
+          addPlaylist(path, stats)
+            .catch(e => console.error(e))
+        }
+      })
+    ;
   }
 
   /**
