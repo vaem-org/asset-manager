@@ -18,9 +18,9 @@
 
 import { config } from '#~/config';
 import axios from 'axios';
-import { createReadStream } from 'fs';
-import { basename } from 'path';
-import { writeFile } from 'fs/promises';
+import { createReadStream } from 'node:fs';
+import { basename } from 'node:path';
+import { writeFile } from 'fs/promises'
 
 const { username, origin } = config.subtitleEditApiUrl ? new URL(config.subtitleEditApiUrl) : {};
 
@@ -34,9 +34,10 @@ const api = axios.create({
 /**
  * Convert a subtitle file
  * @param {String} source
- * @param {String} destination
+ * @param {?String} destination
+ * @return {Promise<string>}
  */
-export async function convert(source, destination) {
+export async function convert(source, destination=null) {
   let data;
 
   try {
@@ -45,5 +46,9 @@ export async function convert(source, destination) {
     throw new Error(`Unable to convert subtitle: ${e.response?.data ?? e}`)
   }
 
-  await writeFile(destination, data);
+  if (destination) {
+    await writeFile(destination, data);
+  }
+
+  return data;
 }
