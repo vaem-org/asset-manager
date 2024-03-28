@@ -19,7 +19,7 @@
 import mongoose from 'mongoose';
 
 import synchronise from './statics/synchronise.js';
-import postRemove from './post/remove.js';
+import postRemove from './post/deleteOne.js';
 import preSave from './pre/save.js';
 import { config } from '#~/config';
 

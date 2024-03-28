@@ -48,7 +48,7 @@ router.put('/', api(async ({ body, doc }) => {
 }))
 
 router.delete('/', api(async ({ doc }) => {
-  return doc.delete();
+  return doc.deleteOne();
 }));
 
 export default router;

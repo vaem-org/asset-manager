@@ -19,9 +19,12 @@
 import { unlink } from 'fs/promises';
 
 export default schema => {
-  schema.post('remove', function() {
-    return unlink(this.path).catch(e => {
-      console.warn(`Unable to remove file ${this.name}: ${e.toString()}`);
+  schema.post('deleteOne', {
+    document: true,
+    query: false
+  }, function(doc) {
+    return unlink(doc.path).catch(e => {
+      console.warn(`Unable to remove file ${doc.name}: ${e.toString()}`);
     });
   });
 }
