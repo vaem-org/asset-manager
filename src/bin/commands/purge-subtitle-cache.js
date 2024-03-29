@@ -18,7 +18,6 @@
 
 import { Bar } from 'cli-progress';
 import { config } from '#~/config';
-import { purgeCache } from '#~/lib/bunny';
 
 export async function run({ assetId }) {
   const entries = await config.storage.list(`${assetId}/subtitles/`);
@@ -27,7 +26,7 @@ export async function run({ assetId }) {
   bar.start(entries.length);
   let i =0;
   for(let { name } of entries) {
-    await purgeCache(`/${assetId}/subtitles/${name}`);
+    await config.cdn.purge(`/${assetId}/subtitles/${name}`);
     bar.update(++i);
   }
   bar.stop();

@@ -35,4 +35,13 @@ export class CDN {
   getSignedUrl(path, validity) {
     throw new Error('Unimplemented');
   }
+
+  /**
+   * Purge a file
+   * @param {string} path
+   * @return {Promise<void>}
+   */
+  async purge(path) {
+    throw new Error('Unimplemented');
+  }
 }

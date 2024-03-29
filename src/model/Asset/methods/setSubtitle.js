@@ -40,6 +40,19 @@ export default schema => {
       `${this._id}/subtitles/${language}.vtt`,
       createReadStream(converted || source)
     );
+
+    if (this.subtitles?.[language] && config.cdn) {
+      // purge cache of old files
+      (async () => {
+        const entries = await config.storage.list(`${this._id}/subtitles/`);
+        for(let { name } of entries) {
+          await config.cdn.purge(`${this._id}/subtitles/${name}`);
+        }
+      })().catch(e => {
+        console.warn(e)
+      })
+    }
+
     this.subtitles = {
       ...this.subtitles,
       [language]: true

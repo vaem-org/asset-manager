@@ -17,7 +17,6 @@
  */
 
 import { config } from '#~/config'
-import { purgeCache } from '#~/lib/bunny'
 
 export const flags = 'create-playlists <assetId>'
 
@@ -54,7 +53,7 @@ export async function run({ assetId }) {
     ].join('\n');
 
     const filename = `${assetId}/${assetId}.${bitrate}.m3u8`;
-    await config.storage.upload(filename, m3u8)
-    await purgeCache(`/${filename}`)
+    await config.storage.upload(filename, m3u8);
+    await config.cdn?.purge?.(filename);
   }
 }
