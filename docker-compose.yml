@@ -1,4 +1,3 @@
-version: "3.0"
 volumes:
   data:
 
@@ -9,3 +8,11 @@ services:
       - "33206:27017"
     volumes:
       - data:/data/db
+
+  subtitleedit:
+    platform: linux/amd64
+    image: vaem/subtitleedit-api
+    environment:
+      - API_KEY=vaem
+    ports:
+      - "26525:5000"

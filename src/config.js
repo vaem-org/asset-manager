@@ -15,17 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import 'dotenv/config';
-import { dirname } from 'path';
+import { config as dotenv } from 'dotenv';
+import { dirname, join } from 'path';
 import { fileURLToPath, URL } from 'url';
 
-const port = parseInt(process.env.PORT) || 5000;
-
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
+
+dotenv({
+  path: join(root, '.env')
+})
 
 if (!process.env.SECRET) {
   throw new Error('Environment variable SECRET not found.');
 }
+
+const port = parseInt(process.env.PORT) || 5000;
 
 let auth = null;
 const authUrl = process.env.AUTH_URL && new URL(process.env.AUTH_URL);
@@ -63,7 +67,7 @@ export const config = {
     hostname: process.env.BUNNY_HOSTNAME
   },
 
-  subtitleEditApiUrl: process.env.SUBTITLEEDIT_API_URL,
+  subtitleEditApiUrl: process.env.SUBTITLEEDIT_API_URL ?? 'http://vaem@localhost:26525',
 
   /**
    * @type {import('./lib/Storage/index.js').Storage}

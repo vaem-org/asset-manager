@@ -24,7 +24,7 @@ export default schema => {
 
     this.type = Object.entries({
       'video': ['.mxf', '.mov', '.mkv', '.mpg', '.mp4', '.264', '.avi', '.ts', '.vob'],
-      'subtitle': ['.890', '.stl', '.pac', '.srt', '.vtt', '.itt']
+      'subtitle': ['.890', '.stl', '.pac', '.srt', '.vtt', '.itt', '.ttml']
     }).find(([,extensions]) => extensions.includes(extension))?.[0] || 'unknown';
   })
 }
