@@ -48,7 +48,7 @@ router.use((req, res, next) => {
 });
 
 router.get('/', api(async ({ model, query }, res) => {
-  if (model.synchronise) {
+  if (model.synchronise && Object.keys(query).length === 0) {
     await model.synchronise();
   }
 
