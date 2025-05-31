@@ -48,10 +48,6 @@ router.use((req, res, next) => {
 });
 
 router.get('/', api(async ({ model, query }, res) => {
-  if (model.synchronise && Object.keys(query).length === 0) {
-    await model.synchronise();
-  }
-
   let filter = getFilter({
     model,
     filter: query.filter
@@ -81,6 +77,10 @@ router.get('/', api(async ({ model, query }, res) => {
   const populate = (query.populate || '').split(',').filter(v => v)
   res.setHeader('x-total', total);
   res.setHeader('Access-Control-Expose-Headers', 'x-total')
+
+  if (model.synchronise && page === 1 && !query.q) {
+    await model.synchronise();
+  }
 
   return (await model
     .find(filter)
