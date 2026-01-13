@@ -33,7 +33,8 @@ router.get('/', wrapper(async ({ params: { language, id }, query: { direct } }, 
   const asset = await getDocument(Asset, id);
   if (config.cdn && direct !== '1') {
     return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt?${stringify({
-      updatedAt: asset.updatedAt.getTime()
+      updatedAt: asset.updatedAt.getTime(),
+      v: asset.__v
     })}`, 60));
   }
 
