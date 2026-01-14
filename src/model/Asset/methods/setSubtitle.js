@@ -57,6 +57,7 @@ export default schema => {
       ...this.subtitles,
       [language]: true
     }
+    this.increment();
     await this.save();
     await segmentVtt(this._id.toString(), language);
     if (converted) {
