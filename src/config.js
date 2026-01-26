@@ -47,7 +47,7 @@ export const config = {
   root,
   auth,
 
-  base: process.env.BASE ?? 'http://localhost:5000',
+  base: process.env.BASE ?? `http://localhost:${port}`,
   mongoUrl: process.env.MONGO_URL ?? 'mongodb://localhost:33206/app',
   storageUrl: process.env.STORAGE_URL ?? `file://${root}/var/output`,
   cdnUrl: process.env.CDN_URL,
