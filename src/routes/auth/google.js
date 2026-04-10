@@ -24,6 +24,17 @@ import { config } from '#~/config';
 
 const router = new Router();
 
+router.get('/', api(async (req) => {
+  return new OAuth2Client({
+    clientId: config.auth?.clientId,
+    clientSecret: config.auth?.clientSecret,
+  }).generateAuthUrl({
+    redirect_uri: req.query.redirect_uri,
+    scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
+    hd: config.auth.hd,
+  })
+}))
+
 router.post('/', urlencoded({
   extended: false
 }), api(async ({ body: { code, redirect_uri } }) => {
