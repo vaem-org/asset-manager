@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Bunny } from './Bunny.js';
-import { Local } from './Local.js';
+import { Bunny } from './Bunny.js'
+import { Local } from './Local.js'
 
 /**
  * Get a storage instance
@@ -25,13 +25,13 @@ import { Local } from './Local.js';
  * @return {Storage}
  */
 export function createStorage(url) {
-  switch(url.protocol) {
+  switch (url.protocol) {
     case 'file:':
-      return new Local({ url });
+      return new Local({ url })
     case 'bunny:':
-      return new Bunny({ url });
+      return new Bunny({ url })
 
     default:
-      throw new Error(`Unknown protocol for ${url}`);
+      throw new Error(`Unknown protocol for ${url}`)
   }
 }

@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { createReadStream } from 'fs';
-import { access, readdir, stat, writeFile, mkdir, rm } from 'fs/promises';
-import { join, dirname } from 'path';
-import { Storage } from './index.js';
+import { createReadStream } from 'fs'
+import { access, readdir, stat, writeFile, mkdir, rm } from 'fs/promises'
+import { join, dirname } from 'path'
+import { Storage } from './index.js'
 
 export class Local extends Storage {
   /**
@@ -27,38 +27,38 @@ export class Local extends Storage {
    * @param {module:url.URL} url
    */
   constructor({ url }) {
-    super({ url });
-    this.root = url.pathname;
+    super({ url })
+    this.root = url.pathname
   }
 
   resolve(path) {
     if (path.includes('..')) {
-      throw new Error(`Invalid path ${path}`);
+      throw new Error(`Invalid path ${path}`)
     }
 
-    return join(this.root, path);
+    return join(this.root, path)
   }
 
   async list(path) {
-    const result = [];
-    const absolutePath = this.resolve(path);
+    const result = []
+    const absolutePath = this.resolve(path)
     for (let file of await readdir(absolutePath)) {
-      const fileStat = await stat(join(absolutePath, file));
+      const fileStat = await stat(join(absolutePath, file))
       result.push({
         name: file,
         size: fileStat.size,
-        isDirectory: fileStat.isDirectory()
+        isDirectory: fileStat.isDirectory(),
       })
     }
-    return result;
+    return result
   }
 
   async upload(path, stream) {
-    const fullPath = this.resolve(path);
+    const fullPath = this.resolve(path)
     await mkdir(dirname(fullPath), {
-      recursive: true
+      recursive: true,
     })
-    await writeFile(fullPath, stream);
+    await writeFile(fullPath, stream)
   }
 
   /**
@@ -67,15 +67,15 @@ export class Local extends Storage {
    * @returns {Promise<module:stream.ReadStream>}
    */
   async download(path) {
-    const fullPath = this.resolve(path);
-    await access(fullPath);
-    return createReadStream(fullPath);
+    const fullPath = this.resolve(path)
+    await access(fullPath)
+    return createReadStream(fullPath)
   }
 
   async remove(path) {
-    const fullPath = this.resolve(path);
+    const fullPath = this.resolve(path)
     await rm(fullPath, {
-      recursive: true
+      recursive: true,
     })
   }
 }

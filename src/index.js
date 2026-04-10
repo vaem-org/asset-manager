@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,76 +16,74 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { glob } from 'glob';
-import cors from 'cors';
-import express, { json, Router } from 'express';
-import { config } from '#~/config';
-import { initialise } from '#~/lib/encoders.socket.io';
-import { initialisation } from '#~/lib/initialisation';
-import { security } from '#~/lib/security';
+import { glob } from 'glob'
+import cors from 'cors'
+import express, { json, Router } from 'express'
+import { config } from '#~/config'
+import { initialise } from '#~/lib/encoders.socket.io'
+import { initialisation } from '#~/lib/initialisation'
+import { security } from '#~/lib/security'
 import { File } from '#~/model/File/index';
 
 (async () => {
-  const app = express();
+  const app = express()
 
   await initialisation({
-    createUploadQueue: true
-  });
+    createUploadQueue: true,
+  })
 
-  await File.synchronise();
+  await File.synchronise()
 
   app.use(cors({
     origin: true,
-    credentials: true
-  }));
+    credentials: true,
+  }))
 
-  app.set('trust proxy', true);
+  app.set('trust proxy', true)
 
-  app.get('/_alive', (req, res) => res.end('alive'));
+  app.get('/_alive', (req, res) => res.end('alive'))
 
-  app.use(json());
+  app.use(json())
 
   // add routes
-  const root = `${config.root}/src/routes`;
+  const root = `${config.root}/src/routes`
   const routes = glob.sync('**/*.js', { cwd: root })
-    .map(path => {
-        let route = '/' + path
+    .map((path) => {
+      let route = '/' + path
         .replace(/\.js$/, '')
         .split('/')
         .map(component => component.replace(/^_/, ':'))
         .join('/')
-        .replace(/(\/|^)index$/, '');
-        return ({
-          sort: route.replace(/:/g, 'ZZ'),
-          route,
-          path
-        });
-      }
+        .replace(/(\/|^)index$/, '')
+      return ({
+        sort: route.replace(/:/g, 'ZZ'),
+        route,
+        path,
+      })
+    },
     )
     .sort(({ sort: sortA }, { sort: sortB }) => sortA.localeCompare(sortB))
-  ;
 
   const main = new Router({
-    mergeParams: true
-  });
+    mergeParams: true,
+  })
   for (let { route, path } of routes) {
     // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    const router = (await import(`${root}/${path}`)).default;
+    const router = (await import(`${root}/${path}`)).default
     if (typeof router === 'function') {
-      console.log(`Adding route: ${route}`);
-      main.use(route, router);
+      console.log(`Adding route: ${route}`)
+      main.use(route, router)
     }
   }
 
-  app.use(['/signed/:timestamp/:n/:signature', '/'], security(), main);
+  app.use(['/signed/:timestamp/:n/:signature', '/'], security(), main)
 
-  const server = initialise(app);
+  const server = initialise(app)
   server.listen(config.port, () => {
-    console.log(`Server listening on http://localhost:${config.port}`);
-  });
-})().catch(e => {
-  console.error(e);
-  // eslint-disable-next-line no-process-exit
-  process.exit(1);
-});
+    console.log(`Server listening on http://localhost:${config.port}`)
+  })
+})().catch((e) => {
+  console.error(e)
 
+  process.exit(1)
+})

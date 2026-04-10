@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { spawn } from 'child_process';
-import { join } from 'path';
-import { finished } from 'stream/promises';
-import { mkdir, writeFile } from 'fs/promises';
-import { Asset } from '#~/model/Asset/index';
-import { config } from '#~/config';
-import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js';
+import { spawn } from 'child_process'
+import { join } from 'path'
+import { finished } from 'stream/promises'
+import { mkdir, writeFile } from 'fs/promises'
+import { Asset } from '#~/model/Asset/index'
+import { config } from '#~/config'
+import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js'
 
 /**
  *
@@ -32,26 +32,27 @@ import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js';
  */
 async function run(cmd, args) {
   const child = spawn(cmd, args, {
-    stdio: ['ignore', 'pipe', 'pipe']
-  });
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
 
-  const stdout = [];
-  child.stdout.on('data', buf => stdout.push(buf));
-  const stderr = [];
-  child.stderr.on('data', buf => {
-    process.stderr.write(buf);
-    stderr.push(buf);
-  });
+  const stdout = []
+  child.stdout.on('data', buf => stdout.push(buf))
+  const stderr = []
+  child.stderr.on('data', (buf) => {
+    process.stderr.write(buf)
+    stderr.push(buf)
+  })
 
   return new Promise((resolve, reject) => {
-    child.on('close', code => {
+    child.on('close', (code) => {
       if (code !== 0) {
-        reject(Buffer.concat(stderr));
-      } else {
-        resolve(Buffer.concat(stdout));
+        reject(Buffer.concat(stderr))
+      }
+      else {
+        resolve(Buffer.concat(stdout))
       }
     })
-  });
+  })
 }
 
 /**
@@ -67,15 +68,14 @@ export async function ffprobe(filename) {
       '-show_format',
       '-show_streams',
       ...filename.toLowerCase().endsWith('.mxf') ? ['-seekable', 0] : [],
-      filename
-    ])).toString()
-    );
+      filename,
+    ])).toString(),
+    )
   }
   catch (e) {
-    throw new Error(`ffprobe process failed: ${e.toString()}`);
+    throw new Error(`ffprobe process failed: ${e.toString()}`)
   }
 }
-
 
 /**
  * Find the streams to use for audio
@@ -83,24 +83,26 @@ export async function ffprobe(filename) {
  * @return {[int]}
  */
 export function getAudio(streams) {
-  const audioStreams = streams.filter(({ codec_type }) => codec_type === 'audio');
+  const audioStreams = streams.filter(({ codec_type }) => codec_type === 'audio')
 
-  const stereo = audioStreams.find(({ channels }) => channels === 2);
+  const stereo = audioStreams.find(({ channels }) => channels === 2)
   if (stereo) {
     return [stereo.index]
   }
 
-  const monoChannels = audioStreams.filter(({ channels }) => channels === 1);
-  const findChannel = layout => monoChannels.find(({ layout: layout2 }) => layout2 === layout)?.index;
+  const monoChannels = audioStreams.filter(({ channels }) => channels === 1)
+  const findChannel = layout => monoChannels.find(({ layout: layout2 }) => layout2 === layout)?.index
 
   if (findChannel('DL')) {
     return [
       findChannel('DL'),
       findChannel('DR'),
     ]
-  } else if (monoChannels.length >= 2) {
+  }
+  else if (monoChannels.length >= 2) {
     return monoChannels.slice(0, 2).map(({ index }) => index)
-  } else return audioStreams
+  }
+  else return audioStreams
     .filter(({ channels }) => channels === 6)
     .map(({ index }) => index)
     .slice(0, 1)
@@ -113,10 +115,10 @@ export function getAudio(streams) {
  * @returns {Promise<void>}
  */
 export async function segmentVtt(assetId, lang) {
-  const item = await Asset.findById(assetId);
+  const item = await Asset.findById(assetId)
 
   if (!item) {
-    throw 'Item not found';
+    throw 'Item not found'
   }
 
   const { frames } = JSON.parse(
@@ -125,38 +127,38 @@ export async function segmentVtt(assetId, lang) {
       '-print_format', 'json',
       '-show_frames',
       '-read_intervals', '%+#1',
-      item.getUrl('235k')
-    ])).toString()
+      item.getUrl('235k'),
+    ])).toString(),
   )
 
-  const pkt_pts = frames?.[0]?.pkt_pts ?? frames?.[0]?.pts;
+  const pkt_pts = frames?.[0]?.pkt_pts ?? frames?.[0]?.pts
   if (!pkt_pts) {
-    throw 'No frames found for asset';
+    throw 'No frames found for asset'
   }
 
-  const stream = await config.storage.download(`${assetId}/subtitles/${lang}.vtt`);
-  const outputPath = join(config.root, 'var/output', assetId, 'subtitles');
-  const buffers = [];
-  stream.on('data', buffer => buffers.push(buffer));
-  await finished(stream);
-  const input = Buffer.concat(buffers).toString();
+  const stream = await config.storage.download(`${assetId}/subtitles/${lang}.vtt`)
+  const outputPath = join(config.root, 'var/output', assetId, 'subtitles')
+  const buffers = []
+  stream.on('data', buffer => buffers.push(buffer))
+  await finished(stream)
+  const input = Buffer.concat(buffers).toString()
 
   await mkdir(outputPath, {
-    recursive: true
-  });
+    recursive: true,
+  })
   await writeFile(
     join(outputPath, `${lang}.m3u8`),
     hlsSegmentPlaylist(input, 10).replace(
       /^\d+\.vtt$/mg,
-      (match) => `${lang}.${match}`
-    )
-  );
+      match => `${lang}.${match}`,
+    ),
+  )
 
-  for(const { filename, content } of hlsSegment(input, 10, pkt_pts)) {
+  for (const { filename, content } of hlsSegment(input, 10, pkt_pts)) {
     await writeFile(
       join(outputPath, `${lang}.${filename}`),
-      content
-    );
+      content,
+    )
   }
 }
 
@@ -169,12 +171,11 @@ export function getFramerate(stream) {
   const rFrameRate = (stream?.r_frame_rate ?? '')
     .split('/')
     .map(i => parseInt(i))
-  ;
 
-  let framerate = 25;
+  let framerate = 25
   if (rFrameRate.length === 2) {
-    framerate = rFrameRate[0] / rFrameRate[1];
+    framerate = rFrameRate[0] / rFrameRate[1]
   }
 
-  return framerate;
+  return framerate
 }

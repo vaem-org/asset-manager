@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,5 +21,5 @@ export default {
   640: [1050],
   720: [2500],
   1280: [3000],
-  1920: [5800]
+  1920: [5800],
 }

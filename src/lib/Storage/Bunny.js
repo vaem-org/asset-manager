@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,30 +16,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import axios from 'axios';
-import { Storage } from './index.js';
+import axios from 'axios'
+import { Storage } from './index.js'
 
 export class Bunny extends Storage {
   /**
    * @param {module:url.URL} url
    */
   constructor({ url }) {
-    super({ url });
-    const { host, hostname, username, password } = url;
-    const protocol = hostname === 'localhost' ? 'http' : 'https';
+    super({ url })
+    const { host, hostname, username, password } = url
+    const protocol = hostname === 'localhost' ? 'http' : 'https'
     this.axios = axios.create({
       baseURL: `${protocol}://${host}/${username}/`,
       headers: {
-        'AccessKey': password
+        AccessKey: password,
       },
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
-    });
+    })
   }
 
   async upload(path, stream) {
     try {
-      await this.axios.put(path, stream);
+      await this.axios.put(path, stream)
     }
     catch (e) {
       throw new Error(`Error uploading ${e.config?.url} (${e.response?.status || 'unknown'}): ${e.response?.data ?? e.toString()}`)
@@ -51,13 +51,13 @@ export class Bunny extends Storage {
       .map(({ ObjectName, Length, IsDirectory }) => ({
         name: ObjectName,
         size: Length,
-        isDirectory: IsDirectory
+        isDirectory: IsDirectory,
       }))
   }
 
   async download(path) {
     return (await this.axios.get(path, {
-      responseType: 'stream'
+      responseType: 'stream',
     })).data
   }
 

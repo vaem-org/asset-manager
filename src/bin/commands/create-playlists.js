@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,19 @@ import { config } from '#~/config'
 export const flags = 'create-playlists <assetId>'
 
 export async function run({ assetId }) {
-  const entries = await config.storage.list(`${assetId}/`);
+  const entries = await config.storage.list(`${assetId}/`)
   const variants = entries.reduce((variants, { name }) => {
     const bitrate = name.split('.')[1]
     return {
       ...variants,
       [bitrate]: [
         ...variants[bitrate] ?? [],
-        name
-      ]
+        name,
+      ],
     }
   }, {})
 
-  const getOrder = filename => parseInt(filename.split('.')[2]);
+  const getOrder = filename => parseInt(filename.split('.')[2])
 
   for (const [bitrate, variant] of Object.entries(variants)) {
     const m3u8 = [
@@ -46,14 +46,14 @@ export async function run({ assetId }) {
         .filter(filename => filename.endsWith('.ts'))
         .sort((a, b) => getOrder(a) - getOrder(b))
         .flatMap(filename => [
-        '#EXTINF:2.0000',
-        filename
-      ]),
-      '#EXT-X-ENDLIST'
-    ].join('\n');
+          '#EXTINF:2.0000',
+          filename,
+        ]),
+      '#EXT-X-ENDLIST',
+    ].join('\n')
 
-    const filename = `${assetId}/${assetId}.${bitrate}.m3u8`;
-    await config.storage.upload(filename, m3u8);
-    await config.cdn?.purge?.(filename);
+    const filename = `${assetId}/${assetId}.${bitrate}.m3u8`
+    await config.storage.upload(filename, m3u8)
+    await config.cdn?.purge?.(filename)
   }
 }

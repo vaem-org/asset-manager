@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,28 +16,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#~/config';
-import axios from 'axios';
+import { config } from '#~/config'
+import axios from 'axios'
 
-export default schema => {
+export default (schema) => {
   /**
    * Finish an asset
    * @returns {Promise<void>}
    */
   schema.methods.finish = async function () {
-    await this.createMasterPlaylist();
-    this.state = 'processed';
-    await this.save();
-    await this.verify();
+    await this.createMasterPlaylist()
+    this.state = 'processed'
+    await this.save()
+    await this.verify()
 
     // send notification to webhook
     if (config.webhooks.finished) {
       axios.post(config.webhooks.finished, {
-        text: `Transcoding asset complete: ${this.title}`
-      }).catch(e => {
-        console.warn(`Unable to post webhook message: ${e.toString()}`);
-      });
+        text: `Transcoding asset complete: ${this.title}`,
+      }).catch((e) => {
+        console.warn(`Unable to post webhook message: ${e.toString()}`)
+      })
     }
-  };
+  }
 }
-

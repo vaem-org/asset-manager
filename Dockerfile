@@ -2,13 +2,13 @@ FROM vaem/node-ffmpeg:20.11.1-alpine
 
 WORKDIR /app
 
-RUN yarn global add pm2
+RUN corepack enable && npm i -g pm2
 
-ADD ./yarn.lock ./package.json /app/
+ADD ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json /app/
 
 ENV NODE_ENV=production
 
-RUN yarn install --prod
+RUN pnpm install
 
 ADD . /app
 

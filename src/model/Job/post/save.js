@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { io } from '#~/lib/encoders.socket.io';
+import { io } from '#~/lib/encoders.socket.io'
 
-export default schema => {
-  schema.post('save', function() {
+export default (schema) => {
+  schema.post('save', function () {
     if (this.state === 'new') {
-      io.emit('new-job');
+      io.emit('new-job')
     }
-  });
+  })
 }

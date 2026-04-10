@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,23 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { api, getDocument } from '#~/lib/express-helpers';
-import { File } from '#~/model/File/index';
-import { ffprobe, getAudio } from '#~/lib/ffmpeg';
+import { Router } from 'express'
+import { api, getDocument } from '#~/lib/express-helpers'
+import { File } from '#~/model/File/index'
+import { ffprobe, getAudio } from '#~/lib/ffmpeg'
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 router.get('/', api(async ({ params: { id } }) => {
-  const file = await getDocument(File, id);
-  const { streams, format } = await ffprobe(file.path);
+  const file = await getDocument(File, id)
+  const { streams, format } = await ffprobe(file.path)
   return {
     streams,
     format,
-    audio: getAudio(streams)
-  };
-}));
+    audio: getAudio(streams),
+  }
+}))
 
-export default router;
+export default router

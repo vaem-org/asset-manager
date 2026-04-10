@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Asset } from '#~/model/Asset/index';
+import { Asset } from '#~/model/Asset/index'
 
 export async function run({ assetId }) {
-  const asset = await Asset.findById(assetId);
-  await asset.createMasterPlaylist();
+  const asset = await Asset.findById(assetId)
+  await asset.createMasterPlaylist()
 }
 
-export const flags = 'create-masterplaylist <assetId>';
+export const flags = 'create-masterplaylist <assetId>'

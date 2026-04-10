@@ -2,7 +2,7 @@
 
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import sywac from 'sywac';
-import { glob } from 'glob';
-import { basename } from 'path';
-import mongoose from 'mongoose';
-import { config } from '#~/config';
+import sywac from 'sywac'
+import { glob } from 'glob'
+import { basename } from 'path'
+import mongoose from 'mongoose'
+import { config } from '#~/config'
 import { initialisation } from '#~/lib/initialisation';
 
 (async () => {
-  await initialisation();
+  await initialisation()
 
-  for(let file of glob.sync(`${config.root}/src/bin/commands/*.js`)) {
-    // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    const { run, flags } = await import(file);
-    sywac.command(flags || basename(file, '.js'), run);
+  for (let file of glob.sync(`${config.root}/src/bin/commands/*.js`)) {
+    const { run, flags } = await import(file)
+    sywac.command(flags || basename(file, '.js'), run)
   }
 
   return sywac
     .showHelpByDefault()
     .parseAndExit()
-})().catch(e => {
-  console.error(e);
-  // eslint-disable-next-line no-process-exit
-  process.exit(1);
-}).finally(() => mongoose.disconnect());
+})().catch((e) => {
+  console.error(e)
+
+  process.exit(1)
+}).finally(() => mongoose.disconnect())

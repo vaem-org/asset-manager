@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { randomBytes } from 'crypto';
-import { Job } from '#~/model/Job/index';
+import { randomBytes } from 'crypto'
+import { Job } from '#~/model/Job/index'
 
-export default schema => {
-  schema.pre('save', function() {
+export default (schema) => {
+  schema.pre('save', function () {
     if (this.isNew) {
-      this.hls_enc_key = randomBytes(16).toString('hex');
-      this.hls_enc_iv = randomBytes(16).toString('hex');
-    } else if (this.isModified('deleted') && this.deleted) {
-      this.removeFiles();
-      Job.deleteMany({
-        asset: this._id
-      }).catch(e => {
-        console.log(`Unable to delete jobs for asset ${e._id}`);
-      });
+      this.hls_enc_key = randomBytes(16).toString('hex')
+      this.hls_enc_iv = randomBytes(16).toString('hex')
     }
-  });
+    else if (this.isModified('deleted') && this.deleted) {
+      this.removeFiles()
+      Job.deleteMany({
+        asset: this._id,
+      }).catch((e) => {
+        console.log(`Unable to delete jobs for asset ${e._id}`)
+      })
+    }
+  })
 }

@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,86 +16,86 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import mongoose from 'mongoose';
-import { api } from '#~/lib/express-helpers';
-import { getFilter, save } from '#~/lib/crud';
+import { Router } from 'express'
+import mongoose from 'mongoose'
+import { api } from '#~/lib/express-helpers'
+import { getFilter, save } from '#~/lib/crud'
 
-import { Asset } from '#~/model/Asset/index';
-import { Job } from '#~/model/Job/index';
-import { File } from '#~/model/File/index';
+import { Asset } from '#~/model/Asset/index'
+import { Job } from '#~/model/Job/index'
+import { File } from '#~/model/File/index'
 
-const { Types: { ObjectId } } = mongoose;
+const { Types: { ObjectId } } = mongoose
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 const models = {
-  'assets': Asset,
-  'jobs': Job,
-  'files': File
+  assets: Asset,
+  jobs: Job,
+  files: File,
 }
 
 router.use((req, res, next) => {
   if (!models[req.params.model]) {
-    return res.status(404).end();
+    return res.status(404).end()
   }
 
-  req.model = models[req.params.model];
+  req.model = models[req.params.model]
 
-  next();
-});
+  next()
+})
 
 router.get('/', api(async ({ model, query }, res) => {
   let filter = getFilter({
     model,
-    filter: query.filter
-  });
+    filter: query.filter,
+  })
 
   if (query.q && ObjectId.isValid(query.q)) {
-    filter._id = query.q;
-  } else if (query.q) {
+    filter._id = query.q
+  }
+  else if (query.q) {
     const searchPaths = model.schema.searchPaths || Object.values(model.schema.paths)
       .filter(({ instance }) => instance === 'String')
       .map(({ path }) => path)
-    ;
 
-    const regex = model.schema.searchExact ? query.q.trim() : new RegExp(query.q.trim(), 'i');
+    const regex = model.schema.searchExact ? query.q.trim() : new RegExp(query.q.trim(), 'i')
 
     filter = {
       ...filter,
       $or: searchPaths
-        .map((path) => ({ [path]: regex }))
+        .map(path => ({ [path]: regex })),
     }
   }
 
-  const page = Math.max(1, parseInt(query.page || '1', 10));
-  const per_page = Math.max(1, parseInt(query.per_page || '20', 10));
-  const sort = query.sort || '-createdAt';
-  const total = await model.countDocuments(filter);
+  const page = Math.max(1, parseInt(query.page || '1', 10))
+  const per_page = Math.max(1, parseInt(query.per_page || '20', 10))
+  const sort = query.sort || '-createdAt'
+  const total = await model.countDocuments(filter)
   const populate = (query.populate || '').split(',').filter(v => v)
-  res.setHeader('x-total', total);
+  res.setHeader('x-total', total)
   res.setHeader('Access-Control-Expose-Headers', 'x-total')
 
   if (model.synchronise && page === 1 && !query.q) {
-    await model.synchronise();
+    await model.synchronise()
   }
 
   return (await model
     .find(filter)
     .sort(sort)
     .populate(populate)
-    .skip((page-1)*per_page)
+    .skip((page - 1) * per_page)
     .limit(per_page)
   ).map(doc => doc.toJSON())
-}));
+}))
 
 router.post('/', api(async ({ body, model }) => {
-  const doc = new model(body);
-  await save(doc);
+  const doc = new model(body)
+  await save(doc)
 
-  return doc.toJSON();
-}));
+  return doc.toJSON()
+}))
 
-export default router;
+export default router

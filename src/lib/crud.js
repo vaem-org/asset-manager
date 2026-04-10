@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
  * @param doc
  * @return {Promise<void>}
  */
-export async function save (doc) {
+export async function save(doc) {
   try {
-    await doc.save();
+    await doc.save()
   }
   catch (e) {
     if (!e.errors) {
@@ -34,27 +34,27 @@ export async function save (doc) {
       status: 400,
       errors: Object.fromEntries(
         Object.entries(e.errors ?? {})
-        .map(([path, {
-          kind,
-          message,
-          name
-        }]) => [path, {
-          kind,
-          message,
-          name
-        }])
+          .map(([path, {
+            kind,
+            message,
+            name,
+          }]) => [path, {
+            kind,
+            message,
+            name,
+          }]),
       ),
-      message: e._message || e.toString()
+      message: e._message || e.toString(),
     }
   }
 }
 
-function setDates (filter) {
+function setDates(filter) {
   if (typeof filter === 'string') {
     return new Date(filter)
   }
   return Object.fromEntries(Object.entries(filter)
-    .map(([key, value]) => [key, new Date(value)])
+    .map(([key, value]) => [key, new Date(value)]),
   )
 }
 
@@ -64,21 +64,23 @@ function setDates (filter) {
  * @param {model} model
  * @return {{}}
  */
-export function getFilter ({ filter, model }) {
+export function getFilter({ filter, model }) {
   try {
-    return filter ? Object.fromEntries(Object.entries(JSON.parse(filter))
-      .map(([path, filter]) => {
-        if (model.schema.paths[path]?.instance === 'Date') {
-          return [path, setDates(filter)]
-        }
-        return [path, filter];
-      })
-    ) : {}
+    return filter
+      ? Object.fromEntries(Object.entries(JSON.parse(filter))
+          .map(([path, filter]) => {
+            if (model.schema.paths[path]?.instance === 'Date') {
+              return [path, setDates(filter)]
+            }
+            return [path, filter]
+          }),
+        )
+      : {}
   }
   catch (e) {
     throw {
       status: 400,
-      message: `Unable to parse filter "${filter}": ${e.toString()}`
+      message: `Unable to parse filter "${filter}": ${e.toString()}`,
     }
   }
 }

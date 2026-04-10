@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,42 +16,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { api } from '#~/lib/express-helpers';
+import { Router } from 'express'
+import { api } from '#~/lib/express-helpers'
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 router.get('/', api(async ({ model }) => {
   return {
     paths: Object.fromEntries(
       [
         ...Object.entries(model.schema.paths)
-        .map(([key, { path, instance, enumValues, options: { ref, ui } }]) => [
-          key,
-          {
-            path,
-            enumValues,
-            ref,
-            instance: ui?.type ?? instance,
-            label: ui?.label
-          }
-        ]),
+          .map(([key, { path, instance, enumValues, options: { ref, ui } }]) => [
+            key,
+            {
+              path,
+              enumValues,
+              ref,
+              instance: ui?.type ?? instance,
+              label: ui?.label,
+            },
+          ]),
         ...Object.entries(model.schema.virtuals)
-        .filter(([key]) => key !== 'id')
-        .map(([key, { path, options }]) => [
-          key,
-          {
-            path,
-            instance: 'virtual',
-            virtual: true,
-            ...options,
-          }
-        ])
-      ]
-    )
-  };
+          .filter(([key]) => key !== 'id')
+          .map(([key, { path, options }]) => [
+            key,
+            {
+              path,
+              instance: 'virtual',
+              virtual: true,
+              ...options,
+            },
+          ]),
+      ],
+    ),
+  }
 }))
 
-export default router;
+export default router

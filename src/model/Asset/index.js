@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,24 +16,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
-import finish from './methods/finish.js';
-import setUploadedVariant from './methods/setUploadedVariant.js';
-import createMasterPlaylist from './methods/createMasterPlaylist.js';
-import verify from './methods/verify.js';
-import verifySubtitles from './methods/verifySubtitles.js';
-import setSubtitle from './methods/setSubtitle.js';
-import getUrl from './methods/getUrl.js';
-import removeFiles from './methods/removeFiles.js';
+import finish from './methods/finish.js'
+import setUploadedVariant from './methods/setUploadedVariant.js'
+import createMasterPlaylist from './methods/createMasterPlaylist.js'
+import verify from './methods/verify.js'
+import verifySubtitles from './methods/verifySubtitles.js'
+import setSubtitle from './methods/setSubtitle.js'
+import getUrl from './methods/getUrl.js'
+import removeFiles from './methods/removeFiles.js'
 
-import preSave from './pre/save.js';
-import postRemove from './post/remove.js';
-import postSave from './post/save.js';
-import { getSignedUrl } from '#~/lib/security';
-import { config } from '#~/config';
+import preSave from './pre/save.js'
+import postRemove from './post/remove.js'
+import postSave from './post/save.js'
+import { getSignedUrl } from '#~/lib/security'
+import { config } from '#~/config'
 
-const { Schema, model, Types: { ObjectId } } = mongoose;
+const { Schema, model, Types: { ObjectId } } = mongoose
 
 const schema = new Schema({
   labels: [String],
@@ -43,55 +43,55 @@ const schema = new Schema({
   file: String,
   subtitles: {
     type: Object,
-    default: {}
+    default: {},
   },
   hls_enc_key: String,
   hls_enc_iv: String,
   deleted: Boolean,
   public: {
     type: Boolean,
-    default: false
+    default: false,
   },
   variants: [String],
   uploadedVariants: [String],
   job: {
     type: ObjectId,
-    ref: 'Job'
-  }
+    ref: 'Job',
+  },
 }, {
-  timestamps: true
-});
+  timestamps: true,
+})
 
-schema.virtual('highestVariant').get(function() {
-  return Math.max(...this.variants.map((variant) => parseInt(variant))) + 'k';
-});
+schema.virtual('highestVariant').get(function () {
+  return Math.max(...this.variants.map(variant => parseInt(variant))) + 'k'
+})
 
-schema.virtual('playbackInfo').get(function() {
-  const expiresIn = 4*3600;
+schema.virtual('playbackInfo').get(function () {
+  const expiresIn = 4 * 3600
   return {
     stream: config.base + getSignedUrl(`/assets/${this._id}/stream`, false, expiresIn) + `/${this._id}.m3u8`,
     subtitles: Object.fromEntries(
       Object.entries(this.subtitles || {})
-      .filter(([,value]) => value)
-      .map(([language]) => [
-        language,
-        config.base + getSignedUrl(`/assets/${this._id}/subtitles/${language}`, true, expiresIn)
-      ])
-    )
+        .filter(([,value]) => value)
+        .map(([language]) => [
+          language,
+          config.base + getSignedUrl(`/assets/${this._id}/subtitles/${language}`, true, expiresIn),
+        ]),
+    ),
   }
-});
+})
 
-preSave(schema);
-postSave(schema);
-postRemove(schema);
+preSave(schema)
+postSave(schema)
+postRemove(schema)
 
-finish(schema);
-setUploadedVariant(schema);
-createMasterPlaylist(schema);
-verify(schema);
-verifySubtitles(schema);
-setSubtitle(schema);
-getUrl(schema);
-removeFiles(schema);
+finish(schema)
+setUploadedVariant(schema)
+createMasterPlaylist(schema)
+verify(schema)
+verifySubtitles(schema)
+setSubtitle(schema)
+getUrl(schema)
+removeFiles(schema)
 
-export const Asset = model('Asset', schema);
+export const Asset = model('Asset', schema)

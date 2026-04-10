@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#~/config';
-import axios from 'axios';
+import { config } from '#~/config'
+import axios from 'axios'
 
-export default schema => {
-  schema.post('save', function() {
+export default (schema) => {
+  schema.post('save', function () {
     if (config.webhooks.saved) {
       axios.post(config.webhooks.saved, {
-        id: this._id
-      }).catch(e => {
-        console.warn(`Unable to post webhook message: ${e.toString()}`);
+        id: this._id,
+      }).catch((e) => {
+        console.warn(`Unable to post webhook message: ${e.toString()}`)
       })
     }
-  });
+  })
 }

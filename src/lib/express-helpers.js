@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 /**
  * Wrap an async function into middleware
@@ -26,24 +26,24 @@ import mongoose from 'mongoose';
 export function api(fn) {
   return (req, res, next) => {
     fn(req, res, next)
-    .then(result => {
-      try {
-        return res.json(result);
-      }
-      catch (e) {
-        console.error(e);
-        return res.status(500).end();
-      }
-    })
-    .catch(exception => {
-      if (exception?.status) {
-        return res.status(exception.status).json(exception);
-      }
+      .then((result) => {
+        try {
+          return res.json(result)
+        }
+        catch (e) {
+          console.error(e)
+          return res.status(500).end()
+        }
+      })
+      .catch((exception) => {
+        if (exception?.status) {
+          return res.status(exception.status).json(exception)
+        }
 
-      console.error(exception);
-      next(new Error(exception))
-    })
-  };
+        console.error(exception)
+        next(new Error(exception))
+      })
+  }
 }
 
 /**
@@ -54,14 +54,14 @@ export function api(fn) {
 export function wrapper(fn) {
   return (req, res, next) => {
     fn(req, res, next)
-    .catch(exception => {
-      if (exception.status) {
-        return res.status(exception.status).json(exception);
-      }
-      console.error(exception);
-      next(new Error(exception))
-    })
-  };
+      .catch((exception) => {
+        if (exception.status) {
+          return res.status(exception.status).json(exception)
+        }
+        console.error(exception)
+        next(new Error(exception))
+      })
+  }
 }
 
 /**
@@ -71,12 +71,12 @@ export function wrapper(fn) {
  * @return {Promise<{}>}
  */
 export async function getDocument(model, id) {
-  const doc = mongoose.Types.ObjectId.isValid(id) && await model.findById(id);
+  const doc = mongoose.Types.ObjectId.isValid(id) && await model.findById(id)
   if (!doc) {
     throw {
-      status: 404
+      status: 404,
     }
   }
 
-  return doc;
+  return doc
 }

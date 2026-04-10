@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import mongoose from 'mongoose';
-import postSave from './post/save.js';
+import mongoose from 'mongoose'
+import postSave from './post/save.js'
 
-const { Schema, model, Types: { ObjectId } } = mongoose;
+const { Schema, model, Types: { ObjectId } } = mongoose
 
 const schema = new Schema({
   asset: {
     type: ObjectId,
-    ref: 'Asset'
+    ref: 'Asset',
   },
   file: String,
   arguments: [String],
@@ -32,11 +32,11 @@ const schema = new Schema({
   progress: Number,
   error: String,
   startedAt: Date,
-  completedAt: Date
+  completedAt: Date,
 }, {
-  timestamps: true
-});
+  timestamps: true,
+})
 
-postSave(schema);
+postSave(schema)
 
-export const Job = model('Job', schema);
+export const Job = model('Job', schema)

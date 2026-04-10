@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,30 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { config as dotenv } from 'dotenv';
-import { dirname, join } from 'path';
-import { fileURLToPath, URL } from 'url';
+import { config as dotenv } from 'dotenv'
+import { dirname, join } from 'path'
+import { fileURLToPath, URL } from 'url'
 
-const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const root = dirname(dirname(fileURLToPath(import.meta.url)))
 
 dotenv({
-  path: join(root, '.env')
+  path: join(root, '.env'),
 })
 
 if (!process.env.SECRET) {
-  throw new Error('Environment variable SECRET not found.');
+  throw new Error('Environment variable SECRET not found.')
 }
 
-const port = parseInt(process.env.PORT) || 5000;
+const port = parseInt(process.env.PORT) || 5000
 
-let auth = null;
-const authUrl = process.env.AUTH_URL && new URL(process.env.AUTH_URL);
+let auth = null
+const authUrl = process.env.AUTH_URL && new URL(process.env.AUTH_URL)
 if (authUrl?.protocol === 'google:') {
   auth = {
     provider: 'google',
     clientId: authUrl.username,
     clientSecret: authUrl.password,
-    hd: authUrl.hostname
+    hd: authUrl.hostname,
   }
 }
 
@@ -59,12 +59,12 @@ export const config = {
 
   webhooks: {
     finished: process.env.WEBHOOK_FINISHED,
-    saved: process.env.WEBHOOK_SAVED
+    saved: process.env.WEBHOOK_SAVED,
   },
 
   bunny: {
     apiKey: process.env.BUNNY_APIKEY,
-    hostname: process.env.BUNNY_HOSTNAME
+    hostname: process.env.BUNNY_HOSTNAME,
   },
 
   subtitleEditApiUrl: process.env.SUBTITLEEDIT_API_URL ?? 'http://vaem@localhost:26525',
@@ -83,4 +83,4 @@ export const config = {
    * @type {UploadQueue}
    */
   uploadQueue: null,
-};
+}

@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ export class CDN {
    * @returns {string}
    */
   getSignedUrl(path, validity) {
-    throw new Error('Unimplemented');
+    throw new Error('Unimplemented')
   }
 
   /**
@@ -42,6 +42,6 @@ export class CDN {
    * @return {Promise<void>}
    */
   async purge(path) {
-    throw new Error('Unimplemented');
+    throw new Error('Unimplemented')
   }
 }

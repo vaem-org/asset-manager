@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#~/config';
-import axios from 'axios';
-import { createReadStream } from 'node:fs';
-import { basename } from 'node:path';
+import { config } from '#~/config'
+import axios from 'axios'
+import { createReadStream } from 'node:fs'
+import { basename } from 'node:path'
 import { writeFile } from 'fs/promises'
 
-const { username, origin } = config.subtitleEditApiUrl ? new URL(config.subtitleEditApiUrl) : {};
+const { username, origin } = config.subtitleEditApiUrl ? new URL(config.subtitleEditApiUrl) : {}
 
 const api = axios.create({
   baseURL: origin,
   headers: {
-    authorization: `Bearer ${username}`
-  }
+    authorization: `Bearer ${username}`,
+  },
 })
 
 /**
@@ -37,18 +37,19 @@ const api = axios.create({
  * @param {?String} destination
  * @return {Promise<string>}
  */
-export async function convert(source, destination=null) {
-  let data;
+export async function convert(source, destination = null) {
+  let data
 
   try {
-    ({ data } = await api.post(basename(source), createReadStream(source)));
-  } catch(e) {
+    ({ data } = await api.post(basename(source), createReadStream(source)))
+  }
+  catch (e) {
     throw new Error(`Unable to convert subtitle: ${e.response?.data ?? e}`)
   }
 
   if (destination) {
-    await writeFile(destination, data);
+    await writeFile(destination, data)
   }
 
-  return data;
+  return data
 }

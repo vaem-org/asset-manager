@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,45 +16,45 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Asset } from '#~/model/Asset/index';
+import { Asset } from '#~/model/Asset/index'
 
 export async function run() {
   // assume all processed assets are verified
   await Asset.updateMany({
-    state: 'processed'
+    state: 'processed',
   }, {
     $set: {
-      state: 'verified'
-    }
-  });
+      state: 'verified',
+    },
+  })
 
   // assign ffprobe to videoParameters.ffprobe
   await Asset.updateMany({
     ffprobe: {
-      $exists: false
-    }
+      $exists: false,
+    },
   }, [
     {
       $set: {
-        ffprobe: '$videoParameters.ffprobe'
-      }
-    }
-  ]);
+        ffprobe: '$videoParameters.ffprobe',
+      },
+    },
+  ])
 
   await Asset.updateMany({},
     {
       $rename: {
-        bitrates: 'variants'
-      }
+        bitrates: 'variants',
+      },
     }, {
-      strict: false
+      strict: false,
     })
 
   await Asset.updateMany({}, {
     $unset: Object.fromEntries(
-      ['audio', 'audioStreams', 'basename', 'videoParameters', 'numStreams', 'streams'].map(key => [key, 1])
-    )
+      ['audio', 'audioStreams', 'basename', 'videoParameters', 'numStreams', 'streams'].map(key => [key, 1]),
+    ),
   }, {
-    strict: false
+    strict: false,
   })
 }

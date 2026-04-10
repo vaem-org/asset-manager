@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { createReadStream } from 'fs';
-import { nextTick } from 'process';
-import { EventEmitter } from 'events';
-import { relative } from 'path';
-import chokidar from 'chokidar';
-import { config } from '#~/config';
-import { unlink } from 'fs/promises';
-import { open } from 'node:fs/promises';
+import { createReadStream } from 'fs'
+import { nextTick } from 'process'
+import { EventEmitter } from 'events'
+import { relative } from 'path'
+import chokidar from 'chokidar'
+import { config } from '#~/config'
+import { unlink } from 'fs/promises'
+import { open } from 'node:fs/promises'
 
 export class UploadQueue extends EventEmitter {
   /**
@@ -32,25 +32,25 @@ export class UploadQueue extends EventEmitter {
    * @param {Storage} storage
    */
   constructor({ concurrency = 4, storage }) {
-    super();
-    this.root = `${config.root}/var/output`;
-    this.queue = [];
-    this.workers = 0;
-    this.concurrency = concurrency;
-    this.storage = storage;
+    super()
+    this.root = `${config.root}/var/output`
+    this.queue = []
+    this.workers = 0
+    this.concurrency = concurrency
+    this.storage = storage
   }
 
   /**
    * Start watching for files
    */
   start() {
-    const addToQueue = path => {
-      this.queue.push(path);
+    const addToQueue = (path) => {
+      this.queue.push(path)
       if (this.workers < this.concurrency) {
-        this.workers++;
-        this.process();
+        this.workers++
+        this.process()
       }
-    };
+    }
 
     /**
      * Add playlist, but only if it ends with 'x-endlist'
@@ -59,37 +59,37 @@ export class UploadQueue extends EventEmitter {
      * @return {Promise<void>}
      */
     const addPlaylist = async (path, stats) => {
-      const input = await open(path, 'r');
-      const shouldBe = '#EXT-X-ENDLIST\n';
-      const toRead = shouldBe.length;
-      const { buffer } = await input.read(Buffer.alloc(toRead), 0, toRead, stats.size - toRead);
-      const result = (buffer.toString() === shouldBe);
+      const input = await open(path, 'r')
+      const shouldBe = '#EXT-X-ENDLIST\n'
+      const toRead = shouldBe.length
+      const { buffer } = await input.read(Buffer.alloc(toRead), 0, toRead, stats.size - toRead)
+      const result = (buffer.toString() === shouldBe)
       await input.close()
 
       if (result) {
-        addToQueue(path);
+        addToQueue(path)
       }
-    };
+    }
 
     chokidar.watch(this.root, {
       awaitWriteFinish: true,
-      ignoreInitial: false
+      ignoreInitial: false,
     })
-    .on('add', (path, stats) => {
-      if (!path.endsWith('.m3u8')) {
-        addToQueue(path)
-      } else {
-        addPlaylist(path, stats)
-          .catch(e => console.error(e))
-      }
-    })
+      .on('add', (path, stats) => {
+        if (!path.endsWith('.m3u8')) {
+          addToQueue(path)
+        }
+        else {
+          addPlaylist(path, stats)
+            .catch(e => console.error(e))
+        }
+      })
       .on('change', (path, stats) => {
         if (path.endsWith('.m3u8')) {
           addPlaylist(path, stats)
             .catch(e => console.error(e))
         }
       })
-    ;
   }
 
   /**
@@ -98,28 +98,28 @@ export class UploadQueue extends EventEmitter {
    * @return {Promise<void>}
    */
   async upload(file) {
-    const name = relative(this.root, file);
-    let tries = 10;
-    let done = false;
+    const name = relative(this.root, file)
+    let tries = 10
+    let done = false
     while (tries > 0 && !done) {
       try {
         await this.storage.upload(
           name,
-          createReadStream(file)
-        );
-        done = true;
+          createReadStream(file),
+        )
+        done = true
       }
       catch (e) {
-        await new Promise(accept => setTimeout(accept, 1000));
-        console.warn(`Retrying upload of ${name}`);
-        tries--;
+        await new Promise(accept => setTimeout(accept, 1000))
+        console.warn(`Retrying upload of ${name}`)
+        tries--
       }
     }
     if (!done) {
-      throw new Error(`Unable to upload ${name}`);
+      throw new Error(`Unable to upload ${name}`)
     }
-    await unlink(file);
-    this.emit('uploaded', file);
+    await unlink(file)
+    this.emit('uploaded', file)
   }
 
   /**
@@ -127,17 +127,17 @@ export class UploadQueue extends EventEmitter {
    */
   process() {
     if (this.queue.length === 0) {
-      this.workers--;
-      return;
+      this.workers--
+      return
     }
 
-    const file = this.queue.shift();
+    const file = this.queue.shift()
     this.upload(file)
-    .catch(e => {
-      this.emit('error', e);
-    })
-    .finally(() => nextTick(() => {
-      this.process();
-    }));
+      .catch((e) => {
+        this.emit('error', e)
+      })
+      .finally(() => nextTick(() => {
+        this.process()
+      }))
   }
 }

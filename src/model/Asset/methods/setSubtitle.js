@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,40 +16,40 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { createReadStream } from 'fs';
-import { config } from '#~/config';
-import { segmentVtt } from '#~/lib/ffmpeg';
-import { convert } from '#~/lib/subtitles';
-import { tmpdir } from 'os';
-import { unlink } from 'fs/promises';
+import { createReadStream } from 'fs'
+import { config } from '#~/config'
+import { segmentVtt } from '#~/lib/ffmpeg'
+import { convert } from '#~/lib/subtitles'
+import { tmpdir } from 'os'
+import { unlink } from 'fs/promises'
 
-export default schema => {
+export default (schema) => {
   /**
    * Add subtitle
    * @param {string} language
    * @param {string} source
    * @returns {Promise<void>}
    */
-  schema.methods.setSubtitle = async function(language, source) {
-    let converted = null;
+  schema.methods.setSubtitle = async function (language, source) {
+    let converted = null
     if (!source.toLowerCase().endsWith('.vtt')) {
-      converted = `${tmpdir()}/${this._id}.vtt`;
-      await convert(source, converted);
+      converted = `${tmpdir()}/${this._id}.vtt`
+      await convert(source, converted)
     }
     await config.storage.upload(
       `${this._id}/subtitles/${language}.vtt`,
-      createReadStream(converted || source)
-    );
+      createReadStream(converted || source),
+    )
 
     this.subtitles = {
       ...this.subtitles,
-      [language]: true
+      [language]: true,
     }
-    this.increment();
-    await this.save();
-    await segmentVtt(this._id.toString(), language);
+    this.increment()
+    await this.save()
+    await segmentVtt(this._id.toString(), language)
     if (converted) {
-      await unlink(converted);
+      await unlink(converted)
     }
   }
 }

@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { extname } from 'path';
+import { extname } from 'path'
 
-export default schema => {
-  schema.pre('save', function() {
-    const extension = extname(this.name).toLowerCase();
+export default (schema) => {
+  schema.pre('save', function () {
+    const extension = extname(this.name).toLowerCase()
 
     this.type = Object.entries({
-      'video': ['.mxf', '.mov', '.mkv', '.mpg', '.mp4', '.264', '.avi', '.ts', '.vob'],
-      'subtitle': ['.890', '.stl', '.pac', '.srt', '.vtt', '.itt', '.ttml']
-    }).find(([,extensions]) => extensions.includes(extension))?.[0] || 'unknown';
+      video: ['.mxf', '.mov', '.mkv', '.mpg', '.mp4', '.264', '.avi', '.ts', '.vob'],
+      subtitle: ['.890', '.stl', '.pac', '.srt', '.vtt', '.itt', '.ttml'],
+    }).find(([,extensions]) => extensions.includes(extension))?.[0] || 'unknown'
   })
 }

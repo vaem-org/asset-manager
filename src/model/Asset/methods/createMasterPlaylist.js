@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,36 +16,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ffprobe } from '#~/lib/ffmpeg';
-import { config } from '#~/config';
+import { ffprobe } from '#~/lib/ffmpeg'
+import { config } from '#~/config'
 
-export default schema => {
+export default (schema) => {
   /**
    * Create a master playlist
    * @returns {Promise<void>}
    */
-  schema.methods.createMasterPlaylist = async function() {
+  schema.methods.createMasterPlaylist = async function () {
     // probe variants
-    const variants = [];
-    for(let variant of this.variants.sort((a, b) => parseInt(b) - parseInt(a))) {
-      const { streams }  = await ffprobe(this.getUrl(variant));
-      const { display_aspect_ratio, height, width } = streams.find(({ codec_type }) => codec_type === 'video');
+    const variants = []
+    for (let variant of this.variants.sort((a, b) => parseInt(b) - parseInt(a))) {
+      const { streams } = await ffprobe(this.getUrl(variant))
+      const { display_aspect_ratio, height, width } = streams.find(({ codec_type }) => codec_type === 'video')
       const aspect = (display_aspect_ratio ?? '')
         .split(':')
         .map(value => parseInt(value))
         .filter(value => value)
-      ;
 
-      const resolution = aspect.length > 0 ? Math.max(width,
-        Math.floor(height / aspect[1] * aspect[0])) + 'x' + height :
-        `${width}x${height}`
+      const resolution = aspect.length > 0
+        ? Math.max(width,
+          Math.floor(height / aspect[1] * aspect[0])) + 'x' + height
+        : `${width}x${height}`
 
-      const bandwidth = parseInt(variant) * 1024;
+      const bandwidth = parseInt(variant) * 1024
       variants.push(
         [
           `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${bandwidth},RESOLUTION=${resolution},CLOSED-CAPTIONS=NONE`,
-          `${this._id}.${variant}.m3u8`
-        ]
+          `${this._id}.${variant}.m3u8`,
+        ],
       )
     }
 
@@ -53,8 +53,8 @@ export default schema => {
       [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
-        ...variants.flat()
-      ].join('\n')
-    );
+        ...variants.flat(),
+      ].join('\n'),
+    )
   }
 }

@@ -1,6 +1,5 @@
 .env
 node_modules
-.idea
 /var/
 /src/bin/commands/sandbox.js
 /yarn-error.log

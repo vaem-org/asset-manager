@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,165 +16,169 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import mongoose from 'mongoose';
-import { mkdir, rmdir } from 'fs/promises';
-import { Mutex } from 'async-mutex';
-import { basename } from 'path';
-import { Job } from '#~/model/Job/index';
-import { config } from '#~/config';
-import { Asset } from '#~/model/Asset/index';
-import { getSignedUrl } from '#~/lib/security';
+import { createServer } from 'http'
+import { Server } from 'socket.io'
+import mongoose from 'mongoose'
+import { mkdir, rmdir } from 'fs/promises'
+import { Mutex } from 'async-mutex'
+import { basename } from 'path'
+import { Job } from '#~/model/Job/index'
+import { config } from '#~/config'
+import { Asset } from '#~/model/Asset/index'
+import { getSignedUrl } from '#~/lib/security'
 
-export let io = null;
+export let io = null
 
-const mutex = new Mutex();
+const mutex = new Mutex()
 async function ready({ connection }) {
-  const release = await mutex.acquire();
+  const release = await mutex.acquire()
   try {
     const job = await Job.findOne({
       state: 'new',
       deleted: {
-        $ne: true
-      }
-    });
+        $ne: true,
+      },
+    })
 
     if (job) {
-      console.log(`Sending job for asset ${job.asset} to encoder`);
+      console.log(`Sending job for asset ${job.asset} to encoder`)
 
-      const output = `${config.root}/var/output/${job.asset}`;
+      const output = `${config.root}/var/output/${job.asset}`
       await mkdir(output, {
-        recursive: true
-      });
+        recursive: true,
+      })
 
-      job.startedAt = new Date();
-      await job.save();
+      job.startedAt = new Date()
+      await job.save()
 
       const response = await new Promise((resolve) => {
         connection.emit('job', {
           job: job._id,
           ffmpegArguments: [
             ...job['arguments'],
-            '-hls_key_info_file', config.base + getSignedUrl(`/assets/${job.asset}/keyinfo`)
-          ]
+            '-hls_key_info_file', config.base + getSignedUrl(`/assets/${job.asset}/keyinfo`),
+          ],
         }, resolve)
-      });
+      })
 
-      job.state = response ? 'encoding' : 'new';
-      await job.save();
+      job.state = response ? 'encoding' : 'new'
+      await job.save()
     }
-  } catch(e) {
-    console.warn(e);
-  } finally {
-    release();
+  }
+  catch (e) {
+    console.warn(e)
+  }
+  finally {
+    release()
   }
 }
 
-async function progress({ event: { job, out_time_ms }}) {
-  const progress = out_time_ms / 1000 / 1000;
+async function progress({ event: { job, out_time_ms } }) {
+  const progress = out_time_ms / 1000 / 1000
 
   await Job.findOneAndUpdate({
-    _id: job
+    _id: job,
   }, {
     $set: {
-      progress
-    }
+      progress,
+    },
   })
 }
 
 async function done({ event: { job: id } }) {
-  const release = await mutex.acquire();
+  const release = await mutex.acquire()
 
   try {
-    console.log(`Job ${id} done`);
-    const job = await Job.findById(id).populate('asset');
+    console.log(`Job ${id} done`)
+    const job = await Job.findById(id).populate('asset')
     if (!job) {
-      return;
+      return
     }
-    job.state = 'done';
-    job.progress = parseFloat(job.asset.ffprobe?.format?.duration);
-    job.completedAt = new Date();
-    await job.save();
+    job.state = 'done'
+    job.progress = parseFloat(job.asset.ffprobe?.format?.duration)
+    job.completedAt = new Date()
+    await job.save()
 
     if (!config.uploadQueue) {
-      await job.asset.finish();
+      await job.asset.finish()
     }
-  } finally {
-    release();
+  }
+  finally {
+    release()
   }
 }
 
 async function error({ event: { job, stderr } }) {
-  console.log(`Error for job ${job}: ${stderr}`);
+  console.log(`Error for job ${job}: ${stderr}`)
   await Job.findOneAndUpdate({
-    _id: job
+    _id: job,
   }, {
     $set: {
       state: 'error',
-      error: stderr
-    }
-  });
+      error: stderr,
+    },
+  })
 }
 
 async function uploaded(file) {
-  const release = await mutex.acquire();
+  const release = await mutex.acquire()
 
   try {
-    const [assetId, variant] = basename(file).split('.');
-    const asset = mongoose.Types.ObjectId.isValid(assetId) && await Asset.findById(assetId);
+    const [assetId, variant] = basename(file).split('.')
+    const asset = mongoose.Types.ObjectId.isValid(assetId) && await Asset.findById(assetId)
     if (asset) {
-      const finished = await asset.setUploadedVariant(variant);
+      const finished = await asset.setUploadedVariant(variant)
       if (finished) {
-        console.log(`Finished asset ${assetId}`);
+        console.log(`Finished asset ${assetId}`)
         setTimeout(() => {
           rmdir(`${config.root}/var/output/${assetId}`)
-          .catch(e => {
-            console.warn(`Unable to remove directory for ${assetId}`, e);
-          })
-        }, 10000);
+            .catch((e) => {
+              console.warn(`Unable to remove directory for ${assetId}`, e)
+            })
+        }, 10000)
       }
     }
-  } finally {
-    release();
+  }
+  finally {
+    release()
   }
 }
 
 export function initialise(app) {
   if (config.uploadQueue) {
-    config.uploadQueue.on('uploaded', file => {
+    config.uploadQueue.on('uploaded', (file) => {
       if (file.endsWith('.m3u8')) {
         uploaded(file)
-        .catch(e => {
-          console.warn(`Unable to set variant as uploaded for ${file}`, e);
-        })
+          .catch((e) => {
+            console.warn(`Unable to set variant as uploaded for ${file}`, e)
+          })
       }
-    });
+    })
   }
 
-  const httpServer = createServer(app);
-  io = new Server(httpServer);
+  const httpServer = createServer(app)
+  io = new Server(httpServer)
 
-  io.on('connection', connection => {
-    console.log(`New connection ${connection.id}`);
+  io.on('connection', (connection) => {
+    console.log(`New connection ${connection.id}`)
     const wrap = fn => (event) => {
       fn({
         connection,
-        event
-      }).catch(e => {
-        console.warn(e);
+        event,
+      }).catch((e) => {
+        console.warn(e)
       })
-    };
+    }
 
     Object.entries({
       ready,
       done,
       error,
-      progress
+      progress,
     }).forEach(([name, handler]) => {
       connection.on(name, wrap(handler))
-    });
-  });
+    })
+  })
 
-  return httpServer;
+  return httpServer
 }

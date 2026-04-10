@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,31 +16,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export default schema => {
+export default (schema) => {
   /**
    * Set variant as uploaded
    * @param {string} variant
    * @returns {Promise<boolean>}
    */
-  schema.methods.setUploadedVariant = async function(variant) {
+  schema.methods.setUploadedVariant = async function (variant) {
     this.uploadedVariants = [...new Set([
       ...this.uploadedVariants,
-      variant
-    ])];
+      variant,
+    ])]
 
-    await this.save();
+    await this.save()
 
-    const complete = this.variants.every(variant => this.uploadedVariants.includes(variant));
+    const complete = this.variants.every(variant => this.uploadedVariants.includes(variant))
     if (complete) {
       setTimeout(() => {
         this.finish()
-          .catch(e => {
-            console.error(e);
+          .catch((e) => {
+            console.error(e)
           })
-        ;
       }, 5000)
     }
 
-    return complete;
+    return complete
   }
 }

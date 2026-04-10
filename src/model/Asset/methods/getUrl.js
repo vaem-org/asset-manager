@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,16 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { getSignedUrl } from '#~/lib/security';
-import { config } from '#~/config';
+import { getSignedUrl } from '#~/lib/security'
+import { config } from '#~/config'
 
-export default schema => {
+export default (schema) => {
   /**
    * Get a signed m3u8 url
    * @param variant
    */
-  schema.methods.getUrl = function(variant=null) {
-    return config.base + getSignedUrl(`/assets/${this._id}/stream`, false, 3600*4) +
-      `/${this.id}${variant?`.${variant}`:''}.m3u8`;
+  schema.methods.getUrl = function (variant = null) {
+    return config.base + getSignedUrl(`/assets/${this._id}/stream`, false, 3600 * 4)
+      + `/${this.id}${variant ? `.${variant}` : ''}.m3u8`
   }
 }

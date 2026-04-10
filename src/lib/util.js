@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { readdir, rmdir } from 'fs/promises';
-import { join } from 'path';
+import { readdir, rmdir } from 'fs/promises'
+import { join } from 'path'
 
 /**
  * Remove any empty directories that exist in given path
@@ -26,20 +26,20 @@ import { join } from 'path';
  */
 export async function removeEmptyDirectories(path) {
   const entries = await readdir(path, {
-    withFileTypes: true
-  });
+    withFileTypes: true,
+  })
 
-  let removed = 0;
-  for(let subEntry of entries.filter(entry => entry.isDirectory())) {
+  let removed = 0
+  for (let subEntry of entries.filter(entry => entry.isDirectory())) {
     if (await removeEmptyDirectories(join(path, subEntry.name))) {
-      removed = removed + 1;
+      removed = removed + 1
     }
   }
 
-  const isEmpty = (entries.length - removed) === 0;
+  const isEmpty = (entries.length - removed) === 0
   if (isEmpty) {
-    await rmdir(path);
+    await rmdir(path)
   }
 
-  return isEmpty;
+  return isEmpty
 }

@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,19 @@
 module.exports = {
   parserOptions: {
     sourceType: 'module',
-    ecmaVersion: 2021
+    ecmaVersion: 2021,
   },
   extends: [
     'eslint:recommended',
-    'plugin:node/recommended'
+    'plugin:node/recommended',
   ],
   rules: {
     'no-empty': ['error', {
-      allowEmptyCatch: true
+      allowEmptyCatch: true,
     }],
     'no-unused-vars': ['error', {
-      ignoreRestSiblings: true
+      ignoreRestSiblings: true,
     }],
-    'node/no-missing-import': ['off']
-  }
+    'node/no-missing-import': ['off'],
+  },
 }

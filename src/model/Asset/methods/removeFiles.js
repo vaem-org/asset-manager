@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#~/config';
+import { config } from '#~/config'
 
-export default schema => {
-  schema.methods.removeFiles = function() {
+export default (schema) => {
+  schema.methods.removeFiles = function () {
     config.storage.remove(this._id.toString() + '/')
-    .catch(e => {
-      console.warn(`Unable to remove files for ${this._id}: ${e.toString()}`);
-    });
+      .catch((e) => {
+        console.warn(`Unable to remove files for ${this._id}: ${e.toString()}`)
+      })
   }
 }

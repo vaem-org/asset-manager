@@ -16,15 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { unlink } from 'fs/promises'
+import { createConfigForNuxt } from '@nuxt/eslint-config'
 
-export default (schema) => {
-  schema.post('deleteOne', {
-    document: true,
-    query: false,
-  }, function (doc) {
-    return unlink(doc.path).catch((e) => {
-      console.warn(`Unable to remove file ${doc.name}: ${e.toString()}`)
-    })
-  })
-}
+export default createConfigForNuxt({
+  features: {
+    stylistic: true,
+  },
+})

@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ export class Storage {
    * @returns {Promise<void>}
    */
   async upload(path, stream) {
-    throw new Error('Unimplemented');
+    throw new Error('Unimplemented')
   }
 
   /**
@@ -51,7 +51,7 @@ export class Storage {
    * @returns {Promise<[{ name: String, size: Number, isDirectory: Boolean }]>}
    */
   async list(path) {
-    throw new Error('Unimplemented');
+    throw new Error('Unimplemented')
   }
 
   /**
@@ -60,6 +60,6 @@ export class Storage {
    * @return {Promise<void>}
    */
   async remove(path) {
-    throw new Error('Unimplemented');
+    throw new Error('Unimplemented')
   }
 }

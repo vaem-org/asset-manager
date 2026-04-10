@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,36 +16,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { createReadStream } from 'fs';
-import { access, mkdir } from 'fs/promises';
-import { dirname } from 'path';
-import { spawn } from 'child_process';
-import { getDocument, wrapper } from '#~/lib/express-helpers';
-import { config } from '#~/config';
-import { Asset } from '#~/model/Asset/index';
+import { Router } from 'express'
+import { createReadStream } from 'fs'
+import { access, mkdir } from 'fs/promises'
+import { dirname } from 'path'
+import { spawn } from 'child_process'
+import { getDocument, wrapper } from '#~/lib/express-helpers'
+import { config } from '#~/config'
+import { Asset } from '#~/model/Asset/index'
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 router.get('/', wrapper(async ({ params: { ss, id } }, res) => {
-  const asset = await getDocument(Asset, id);
+  const asset = await getDocument(Asset, id)
   if (!['verified', 'processed'].includes(asset.state) || asset.variants.length === 0 || asset.deleted) {
     throw {
-      status: 404
+      status: 404,
     }
   }
 
-  const filename = `${config.root}/var/thumbnails/${id}.${ss}.png`;
+  const filename = `${config.root}/var/thumbnails/${id}.${ss}.png`
 
   try {
     await access(filename)
   }
   catch (e) {
     await mkdir(dirname(filename), {
-      recursive: true
-    });
+      recursive: true,
+    })
 
     // create thumbnail
     await new Promise((resolve, reject) => {
@@ -56,21 +56,22 @@ router.get('/', wrapper(async ({ params: { ss, id } }, res) => {
         '-i', asset.getUrl(asset.highestVariant),
         '-frames:v', 1,
         '-c:v', 'png',
-        filename
+        filename,
       ], {
-        stdio: 'inherit'
-      }).on('close', code => {
+        stdio: 'inherit',
+      }).on('close', (code) => {
         if (code === 0) {
-          resolve();
-        } else {
+          resolve()
+        }
+        else {
           reject('ffmpeg failed')
         }
-      });
-    });
+      })
+    })
   }
 
-  res.setHeader('content-type', 'image/png');
-  createReadStream(filename).pipe(res);
+  res.setHeader('content-type', 'image/png')
+  createReadStream(filename).pipe(res)
 }))
 
-export default router;
+export default router

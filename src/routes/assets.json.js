@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,28 +16,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { api } from '#~/lib/express-helpers';
-import { Asset } from '#~/model/Asset/index';
+import { Router } from 'express'
+import { api } from '#~/lib/express-helpers'
+import { Asset } from '#~/model/Asset/index'
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 router.get('', api(async () => {
   const assets = await Asset.find()
-    .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted', 'ffprobe.format.duration']);
+    .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted', 'ffprobe.format.duration'])
 
   return assets.reduce((byId, doc) => {
-    const { _id, ffprobe, ...item } = doc.toObject();
+    const { _id, ffprobe, ...item } = doc.toObject()
     return ({
       ...byId,
       [_id]: {
         ...item,
-        duration: ffprobe.format.duration
-      }
-    });
-  }, {});
-}));
+        duration: ffprobe.format.duration,
+      },
+    })
+  }, {})
+}))
 
-export default router;
+export default router

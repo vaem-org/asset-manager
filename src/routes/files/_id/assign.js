@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { api, getDocument } from '#~/lib/express-helpers';
-import { File } from '#~/model/File/index';
-import { Asset } from '#~/model/Asset/index';
+import { Router } from 'express'
+import { api, getDocument } from '#~/lib/express-helpers'
+import { File } from '#~/model/File/index'
+import { Asset } from '#~/model/Asset/index'
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 router.post('/:assetId/:language', api(async ({ params: { id, assetId, language } }) => {
-  const file = await getDocument(File, id);
-  const asset = await getDocument(Asset, assetId);
-  await asset.setSubtitle(language, file.path);
+  const file = await getDocument(File, id)
+  const asset = await getDocument(Asset, assetId)
+  await asset.setSubtitle(language, file.path)
 }))
 
-export default router;
+export default router

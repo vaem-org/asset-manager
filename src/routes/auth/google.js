@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router, urlencoded } from 'express';
-import { OAuth2Client } from 'google-auth-library';
-import jwt from 'jsonwebtoken';
-import { api } from '#~/lib/express-helpers';
-import { config } from '#~/config';
+import { Router, urlencoded } from 'express'
+import { OAuth2Client } from 'google-auth-library'
+import jwt from 'jsonwebtoken'
+import { api } from '#~/lib/express-helpers'
+import { config } from '#~/config'
 
-const router = new Router();
+const router = new Router()
 
 router.get('/', api(async (req) => {
   return new OAuth2Client({
@@ -36,42 +36,42 @@ router.get('/', api(async (req) => {
 }))
 
 router.post('/', urlencoded({
-  extended: false
+  extended: false,
 }), api(async ({ body: { code, redirect_uri } }) => {
   const client = new OAuth2Client({
     clientId: config.auth?.clientId,
     clientSecret: config.auth?.clientSecret,
-    redirectUri: redirect_uri
-  });
+    redirectUri: redirect_uri,
+  })
 
-  let payload;
+  let payload
 
   try {
-    const { tokens: { id_token } } = await client.getToken(code);
+    const { tokens: { id_token } } = await client.getToken(code)
     payload = (await client.verifyIdToken({
-      idToken: id_token
-    })).getPayload();
+      idToken: id_token,
+    })).getPayload()
   }
   catch (e) {
     throw {
-      status: 401
+      status: 401,
     }
   }
 
   if (payload.hd !== config.auth.hd) {
     throw {
-      status: 401
+      status: 401,
     }
   }
 
   return {
     access_token: jwt.sign({
       email: payload.email,
-      sub: payload.sub
+      sub: payload.sub,
     }, config.secret, {
-      expiresIn: '24h'
-    })
-  };
-}));
+      expiresIn: '24h',
+    }),
+  }
+}))
 
-export default router;
+export default router

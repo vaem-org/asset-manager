@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import m3u8 from 'm3u8';
+import m3u8 from 'm3u8'
 
 /**
  * Parse an m3u8 stream
@@ -25,32 +25,32 @@ import m3u8 from 'm3u8';
  */
 export function parseM3U8(stream) {
   return new Promise((accept, reject) => {
-    const parser = m3u8.createStream();
+    const parser = m3u8.createStream()
 
-    let error = null;
+    let error = null
 
-    stream.pipe(parser);
+    stream.pipe(parser)
 
-    stream.on('error', err => {
-      error = true;
-      reject(err);
-    });
+    stream.on('error', (err) => {
+      error = true
+      reject(err)
+    })
 
-    parser.on('error', err => {
+    parser.on('error', (err) => {
       if (error) {
-        return;
+        return
       }
-      error = true;
-      reject(err);
-      parser.end();
-    });
+      error = true
+      reject(err)
+      parser.end()
+    })
 
-    parser.on('m3u', m3u => {
+    parser.on('m3u', (m3u) => {
       if (error) {
-        return;
+        return
       }
 
-      accept(m3u);
-    });
-  });
+      accept(m3u)
+    })
+  })
 }

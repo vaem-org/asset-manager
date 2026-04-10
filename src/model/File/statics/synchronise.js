@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,43 +16,43 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { glob } from 'glob';
-import { join } from 'path';
-import { stat } from 'fs/promises';
+import { glob } from 'glob'
+import { join } from 'path'
+import { stat } from 'fs/promises'
 
 export default ({ schema, root }) => {
   /**
    * Synchronise files with storage
    */
-  schema.statics.synchronise = async function() {
+  schema.statics.synchronise = async function () {
     const files = await glob('**', {
       nodir: true,
-      cwd: root
-    });
+      cwd: root,
+    })
 
-    for(const name of files) {
-      const { size } = await stat(join(root, name));
+    for (const name of files) {
+      const { size } = await stat(join(root, name))
       const file = await this.findOne({ name }) || new this({
-        name
-      });
-      file.size = size;
-      await file.save();
+        name,
+      })
+      file.size = size
+      await file.save()
     }
 
     await this.deleteMany({
       name: {
-        $nin: files
+        $nin: files,
       },
       $or: [
         {
-          sourceSize: 0
+          sourceSize: 0,
         },
         {
           size: {
-            $ne: 0
-          }
-        }
-      ]
-    });
+            $ne: 0,
+          },
+        },
+      ],
+    })
   }
-};
+}

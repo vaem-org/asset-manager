@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,30 +16,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { getDocument, wrapper } from '#~/lib/express-helpers';
-import { Asset } from '#~/model/Asset/index';
-import { config } from '#~/config';
+import { Router } from 'express'
+import { getDocument, wrapper } from '#~/lib/express-helpers'
+import { Asset } from '#~/model/Asset/index'
+import { config } from '#~/config'
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 router.use(wrapper(async (req, res, next) => {
-  req.doc = await getDocument(Asset, req.params.id);
-  next();
-}));
+  req.doc = await getDocument(Asset, req.params.id)
+  next()
+}))
 
 router.get('/file.key', wrapper(async ({ doc }, res) => {
-  return res.send(Buffer.from(doc.hls_enc_key, 'hex'));
-}));
+  return res.send(Buffer.from(doc.hls_enc_key, 'hex'))
+}))
 
 router.get('/', wrapper(async ({ doc, originalUrl }, res) => {
   return res.send([
     'file.key',
     `${config.base}${originalUrl}/file.key`,
-    doc.hls_enc_iv
-  ].join('\n'));
-}));
+    doc.hls_enc_iv,
+  ].join('\n'))
+}))
 
-export default router;
+export default router

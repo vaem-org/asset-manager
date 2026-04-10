@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Job } from '#~/model/Job/index';
+import { Job } from '#~/model/Job/index'
 
-export default schema => {
-  schema.post('remove', async function() {
-    this.removeFiles();
+export default (schema) => {
+  schema.post('remove', async function () {
+    this.removeFiles()
 
     // remove any jobs
     await Job.deleteMany({
-      asset:this._id
-    });
-  });
+      asset: this._id,
+    })
+  })
 }

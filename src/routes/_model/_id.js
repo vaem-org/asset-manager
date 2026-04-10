@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2022  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,39 +16,39 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { save } from '#~/lib/crud';
-import { wrapper, api, getDocument } from '#~/lib/express-helpers';
+import { Router } from 'express'
+import { save } from '#~/lib/crud'
+import { wrapper, api, getDocument } from '#~/lib/express-helpers'
 
 const router = new Router({
-  mergeParams: true
-});
+  mergeParams: true,
+})
 
 router.use(wrapper(async (req, res, next) => {
   if (req.params.id === 'new' && req.method === 'GET') {
-    return next();
+    return next()
   }
 
-  req.doc = await getDocument(req.model, req.params.id);
+  req.doc = await getDocument(req.model, req.params.id)
   next()
-}));
+}))
 
 router.get('/', api(async ({ doc, params: { id }, model }) => {
   if (id === 'new') {
     doc = new model()
   }
 
-  return doc.toJSON();
-}));
+  return doc.toJSON()
+}))
 
 router.put('/', api(async ({ body, doc }) => {
-  doc.set(body);
-  await save(doc);
-  return doc.toJSON();
+  doc.set(body)
+  await save(doc)
+  return doc.toJSON()
 }))
 
 router.delete('/', api(async ({ doc }) => {
-  return doc.deleteOne();
-}));
+  return doc.deleteOne()
+}))
 
-export default router;
+export default router
