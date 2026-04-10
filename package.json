@@ -32,7 +32,7 @@
     "cors": "^2.8.6",
     "dayjs": "^1.11.20",
     "dotenv": "^17.4.1",
-    "express": "^5.2.1",
+    "express": "^4.22.1",
     "glob": "^13.0.6",
     "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.3",

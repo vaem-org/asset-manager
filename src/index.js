@@ -68,7 +68,6 @@ import { File } from '#~/model/File/index';
     mergeParams: true,
   })
   for (let { route, path } of routes) {
-    // eslint-disable-next-line node/no-unsupported-features/es-syntax
     const router = (await import(`${root}/${path}`)).default
     if (typeof router === 'function') {
       console.log(`Adding route: ${route}`)
