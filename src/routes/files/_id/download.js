@@ -17,8 +17,8 @@
  */
 
 import { Router } from 'express'
-import { getDocument, wrapper } from '#~/lib/express-helpers'
-import { File } from '#~/model/File/index'
+import { getDocument, wrapper } from '../../../lib/express-helpers.ts'
+import { File } from '../../../model/File/index.ts'
 import send from 'send'
 
 const router = new Router({

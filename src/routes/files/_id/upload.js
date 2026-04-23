@@ -20,8 +20,8 @@ import { Router } from 'express'
 import { createWriteStream } from 'fs'
 import { dirname } from 'path'
 import { stat, mkdir } from 'fs/promises'
-import { api, getDocument, wrapper } from '#~/lib/express-helpers'
-import { File } from '#~/model/File/index'
+import { api, getDocument, wrapper } from '../../../lib/express-helpers.ts'
+import { File } from '../../../model/File/index.ts'
 
 const router = new Router({
   mergeParams: true,

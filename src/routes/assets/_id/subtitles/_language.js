@@ -21,7 +21,7 @@ import { unlink, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { extname } from 'path'
 import { stringify } from 'querystring'
-import { api, getDocument, wrapper } from '#~/lib/express-helpers'
+import { api, getDocument, wrapper } from '../../../../lib/express-helpers.ts'
 import { config } from '#~/config'
 import { Asset } from '#~/model/Asset/index'
 

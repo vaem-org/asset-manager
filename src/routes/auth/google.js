@@ -19,7 +19,7 @@
 import { Router, urlencoded } from 'express'
 import { OAuth2Client } from 'google-auth-library'
 import jwt from 'jsonwebtoken'
-import { api } from '#~/lib/express-helpers'
+import { api } from '../../lib/express-helpers.ts'
 import { config } from '#~/config'
 
 const router = new Router()

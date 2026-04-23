@@ -17,9 +17,9 @@
  */
 
 import { Router } from 'express'
-import { api, getDocument } from '#~/lib/express-helpers'
+import { api, getDocument } from '../../../lib/express-helpers.ts'
 import { encode } from '#~/lib/encode'
-import { File } from '#~/model/File/index'
+import { File } from '../../../model/File/index.ts'
 
 const router = new Router({
   mergeParams: true,

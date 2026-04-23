@@ -19,9 +19,9 @@
 import { Router } from 'express'
 import dayjs from 'dayjs'
 
-import { getDocument, wrapper } from '#~/lib/express-helpers'
-import { File } from '#~/model/File/index'
-import { convert } from '#~/lib/subtitles'
+import { getDocument, wrapper } from '../../../lib/express-helpers.ts'
+import { File } from '../../../model/File/index.ts'
+import { convert } from '../../../lib/subtitles.ts'
 
 const router = new Router({
   mergeParams: true,

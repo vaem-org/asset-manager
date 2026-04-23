@@ -17,8 +17,8 @@
  */
 
 import { Router } from 'express'
-import { api } from '#~/lib/express-helpers'
-import { getSignedUrl } from '#~/lib/security'
+import { api } from '../lib/express-helpers.ts'
+import { getSignedUrl } from '../lib/security.ts'
 
 const router = new Router()
 

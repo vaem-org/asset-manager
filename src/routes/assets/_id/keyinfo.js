@@ -17,7 +17,7 @@
  */
 
 import { Router } from 'express'
-import { getDocument, wrapper } from '#~/lib/express-helpers'
+import { getDocument, wrapper } from '../../../lib/express-helpers.ts'
 import { Asset } from '#~/model/Asset/index'
 import { config } from '#~/config'
 

@@ -18,12 +18,12 @@
 
 import { Router } from 'express'
 import mongoose from 'mongoose'
-import { api } from '#~/lib/express-helpers'
+import { api } from '../../lib/express-helpers.ts'
 import { getFilter, save } from '#~/lib/crud'
 
 import { Asset } from '#~/model/Asset/index'
-import { Job } from '#~/model/Job/index'
-import { File } from '#~/model/File/index'
+import { Job } from '../../model/Job/index.ts'
+import { File } from '../../model/File/index.ts'
 
 const { Types: { ObjectId } } = mongoose
 

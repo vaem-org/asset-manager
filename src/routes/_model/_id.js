@@ -18,7 +18,7 @@
 
 import { Router } from 'express'
 import { save } from '#~/lib/crud'
-import { wrapper, api, getDocument } from '#~/lib/express-helpers'
+import { wrapper, api, getDocument } from '../../lib/express-helpers.ts'
 
 const router = new Router({
   mergeParams: true,

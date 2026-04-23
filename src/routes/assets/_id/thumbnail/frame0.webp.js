@@ -21,7 +21,7 @@ import { createReadStream } from 'fs'
 import { access, mkdir } from 'fs/promises'
 import { dirname } from 'path'
 import { spawn } from 'child_process'
-import { getDocument, wrapper } from '#~/lib/express-helpers'
+import { getDocument, wrapper } from '../../../../lib/express-helpers.ts'
 import { config } from '#~/config'
 import { Asset } from '#~/model/Asset/index'
 

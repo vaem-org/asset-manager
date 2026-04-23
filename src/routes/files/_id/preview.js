@@ -20,12 +20,12 @@ import mongoose from 'mongoose'
 import { Router } from 'express'
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { api } from '#~/lib/express-helpers'
+import { api } from '../../../lib/express-helpers.ts'
 import { config } from '#~/config'
 import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg'
 import { spawn } from 'child_process'
-import { getSignedUrl } from '#~/lib/security'
-import { File } from '#~/model/File/index'
+import { getSignedUrl } from '../../../lib/security.ts'
+import { File } from '../../../model/File/index.ts'
 
 const { ObjectId } = mongoose.Types
 

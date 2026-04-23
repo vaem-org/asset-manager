@@ -20,10 +20,10 @@ import { Router } from 'express'
 import dayjs from 'dayjs'
 import send from 'send'
 import axios from 'axios'
-import { api, getDocument, wrapper } from '#~/lib/express-helpers'
+import { api, getDocument, wrapper } from '../../../lib/express-helpers.ts'
 import { Asset } from '#~/model/Asset/index'
 import { config } from '#~/config'
-import { parseM3U8 } from '#~/lib/m3u8'
+import { parseM3U8 } from '../../../lib/m3u8.ts'
 
 const router = new Router({
   mergeParams: true,

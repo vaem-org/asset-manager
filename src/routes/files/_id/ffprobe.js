@@ -17,8 +17,8 @@
  */
 
 import { Router } from 'express'
-import { api, getDocument } from '#~/lib/express-helpers'
-import { File } from '#~/model/File/index'
+import { api, getDocument } from '../../../lib/express-helpers.ts'
+import { File } from '../../../model/File/index.ts'
 import { ffprobe, getAudio } from '#~/lib/ffmpeg'
 
 const router = new Router({

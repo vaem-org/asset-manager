@@ -17,7 +17,7 @@
  */
 
 import { Router } from 'express'
-import { api } from '#~/lib/express-helpers'
+import { api } from '../../../lib/express-helpers.ts'
 
 const router = new Router({
   mergeParams: true,

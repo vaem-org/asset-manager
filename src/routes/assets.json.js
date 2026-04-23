@@ -17,7 +17,7 @@
  */
 
 import { Router } from 'express'
-import { api } from '#~/lib/express-helpers'
+import { api } from '../lib/express-helpers.ts'
 import { Asset } from '#~/model/Asset/index'
 
 const router = new Router({
