@@ -3,5 +3,5 @@ node_modules
 /var/
 /src/bin/commands/sandbox.js
 /yarn-error.log
-/src/sandbox.js
+/src/sandbox.ts
 /dist

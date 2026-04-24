@@ -26,6 +26,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.12.2",
+    "@types/send": "^1.2.1",
     "eslint": "^10.2.0",
     "eslint-plugin-node": "^11.1.0",
     "typescript": "^6.0.3"

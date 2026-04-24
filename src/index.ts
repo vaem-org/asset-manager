@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { glob } from 'glob'
 import cors from 'cors'
 import express, { json, Router } from 'express'
 import { config } from '#/config.js'
@@ -24,6 +23,8 @@ import { initialise } from '#/lib/encoders.socket.io.js'
 import { initialisation } from '#/lib/initialisation.js'
 import { security } from '#/lib/security.js'
 import { File } from '#/model/File/index.js'
+
+import index from './routes/index.js'
 
 const app = express()
 
@@ -44,35 +45,11 @@ app.get('/_alive', (req, res) => res.end('alive'))
 
 app.use(json())
 
-// add routes
-const root = `${config.root}/src/routes`
-const routes = glob.sync('**/*.js', { cwd: root })
-  .map((path) => {
-    const route = '/' + path
-      .replace(/\.js$/, '')
-      .split('/')
-      .map(component => component.replace(/^_/, ':'))
-      .join('/')
-      .replace(/(\/|^)index$/, '')
-    return ({
-      sort: route.replace(/:/g, 'ZZ'),
-      route,
-      path,
-    })
-  },
-  )
-  .sort(({ sort: sortA }, { sort: sortB }) => sortA.localeCompare(sortB))
-
 const main = Router({
   mergeParams: true,
 })
-for (const { route, path } of routes) {
-  const router = (await import(`${root}/${path}`)).default
-  if (typeof router === 'function') {
-    console.log(`Adding route: ${route}`)
-    main.use(route, router)
-  }
-}
+
+index(main)
 
 app.use(['/signed/:timestamp/:n/:signature', '/'], security(), main)
 

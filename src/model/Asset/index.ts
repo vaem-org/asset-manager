@@ -71,7 +71,7 @@ type IAssetVirtuals = {
   }
 }
 
-type AssetModelType = Model<IAsset, object, IAssetMethods, IAssetVirtuals>
+export type AssetModelType = Model<IAsset, object, IAssetMethods, IAssetVirtuals>
 
 const schema = new Schema<IAsset, AssetModelType, IAssetMethods, object, IAssetVirtuals>({
   labels: [String],

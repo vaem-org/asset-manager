@@ -16,9 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Model } from 'mongoose'
+import type { HydratedDocument, Model } from 'mongoose'
 import { Types } from 'mongoose'
 import type { Request, Response, NextFunction } from 'express'
+import { Router } from 'express'
 import { HttpError } from '#/lib/HttpError.js'
 
 /**
@@ -50,7 +51,7 @@ export function api(fn: (req: Request, res?: Response, next?: NextFunction) => P
 /**
  * Basic wrapper
  */
-export function wrapper(fn: (req?: Request, res?: Response, next?: NextFunction) => Promise<unknown>) {
+export function wrapper(fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>) {
   return (req: Request, res: Response, next: NextFunction) => {
     fn(req, res, next)
       .catch((exception) => {
@@ -66,11 +67,29 @@ export function wrapper(fn: (req?: Request, res?: Response, next?: NextFunction)
 /**
  * Helper for getting a document and throw 404 if not found
  */
-export async function getDocument<T>(model: Model<T>, id: string) {
-  const doc = Types.ObjectId.isValid(id) && await model.findById(id)
+export async function getDocument<T, TQuery = object, TMethods = object, TVirtuals = object>(
+  model: Model<T, TQuery, TMethods, TVirtuals>,
+  id: string | string[],
+): Promise<HydratedDocument<T, TMethods, TVirtuals>> {
+  if (typeof id !== 'string' || !Types.ObjectId.isValid(id)) {
+    throw new HttpError(400)
+  }
+
+  const doc = await model.findById(id).exec()
   if (!doc) {
     throw new HttpError(404)
   }
 
-  return doc
+  return doc as unknown as HydratedDocument<T, TMethods, TVirtuals>
+}
+
+/**
+ * Helper for adding child routes
+ */
+export function useRouter(router: Router, path: string, callback: (router: Router) => void) {
+  const subRouter = Router({
+    mergeParams: true,
+  })
+  router.use(path, subRouter)
+  callback(subRouter)
 }

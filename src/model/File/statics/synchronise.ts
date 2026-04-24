@@ -26,7 +26,7 @@ export default (schema: FileSchema, root: string) => {
   /**
    * Synchronise files with storage
    */
-  schema.statics.synchronise = async function () {
+  schema.static('synchronise', async function () {
     const files = await glob('**', {
       nodir: true,
       cwd: root,
@@ -56,5 +56,5 @@ export default (schema: FileSchema, root: string) => {
         },
       ],
     })
-  }
+  })
 }

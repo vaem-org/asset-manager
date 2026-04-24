@@ -37,13 +37,11 @@ interface IFileVirtuals {
   path: string
 }
 
-interface IFileStaticMethods {
+export interface FileModelType extends Model<IFile, object, object, IFileVirtuals> {
   synchronise(): Promise<void>
 }
 
-type FileModelType = Model<IFile, object, object, IFileVirtuals>
-
-const schema = new Schema<IFile, FileModelType, object, object, IFileVirtuals, IFileStaticMethods>({
+const schema = new Schema<IFile, FileModelType, object, object, IFileVirtuals>({
   name: String,
   size: {
     type: Number,
