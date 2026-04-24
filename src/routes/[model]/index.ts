@@ -18,14 +18,14 @@
 
 import type { Router } from 'express'
 import mongoose from 'mongoose'
-import { api, useRouter } from '#/lib/express-helpers.js'
-import { getFilter, save } from '#/lib/crud.js'
+import { api, useRouter } from '#~/lib/express-helpers.js'
+import { getFilter, save } from '#~/lib/crud.js'
 
-import { Asset } from '#/model/Asset/index.js'
-import { Job } from '#/model/Job/index.js'
-import { File } from '#/model/File/index.js'
+import { Asset } from '#~/model/Asset/index.js'
+import { Job } from '#~/model/Job/index.js'
+import { File } from '#~/model/File/index.js'
 
-import distinct from './distinct.js'
+import distinct from './distinct/index.js'
 import count from './count.js'
 import info from './info.js'
 

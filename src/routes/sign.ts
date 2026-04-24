@@ -17,8 +17,8 @@
  */
 
 import type { Router } from 'express'
-import { api } from '#/lib/express-helpers.js'
-import { getSignedUrl } from '#/lib/security.js'
+import { api } from '#~/lib/express-helpers.js'
+import { getSignedUrl } from '#~/lib/security.js'
 
 export default (router: Router) => {
   router.post('/sign', api(async ({ body: { url } }) => {

@@ -17,8 +17,8 @@
  */
 
 import { randomBytes } from 'crypto'
-import { Job } from '#/model/Job/index.js'
-import type { AssetSchema } from '#/model/Asset/index.js'
+import { Job } from '#~/model/Job/index.js'
+import type { AssetSchema } from '#~/model/Asset/index.js'
 
 export default (schema: AssetSchema) => {
   schema.pre('save', function () {

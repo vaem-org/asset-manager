@@ -23,8 +23,8 @@ import { EventEmitter } from 'node:events'
 import { relative } from 'node:path'
 import { open, unlink } from 'node:fs/promises'
 import chokidar from 'chokidar'
-import { config } from '#/config.js'
-import type { Storage } from '#/lib/Storage/index.js'
+import { config } from '#~/config.js'
+import type { Storage } from '#~/lib/Storage/index.js'
 
 export class UploadQueue extends EventEmitter {
   private readonly root: string

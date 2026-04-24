@@ -17,7 +17,7 @@
  */
 
 import type { Router } from 'express'
-import { useRouter } from '#/lib/express-helpers.js'
+import { useRouter } from '#~/lib/express-helpers.js'
 
 import assetsJson from './assets.json.js'
 import me from './me.js'
@@ -25,7 +25,7 @@ import sign from './sign.js'
 import auth from './auth/index.js'
 import publicRouter from './public/index.js'
 import files from './files/index.js'
-import model from '/[model]/index.js'
+import model from './[model]/index.js'
 
 export default (router: Router) => {
   assetsJson(router)

@@ -17,14 +17,14 @@
  */
 
 import type { Router } from 'express'
-import { api } from '#/lib/express-helpers.js'
-import { Asset } from '#/model/Asset/index.js'
+import { api } from '#~/lib/express-helpers.js'
+import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
   router.get('/', api(async ({ query: { ids } }) => {
     const assets = await Asset.find({
       _id: {
-        $in: ids.split(','),
+        $in: Array.isArray(ids) ? ids : [],
       },
     }).populate('job')
 

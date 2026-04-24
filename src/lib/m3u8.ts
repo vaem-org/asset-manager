@@ -16,40 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import m3u8 from 'm3u8'
+import { text } from 'node:stream/consumers'
 import type { ReadStream } from 'node:fs'
+import type { Manifest } from 'm3u8-parser'
+import { Parser } from 'm3u8-parser'
 
 /**
  * Parse an m3u8 stream
  */
-export function parseM3U8(stream: ReadStream): Promise<unknown> {
-  return new Promise((accept, reject) => {
-    const parser = m3u8.createStream()
-
-    let error: boolean | null = null
-
-    stream.pipe(parser)
-
-    stream.on('error', (err) => {
-      error = true
-      reject(err)
-    })
-
-    parser.on('error', (err: Error) => {
-      if (error) {
-        return
-      }
-      error = true
-      reject(err)
-      parser.end()
-    })
-
-    parser.on('m3u', (m3u: unknown) => {
-      if (error) {
-        return
-      }
-
-      accept(m3u)
-    })
-  })
+export async function parseM3U8(stream: ReadStream): Promise<Manifest> {
+  const parser = new Parser()
+  parser.push(await text(stream))
+  parser.end()
+  return parser.manifest
 }

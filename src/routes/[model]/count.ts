@@ -16,15 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express'
-import { api } from '#/lib/express-helpers.js'
-import { getFilter } from '#/lib/crud.js'
+import type { Router } from 'express'
+import { api } from '#~/lib/express-helpers.js'
+import { getFilter } from '#~/lib/crud.js'
 
 export default (router: Router) => {
   router.get('/', api(async ({ query: { filter }, model }) => {
-    return model.countDocuments(getFilter({
-      model,
-      filter,
+    return model!.countDocuments(getFilter({
+      model: model!,
+      filter: typeof filter === 'string' ? filter : '{}',
     }))
   }))
-})
+}

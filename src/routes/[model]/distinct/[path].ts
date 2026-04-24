@@ -16,15 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express'
-import { api } from '../../../lib/express-helpers.ts'
+import type { Router } from 'express'
+import { api } from '#~/lib/express-helpers.js'
 
-const router = new Router({
-  mergeParams: true,
-})
-
-router.get('/', api(async ({ model, params: { path } }) => {
-  return model.distinct(path)
-}))
-
-export default router
+export default (router: Router) => {
+  router.get('/', api(async ({ model, params: { path } }) => {
+    return model!.distinct(path.toString())
+  }))
+}

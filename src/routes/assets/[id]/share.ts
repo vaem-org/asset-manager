@@ -17,9 +17,9 @@
  */
 
 import type { Router } from 'express'
-import { api, getDocument } from '#/lib/express-helpers.js'
-import { getSignedUrl } from '#/lib/security.js'
-import { Asset } from '#/model/Asset/index.js'
+import { api, getDocument } from '#~/lib/express-helpers.js'
+import { getSignedUrl } from '#~/lib/security.js'
+import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
   router.post('/', api(async ({ params: { id }, body: { password, expires } }) => {

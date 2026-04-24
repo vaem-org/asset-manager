@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#/config.js'
+import { config } from '#~/config.js'
 import axios, { AxiosError } from 'axios'
 import { createReadStream } from 'node:fs'
 import { basename } from 'node:path'

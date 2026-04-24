@@ -17,9 +17,9 @@
  */
 
 import { Router } from 'express';
-import { api, getDocument } from '#/lib/express-helpers.js';
-import { Asset } from '#/model/Asset/index.js'
-import { HttpError } from '#/lib/HttpError.js'
+import { api, getDocument } from '#~/lib/express-helpers.js';
+import { Asset } from '#~/model/Asset/index.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   router.get('/', api(async ({ params: { id } }) => {

@@ -17,10 +17,10 @@
  */
 
 import type { Router } from 'express'
-import { api, getDocument } from '#/lib/express-helpers.js'
-import { encode } from '#/lib/encode.js'
-import { File } from '#/model/File/index.js'
-import { HttpError } from '#/lib/HttpError.js'
+import { api, getDocument } from '#~/lib/express-helpers.js'
+import { encode } from '#~/lib/encode.js'
+import { File } from '#~/model/File/index.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   router.post('', api(async ({ params: { id }, body: {
@@ -32,13 +32,13 @@ export default (router: Router) => {
     const doc = await getDocument(File, id)
 
     try {
-      return await encode({
-        file: doc.name,
+      return await encode(
+        doc.name,
         audio,
-        copyHighestVariant: !!copyHighestVariant,
+        !!copyHighestVariant,
         customAudioFilter,
         ss,
-      })
+      )
     }
     catch (e) {
       console.warn(e)

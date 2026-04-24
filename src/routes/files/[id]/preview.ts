@@ -19,14 +19,14 @@
 import type { Router } from 'express'
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { api, getDocument } from '#/lib/express-helpers.js'
-import { config } from '#/config.js'
-import { ffprobe, getAudio, getFramerate } from '#/lib/ffmpeg.js'
+import { api, getDocument } from '#~/lib/express-helpers.js'
+import { config } from '#~/config.js'
+import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg.js'
 import type { ChildProcess } from 'node:child_process'
 import { spawn } from 'node:child_process'
-import { getSignedUrl } from '#/lib/security.js'
-import { File } from '#/model/File/index.js'
-import { HttpError } from '#/lib/HttpError.js'
+import { getSignedUrl } from '#~/lib/security.js'
+import { File } from '#~/model/File/index.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 interface Child {
   child: ChildProcess
@@ -54,6 +54,10 @@ export default (router: Router) => {
     )
 
     const video = streams.find(({ codec_type }) => codec_type === 'video')
+
+    if (!video) {
+      throw new HttpError(400, 'No video stream found')
+    }
 
     const framerate = getFramerate(video)
 
@@ -191,5 +195,6 @@ export default (router: Router) => {
     }
 
     process.child.kill()
+    res.end()
   })
 }

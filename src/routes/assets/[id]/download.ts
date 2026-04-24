@@ -17,9 +17,9 @@
  */
 
 import type { Router } from 'express'
-import { getDocument, wrapper } from '#/lib/express-helpers.js'
+import { getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { spawn } from 'node:child_process'
-import { Asset } from '#/model/Asset/index.js'
+import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
   router.get('/', wrapper(async (req, res) => {

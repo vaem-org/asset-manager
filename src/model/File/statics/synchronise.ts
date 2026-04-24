@@ -19,8 +19,8 @@
 import { glob } from 'glob'
 import { join } from 'node:path'
 import { stat } from 'node:fs/promises'
-import type { FileSchema } from '#/model/File/index.js'
-import { File } from '#/model/File/index.js'
+import type { FileSchema } from '#~/model/File/index.js'
+import { File } from '#~/model/File/index.js'
 
 export default (schema: FileSchema, root: string) => {
   /**

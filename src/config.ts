@@ -18,9 +18,9 @@
 import { config as dotenv } from 'dotenv'
 import { dirname, join } from 'path'
 import { fileURLToPath, URL } from 'url'
-import type { CDN } from '#/lib/CDN/index.js'
-import type { Storage } from '#/lib/Storage/index.js'
-import type { UploadQueue } from '#/lib/UploadQueue.js'
+import type { UploadQueue } from '#~/lib/UploadQueue.js'
+import { createStorage } from '#~/lib/Storage/factory.js'
+import { createCDN } from '#~/lib/CDN/factory.js'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 
@@ -45,6 +45,8 @@ if (authUrl?.protocol === 'google:') {
   }
 }
 
+const storageUrl = process.env.STORAGE_URL ?? `file://${root}/var/output`
+const cdnUrl = process.env.CDN_URL
 export const config = {
   port,
   root,
@@ -52,8 +54,8 @@ export const config = {
 
   base: process.env.BASE ?? `http://localhost:${port}`,
   mongoUrl: process.env.MONGO_URL ?? 'mongodb://localhost:33206/app',
-  storageUrl: process.env.STORAGE_URL ?? `file://${root}/var/output`,
-  cdnUrl: process.env.CDN_URL,
+  storageUrl,
+  cdnUrl,
   secret: process.env.SECRET,
   skipAuth: process.env.SKIP_AUTH === '1',
   apiTokens: (process.env.API_TOKENS ?? '')
@@ -72,9 +74,9 @@ export const config = {
 
   subtitleEditApiUrl: process.env.SUBTITLEEDIT_API_URL ?? 'http://vaem@localhost:26525',
 
-  storage: null as Storage | null,
+  storage: createStorage(new URL(storageUrl)),
 
-  cdn: null as CDN | null,
+  cdn: cdnUrl ? createCDN(new URL(cdnUrl)) : null,
 
   uploadQueue: null as UploadQueue | null,
 }

@@ -17,9 +17,9 @@
  */
 
 import type { Router } from 'express'
-import { api, getDocument } from '#/lib/express-helpers.js'
-import { File } from '#/model/File/index.js'
-import { Asset } from '#/model/Asset/index.js'
+import { api, getDocument } from '#~/lib/express-helpers.js'
+import { File } from '#~/model/File/index.js'
+import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
   router.post('/:assetId/:language', api(async ({ params: { id, assetId, language } }) => {

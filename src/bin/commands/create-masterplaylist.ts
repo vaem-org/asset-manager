@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Asset } from '#/model/Asset/index.js'
+import { Asset } from '#~/model/Asset/index.js'
 import type { Command } from 'commander'
 
 async function action(assetId: string) {

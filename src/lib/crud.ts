@@ -18,11 +18,12 @@
 
 import type { Document, Model } from 'mongoose'
 import { Error as MongooseError } from 'mongoose'
+import { HttpError } from '#~/lib/HttpError.js'
 
 /**
  * Save a document and report errors if there are any
  */
-export async function save(doc: Document) {
+export async function save(doc: Document<unknown>) {
   try {
     await doc.save()
   }
@@ -32,8 +33,7 @@ export async function save(doc: Document) {
       console.error(e)
     }
 
-    throw {
-      status: 400,
+    throw new HttpError(404, validationError?.message ?? e?.toString?.(), {
       errors: Object.fromEntries(
         Object.entries(validationError?.errors ?? {})
           .map(([path, {
@@ -46,8 +46,7 @@ export async function save(doc: Document) {
             name,
           }]),
       ),
-      message: validationError?.message ?? e?.toString?.(),
-    }
+    })
   }
 }
 
@@ -63,10 +62,10 @@ function setDates(filter: string | object) {
 /**
  * Parse a filter string from the url query
  */
-export function getFilter<T>({ filter, model }: { filter: string, model: Model<T> }) {
+export function getFilter<T>({ filter, model }: { filter: string | string[], model: Model<T> }) {
   try {
     return filter
-      ? Object.fromEntries(Object.entries(JSON.parse(filter))
+      ? Object.fromEntries(Object.entries(JSON.parse(filter.toString()))
           .map(([path, filter]) => {
             if (model.schema.paths[path]?.instance === 'Date'
               && (typeof filter === 'string' || typeof filter === 'object')
@@ -80,9 +79,6 @@ export function getFilter<T>({ filter, model }: { filter: string, model: Model<T
       : {}
   }
   catch (e) {
-    throw {
-      status: 400,
-      message: `Unable to parse filter "${filter}": ${e?.toString?.()}`,
-    }
+    throw new HttpError(400, `Unable to parse filter "${filter}": ${e?.toString?.()}`)
   }
 }

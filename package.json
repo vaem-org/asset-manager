@@ -5,7 +5,7 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "imports": {
-    "#/*": "./dist/*"
+    "#~/*": "./dist/*"
   },
   "scripts": {
     "build": "tsc",
@@ -25,6 +25,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/m3u8-parser": "^7.2.6",
     "@types/node": "^24.12.2",
     "@types/send": "^1.2.1",
     "eslint": "^10.2.0",
@@ -44,7 +45,7 @@
     "glob": "^13.0.6",
     "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.3",
-    "m3u8": "^0.0.10",
+    "m3u8-parser": "^7.2.0",
     "mongoose": "^9.4.1",
     "node-webvtt": "^1.9.4",
     "send": "^1.2.1",

@@ -21,17 +21,16 @@ import { createReadStream } from 'fs'
 import { access, mkdir } from 'fs/promises'
 import { dirname } from 'path'
 import { spawn } from 'child_process'
-import { getDocument, wrapper } from '#/lib/express-helpers.js'
-import { config } from '#/config.js'
-import { Asset } from '#/model/Asset/index.js'
+import { getDocument, wrapper } from '#~/lib/express-helpers.js'
+import { config } from '#~/config.js'
+import { Asset } from '#~/model/Asset/index.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router): void => {
   router.get('/', wrapper(async ({ params: { id } }, res) => {
     const asset = await getDocument(Asset, id)
     if (!['verified', 'processed'].includes(asset.state) || asset.variants.length === 0 || asset.deleted) {
-      throw {
-        status: 404,
-      }
+      throw new HttpError(404)
     }
 
     const filename = `${config.root}/var/thumbnails/${id}.webp`

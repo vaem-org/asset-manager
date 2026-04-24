@@ -17,7 +17,7 @@
  */
 
 import type { Router } from 'express'
-import { api } from '#/lib/express-helpers.js'
+import { api } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
   router.get('/me', api(async ({ token }) => token))

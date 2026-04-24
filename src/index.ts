@@ -18,11 +18,11 @@
 
 import cors from 'cors'
 import express, { json, Router } from 'express'
-import { config } from '#/config.js'
-import { initialise } from '#/lib/encoders.socket.io.js'
-import { initialisation } from '#/lib/initialisation.js'
-import { security } from '#/lib/security.js'
-import { File } from '#/model/File/index.js'
+import { config } from '#~/config.js'
+import { initialise } from '#~/lib/encoders.socket.io.js'
+import { initialisation } from '#~/lib/initialisation.js'
+import { security } from '#~/lib/security.js'
+import { File } from '#~/model/File/index.js'
 
 import index from './routes/index.js'
 

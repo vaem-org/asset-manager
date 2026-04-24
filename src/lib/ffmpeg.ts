@@ -20,10 +20,10 @@ import { spawn } from 'child_process'
 import { join } from 'path'
 import { finished } from 'stream/promises'
 import { mkdir, writeFile } from 'fs/promises'
-import { Asset } from '#~/model/Asset/index'
+import { Asset } from '#~/model/Asset/index.js'
 import { config } from '../config.js'
 import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js'
-import type { Format, Stream } from '#~/types/ffmpeg'
+import type { Format, Stream } from '#~/types/ffmpeg.js'
 
 /**
  *

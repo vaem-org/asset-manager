@@ -16,9 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#/config.js'
-import { ffprobe } from '#/lib/ffmpeg.js'
-import type { AssetSchema } from '#/model/Asset/index.js'
+import { config } from '#~/config.js'
+import { ffprobe } from '#~/lib/ffmpeg.js'
+import type { AssetSchema } from '#~/model/Asset/index.js'
 
 export default (schema: AssetSchema) => {
   /**
@@ -35,7 +35,7 @@ export default (schema: AssetSchema) => {
         const [,variant] = name.split('.')
         return variant && variant !== 'm3u8'
       })
-      .reduce((counts, name) => {
+      .reduce((counts: Record<string, number>, name) => {
         const [,variant] = name.split('.')
         return ({
           ...counts,
@@ -60,7 +60,7 @@ export default (schema: AssetSchema) => {
       console.info(`Checking duration for ${variant}`)
       let duration
       try {
-        duration = parseFloat((await ffprobe(videoUrl)).format.duration)
+        duration = (await ffprobe(videoUrl)).format.duration
       }
       catch (_e) {
         duration = 0

@@ -22,18 +22,18 @@ import { Schema, model } from 'mongoose'
 import synchronise from './statics/synchronise.js'
 import postRemove from './post/deleteOne.js'
 import preSave from './pre/save.js'
-import { config } from '#/config.js'
+import { config } from '#~/config.js'
 
 export const root = `${config.root}/var/files`
 
-interface IFile extends SchemaTimestampsConfig {
+export interface IFile extends SchemaTimestampsConfig {
   name: string
   size: number
   type: 'unknown' | 'video' | 'subtitle'
   sourceSize: number
 }
 
-interface IFileVirtuals {
+export interface IFileVirtuals {
   path: string
 }
 

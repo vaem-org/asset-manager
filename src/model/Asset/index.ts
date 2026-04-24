@@ -31,10 +31,10 @@ import removeFiles from './methods/removeFiles.js'
 import preSave from './pre/save.js'
 import postRemove from './post/remove.js'
 import postSave from './post/save.js'
-import { getSignedUrl } from '#/lib/security.js'
-import { config } from '#/config.js'
-import type { FFProbe } from '#/types/ffmpeg.js'
-import type { IJob } from '#/model/Job/index.js'
+import { getSignedUrl } from '#~/lib/security.js'
+import { config } from '#~/config.js'
+import type { FFProbe } from '#~/types/ffmpeg.js'
+import type { IJob } from '#~/model/Job/index.js'
 
 export interface IAsset extends SchemaTimestampsConfig {
   labels: string[]
@@ -55,7 +55,7 @@ export interface IAsset extends SchemaTimestampsConfig {
 type IAssetMethods = {
   createMasterPlaylist(): Promise<void>
   finish(): Promise<void>
-  getUrl(): string
+  getUrl(variant: string | null): string
   removeFiles(): void
   setSubtitle(language: string, source: string): Promise<void>
   setUploadedVariant(variant: string): Promise<boolean>

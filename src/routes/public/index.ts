@@ -17,8 +17,8 @@
  */
 
 import { Router } from 'express'
-import publicAssetsId from '#/routes/public/assets/[id].js'
-import { useRouter } from '#/lib/express-helpers.js'
+import publicAssetsId from '#~/routes/public/assets/[id].js'
+import { useRouter } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
   useRouter(router, '/assets/:id', publicAssetsId)

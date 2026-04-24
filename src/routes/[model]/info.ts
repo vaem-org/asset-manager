@@ -17,10 +17,15 @@
  */
 
 import type { Router } from 'express'
-import { api } from '#/lib/express-helpers.js'
+import { api } from '#~/lib/express-helpers.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   router.get('/', api(async ({ model }) => {
+    if (!model) {
+      throw new HttpError(500)
+    }
+
     return {
       paths: Object.fromEntries(
         [

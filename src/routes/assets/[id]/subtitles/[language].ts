@@ -21,16 +21,17 @@ import { unlink, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { extname } from 'path'
 import { stringify } from 'querystring'
-import { api, getDocument, wrapper } from '#/lib/express-helpers.js'
-import { config } from '#/config.js'
-import { Asset } from '#/model/Asset/index.js'
+import { api, getDocument, wrapper } from '#~/lib/express-helpers.js'
+import { config } from '#~/config.js'
+import { Asset } from '#~/model/Asset/index.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   router.get('/', wrapper(async ({ params: { language, id }, query: { direct } }, res) => {
     const asset = await getDocument(Asset, id)
     if (config.cdn && direct !== '1') {
       return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt?${stringify({
-        updatedAt: asset.updatedAt.getTime(),
+        updatedAt: typeof asset.updatedAt === 'string' ? new Date(asset.updatedAt).getTime() : 0,
         v: asset.__v,
       })}`, 60))
     }
@@ -40,27 +41,24 @@ export default (router: Router) => {
     try {
       (await config.storage.download(`${id}/subtitles/${language}.vtt`)).pipe(res)
     }
-    catch (e) {
-      throw {
-        status: 404,
-      }
+    catch (_e) {
+      throw new HttpError(404)
     }
   }))
 
   router.put('/:name', api(async (req) => {
     const { params: { language, id, name } } = req
-    const tempFile = `${tmpdir()}/${id}${extname(name)}`
+    const tempFile = `${tmpdir()}/${id}${extname(name.toString())}`
     await writeFile(tempFile, req)
     const asset = await getDocument(Asset, id)
-    await asset.setSubtitle(language, tempFile)
+    await asset.setSubtitle(language.toString(), tempFile)
     await unlink(tempFile)
   }))
 
   router.delete('/', api(async ({ params: { language, id } }) => {
     const asset = await getDocument(Asset, id)
 
-    const subtitles = { ...asset.subtitles }
-    delete subtitles[language]
+    const { [language.toString()]: _toRemove, ...subtitles } = asset.subtitles
     asset.subtitles = subtitles
     await asset.save();
 

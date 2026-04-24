@@ -17,34 +17,25 @@
  */
 
 import type { Router } from 'express'
-import { save } from '#/lib/crud.js'
-import { wrapper, api, getDocument } from '#/lib/express-helpers.js'
+import { save } from '#~/lib/crud.js'
+import { api, getDocument } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
-  router.use(wrapper(async (req, res, next) => {
-    if (req.params.id === 'new' && req.method === 'GET') {
-      return next()
-    }
-
-    req.doc = await getDocument(req.model, req.params.id)
-    next()
-  }))
-
-  router.get('/', api(async ({ doc, params: { id }, model }) => {
-    if (id === 'new') {
-      doc = new model()
-    }
+  router.get('/', api(async ({ params: { id }, model }) => {
+    const doc = id === 'new' ? new model!() : await getDocument(model!, id)
 
     return doc.toJSON()
   }))
 
-  router.put('/', api(async ({ body, doc }) => {
+  router.put('/', api(async ({ body, model, params: { id } }) => {
+    const doc = id === 'new' ? new model!() : await getDocument(model!, id)
     doc.set(body)
     await save(doc)
     return doc.toJSON()
   }))
 
-  router.delete('/', api(async ({ doc }) => {
+  router.delete('/', api(async ({ model, params: { id } }) => {
+    const doc = await getDocument(model!, id)
     return doc.deleteOne()
   }))
 }

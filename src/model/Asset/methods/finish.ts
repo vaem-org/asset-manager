@@ -16,9 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#/config.js'
+import { config } from '#~/config.js'
 import axios from 'axios'
-import type { AssetSchema } from '#/model/Asset/index.js'
+import type { AssetSchema } from '#~/model/Asset/index.js'
 
 export default (schema: AssetSchema) => {
   /**

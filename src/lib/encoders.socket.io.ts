@@ -24,10 +24,10 @@ import mongoose from 'mongoose'
 import { mkdir, rmdir } from 'fs/promises'
 import { Mutex } from 'async-mutex'
 import { basename } from 'path'
-import { Job } from '#/model/Job/index.js'
-import { config } from '#/config.js'
-import { Asset } from '#/model/Asset/index.js'
-import { getSignedUrl } from '#/lib/security.js'
+import { Job } from '#~/model/Job/index.js'
+import { config } from '#~/config.js'
+import { Asset } from '#~/model/Asset/index.js'
+import { getSignedUrl } from '#~/lib/security.js'
 
 let io: Server<DefaultEventsMap, DefaultEventsMap>
 

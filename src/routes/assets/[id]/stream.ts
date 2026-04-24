@@ -20,11 +20,11 @@ import type { Router } from 'express'
 import dayjs from 'dayjs'
 import send from 'send'
 import axios, { AxiosError } from 'axios'
-import { api, getDocument, wrapper } from '#/lib/express-helpers.js'
-import { Asset } from '#/model/Asset/index.js'
-import { config } from '#/config.js'
-import { parseM3U8 } from '#/lib/m3u8.js'
-import { HttpError } from '#/lib/HttpError.js'
+import { api, getDocument, wrapper } from '#~/lib/express-helpers.js'
+import { Asset } from '#~/model/Asset/index.js'
+import { config } from '#~/config.js'
+import { parseM3U8 } from '#~/lib/m3u8.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   router.get('/', api(async (req) => {
@@ -72,7 +72,7 @@ export default (router: Router) => {
       m3u.items.PlaylistItem.forEach((stream) => {
         if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
           stream.set('uri',
-            config.cdn.getSignedUrl(
+            config.cdn!.getSignedUrl(
               `/${id}/${stream.get('uri')}`,
               8 * 3600,
             ),
@@ -101,7 +101,7 @@ export default (router: Router) => {
       }
       catch (e) {
         throw new HttpError(
-          e instanceof AxiosError ? e.response?.status ?? 500,
+          e instanceof AxiosError ? e.response?.status ?? 500 : 500,
         )
       }
       return

@@ -18,7 +18,7 @@
 
 import type { Router } from 'express'
 
-import language from './language.js'
+import language from './[language].js'
 
 export default (router: Router): void => {
   router.use(language)

@@ -17,7 +17,7 @@
  */
 
 import type { Router } from 'express'
-import { useRouter } from '#/lib/express-helpers.js'
+import { useRouter } from '#~/lib/express-helpers.js'
 
 import download from './download.js'
 import keyinfo from './keyinfo.js'

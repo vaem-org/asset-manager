@@ -17,9 +17,9 @@
  */
 
 import type { Router } from 'express'
-import { api, getDocument } from '#/lib/express-helpers.js'
-import { File } from '#/model/File/index.js'
-import { ffprobe, getAudio } from '#/lib/ffmpeg.js'
+import { api, getDocument } from '#~/lib/express-helpers.js'
+import { File } from '#~/model/File/index.js'
+import { ffprobe, getAudio } from '#~/lib/ffmpeg.js'
 
 export default (router: Router) => {
   router.get('/', api(async ({ params: { id } }) => {

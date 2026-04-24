@@ -21,9 +21,9 @@ import { urlencoded } from 'express'
 import type { TokenPayload } from 'google-auth-library'
 import { OAuth2Client } from 'google-auth-library'
 import jwt from 'jsonwebtoken'
-import { api } from '#/lib/express-helpers.js'
-import { config } from '#/config.js'
-import { HttpError } from '#/lib/HttpError.js'
+import { api } from '#~/lib/express-helpers.js'
+import { config } from '#~/config.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   if (config.auth?.provider !== 'google') {

@@ -17,9 +17,9 @@
  */
 
 import type { Router } from 'express'
-import { getDocument, wrapper } from '#/lib/express-helpers.js'
-import { Asset } from '#/model/Asset/index.js'
-import { config } from '#/config.js'
+import { getDocument, wrapper } from '#~/lib/express-helpers.js'
+import { Asset } from '#~/model/Asset/index.js'
+import { config } from '#~/config.js'
 
 export default (router: Router) => {
   router.get('/file.key', wrapper(async (req, res) => {

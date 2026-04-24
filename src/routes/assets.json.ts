@@ -17,8 +17,8 @@
  */
 
 import type { Router } from 'express'
-import { api } from '#/lib/express-helpers.js'
-import { Asset } from '#/model/Asset/index.js'
+import { api } from '#~/lib/express-helpers.js'
+import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
   router.get('/assets.json', api(async () => {

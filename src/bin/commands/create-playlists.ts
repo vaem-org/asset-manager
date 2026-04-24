@@ -16,13 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { config } from '#/config.js'
+import { config } from '#~/config.js'
 import type { Command } from 'commander'
 
 async function action(assetId: string): Promise<void> {
   const entries = (await config.storage?.list?.(`${assetId}/`) ?? [])
-  const variants = entries.reduce((variants, { name }) => {
+  const variants = entries.reduce((variants: Record<string, string[]>, { name }) => {
     const bitrate = name.split('.')[1]
+    if (!variants[bitrate]) {
+      variants[bitrate] = []
+    }
+
     return {
       ...variants,
       [bitrate]: [

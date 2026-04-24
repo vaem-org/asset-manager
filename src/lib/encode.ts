@@ -17,28 +17,22 @@
  */
 
 import { basename } from 'path'
-import { Asset } from '#/model/Asset/index.js'
-import { ffprobe, getAudio, getFramerate } from '#/lib/ffmpeg.js'
-import { Job } from '#/model/Job/index.js'
-import profiles from '#/lib/profiles.js'
-import { config } from '#/config.js'
+import { Asset } from '#~/model/Asset/index.js'
+import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg.js'
+import { Job } from '#~/model/Job/index.js'
+import profiles from '#~/lib/profiles.js'
+import { config } from '#~/config.js'
 
 /**
  * Create an asset and accompanying job
- * @param {string} file
- * @param {int[]} audio
- * @param {boolean} copyHighestVariant
- * @param {?string} customAudioFilter
- * @param {?string} ss
- * @return {Promise<void>}
  */
-export async function encode({
-  file,
-  audio = null,
-  copyHighestVariant = false,
-  customAudioFilter = null,
-  ss = null,
-}) {
+export async function encode(
+  file: string,
+  audio: number[] | null = null,
+  copyHighestVariant: boolean = false,
+  customAudioFilter: string | null = null,
+  ss: string | null = null,
+) {
   const path = `${config.root}/var/files/${file}`
   const asset = await Asset.findOne({
     file,
@@ -64,13 +58,17 @@ export async function encode({
   const videoStream = asset.ffprobe.streams
     .find(({ codec_type }) => codec_type === 'video')
 
+  if (!videoStream) {
+    throw new Error('No video stream found')
+  }
+
   const framerate = getFramerate(videoStream)
 
   const videoFilter = null
   audio = audio ?? getAudio(asset.ffprobe.streams)
 
   const matchingProfiles = Object.entries(profiles)
-    .filter(([width]) => width <= videoStream.width)
+    .filter(([width]) => parseInt(width) <= videoStream.width)
     .flatMap(([width, bitrates]) => bitrates.map(bitrate => ({
       bitrate: `${bitrate}k`,
       width,
@@ -82,7 +80,7 @@ export async function encode({
   const highestVariant = asset.highestVariant
 
   const asplit = `${matchingProfiles.length}${
-    matchingProfiles.map((profile, i) => `[aout${i}]`).join('')
+    matchingProfiles.map((_profile, i) => `[aout${i}]`).join('')
   }`
 
   job['arguments'] = [
@@ -102,49 +100,53 @@ export async function encode({
 
     ...matchingProfiles.flatMap(({ width, bitrate }, i) => {
       return [
-        ...highestVariant === bitrate && copyHighestVariant ? [
-          // copy streams from source
-          ...audio.length > 0
-            ? [
-                '-map', '0:a',
-                '-c:a', 'copy',
-              ]
-            : [],
+        ...highestVariant === bitrate && copyHighestVariant
+          ? [
+              // copy streams from source
+              ...audio.length > 0
+                ? [
+                    '-map', '0:a',
+                    '-c:a', 'copy',
+                  ]
+                : [],
 
-          '-map', '0:v',
-          '-c', 'copy',
-        ] : [
-          // process audio and video
-          ...audio.length > 0 || customAudioFilter ? [
-            // audio options,
-            '-map', audio.length === 1 ? `0:${audio[0]}` : `[aout${i}]`,
-            '-c:a', 'libfdk_aac',
-            '-ac', 2,
-            '-b:a', '128k',
-          ] : [],
+              '-map', '0:v',
+              '-c', 'copy',
+            ]
+          : [
+              // process audio and video
+              ...audio.length > 0 || customAudioFilter
+                ? [
+                    // audio options,
+                    '-map', audio.length === 1 ? `0:${audio[0]}` : `[aout${i}]`,
+                    '-c:a', 'libfdk_aac',
+                    '-ac', '2',
+                    '-b:a', '128k',
+                  ]
+                : [],
 
-          // video options
-          '-map', '0:v',
-          '-vcodec', 'libx264',
-          '-vprofile', 'high',
-          '-level', '4.1',
-          '-pix_fmt', 'yuv420p',
-          '-g', 2 * Math.ceil(framerate),
-          '-x264opts', 'no-scenecut',
-          '-vf',
-          (videoFilter ? videoFilter + '[out];[out]' : '')
-          + `scale=${width}:trunc(ow/dar/2)*2`,
-          '-b:v', bitrate,
-          '-maxrate', bitrate,
-          '-bufsize', bitrate,
-          '-preset', 'slow',
-        ],
+              // video options
+              '-map', '0:v',
+              '-vcodec', 'libx264',
+              '-vprofile', 'high',
+              '-level', '4.1',
+              '-pix_fmt', 'yuv420p',
+              '-g', (2 * Math.ceil(framerate)).toString(),
+              '-x264opts', 'no-scenecut',
+              '-vf',
+              (videoFilter ? videoFilter + '[out];[out]' : '')
+              + `scale=${width}:trunc(ow/dar/2)*2`,
+              '-b:v', bitrate,
+              '-maxrate', bitrate,
+              '-bufsize', bitrate,
+              '-preset', 'slow',
+            ],
 
         // output
         '-f', 'hls',
-        '-hls_list_size', 0,
+        '-hls_list_size', '0',
         '-hls_playlist_type', 'vod',
-        '-hls_time', 2,
+        '-hls_time', '2',
         '-hls_segment_filename', `${config.root}/var/output/${asset._id}/${asset._id}.${bitrate}.%05d.ts`,
         `${config.root}/var/output/${asset._id}/${asset._id}.${bitrate}.m3u8`,
       ]

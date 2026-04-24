@@ -16,19 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Router } from 'express'
-import dayjs from 'dayjs'
-
-import { getDocument, wrapper } from '#~/lib/express-helpers.js'
-import { File } from '#~/model/File/index.js'
-import { convert } from '#~/lib/subtitles.js'
-
-export default (router: Router) => {
-  router.get('', wrapper(async ({ params: { id } }, res) => {
-    res.setHeader('expires', dayjs().add(7, 'days').toISOString())
-    res.setHeader('cache-control', 'private,max-age=604800')
-
-    const file = await getDocument(File, id)
-    res.send(await convert(file.path))
-  }))
+export interface Token {
+  email: string
+  sub: string
 }

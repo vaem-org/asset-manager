@@ -17,12 +17,12 @@
  */
 
 import { createReadStream } from 'fs'
-import { config } from '#/config.js'
-import { segmentVtt } from '#/lib/ffmpeg.js'
-import { convert } from '#/lib/subtitles.js'
+import { config } from '#~/config.js'
+import { segmentVtt } from '#~/lib/ffmpeg.js'
+import { convert } from '#~/lib/subtitles.js'
 import { tmpdir } from 'os'
 import { unlink } from 'fs/promises'
-import type { AssetSchema } from '#/model/Asset/index.js'
+import type { AssetSchema } from '#~/model/Asset/index.js'
 
 export default (schema: AssetSchema) => {
   /**

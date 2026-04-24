@@ -17,8 +17,8 @@
  */
 
 import type { Router } from 'express'
-import { getDocument, wrapper } from '#/lib/express-helpers.js'
-import { File } from '#/model/File/index.js'
+import { getDocument, wrapper } from '#~/lib/express-helpers.js'
+import { File } from '#~/model/File/index.js'
 import send from 'send'
 
 export default (router: Router) => {

@@ -17,7 +17,7 @@
  */
 
 import type { Router } from 'express'
-import { useRouter } from '#/lib/express-helpers.js'
+import { useRouter } from '#~/lib/express-helpers.js'
 
 import progress from './progress.js'
 import id from './[id]/index.js'

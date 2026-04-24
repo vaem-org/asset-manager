@@ -20,8 +20,8 @@ import type { Router } from 'express'
 import { createWriteStream } from 'fs'
 import { dirname } from 'path'
 import { stat, mkdir } from 'fs/promises'
-import { api, getDocument, wrapper } from '#/lib/express-helpers.js'
-import { File } from '#/model/File/index.js'
+import { api, getDocument, wrapper } from '#~/lib/express-helpers.js'
+import { File } from '#~/model/File/index.js'
 
 export default (router: Router) => {
   router.get('/', api(async ({ params: { id } }) => {

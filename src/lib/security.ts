@@ -17,10 +17,11 @@
  */
 
 import { createHmac } from 'crypto'
-import { config } from '#/config.js'
-import { wrapper } from '#/lib/express-helpers.js'
+import { config } from '#~/config.js'
+import { wrapper } from '#~/lib/express-helpers.js'
 import { OAuth2Client } from 'google-auth-library'
 import jwt from 'jsonwebtoken'
+import type { Token } from '#~/types/Token.js'
 
 /**
  * Get a signature
@@ -65,18 +66,20 @@ export function security() {
 
     if (originalUrl.startsWith('/signed')) {
       // verify signed urls
-      verified = Date.now() < timestamp && signature === getSignature(url, timestamp, parseInt(n))
+      const _timestamp = parseInt(timestamp.toString())
+      verified = Date.now() < _timestamp && signature === getSignature(url, _timestamp, parseInt(n.toString()))
     }
     else {
       // verify jwt or api token
-      const [, token] = /^bearer (.*)$/i.exec(headers['authorization']) ?? []
+      const [, token] = /^bearer (.*)$/i.exec(headers['authorization'] ?? '') ?? []
       verified = config.apiTokens.includes(token)
       if (!verified && client) {
         try {
-          req.token = jwt.verify(token, config.secret)
+          req.token = jwt.verify(token, config.secret) as Token
           verified = !!req.token
         }
         catch (_e) {
+          // ignore
         }
       }
     }

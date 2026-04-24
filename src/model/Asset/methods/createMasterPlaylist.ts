@@ -16,9 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ffprobe } from '#/lib/ffmpeg.js'
-import { config } from '#/config.js'
-import type { AssetSchema } from '#/model/Asset/index.js'
+import { ffprobe } from '#~/lib/ffmpeg.js'
+import { config } from '#~/config.js'
+import type { AssetSchema } from '#~/model/Asset/index.js'
 
 export default (schema: AssetSchema) => {
   /**
@@ -29,11 +29,17 @@ export default (schema: AssetSchema) => {
     const variants = []
     for (const variant of this.variants.sort((a, b) => parseInt(b) - parseInt(a))) {
       const { streams } = await ffprobe(this.getUrl(variant))
-      const { display_aspect_ratio, height, width } = streams.find(({ codec_type }) => codec_type === 'video')
+      const videoStream = streams.find(({ codec_type }) => codec_type === 'video')
+
+      if (!videoStream) {
+        throw new Error(`Unable to create Master playlist for variant ${variant}`)
+      }
+
+      const { display_aspect_ratio, height, width } = videoStream
       const aspect = (display_aspect_ratio ?? '')
         .split(':')
-        .map(value => parseInt(value))
-        .filter(value => value)
+        .map((value: string) => parseInt(value))
+        .filter((value: number) => value)
 
       const resolution = aspect.length > 0
         ? Math.max(width,

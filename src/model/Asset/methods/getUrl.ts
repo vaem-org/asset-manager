@@ -16,16 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { getSignedUrl } from '#/lib/security.js'
-import { config } from '#/config.js'
-import type { AssetSchema } from '#/model/Asset/index.js'
+import { getSignedUrl } from '#~/lib/security.js'
+import { config } from '#~/config.js'
+import type { AssetSchema } from '#~/model/Asset/index.js'
 
 export default (schema: AssetSchema) => {
   /**
    * Get a signed m3u8 url
    * @param variant
    */
-  schema.methods.getUrl = function (variant = null) {
+  schema.methods.getUrl = function (variant: string | null = null) {
     return config.base + getSignedUrl(`/assets/${this._id}/stream`, false, 3600 * 4)
       + `/${this._id}${variant ? `.${variant}` : ''}.m3u8`
   }

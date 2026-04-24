@@ -17,7 +17,7 @@
  */
 
 import { extname } from 'path'
-import type { FileSchema } from '#/model/File/index.js'
+import type { FileSchema } from '#~/model/File/index.js'
 
 export default (schema: FileSchema) => {
   schema.pre('save', function () {

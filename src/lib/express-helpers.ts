@@ -20,13 +20,19 @@ import type { HydratedDocument, Model } from 'mongoose'
 import { Types } from 'mongoose'
 import type { Request, Response, NextFunction } from 'express'
 import { Router } from 'express'
-import { HttpError } from '#/lib/HttpError.js'
+import { HttpError } from '#~/lib/HttpError.js'
+import type { Token } from '#~/types/Token.js'
+
+interface CustomRequest extends Request {
+  token?: Token
+  model?: Model<object>
+}
 
 /**
  * Wrap an async function into middleware
  */
-export function api(fn: (req: Request, res?: Response, next?: NextFunction) => Promise<unknown>) {
-  return (req: Request, res: Response, next: NextFunction) => {
+export function api(fn: (req: CustomRequest, res?: Response, next?: NextFunction) => Promise<unknown>) {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     fn(req, res, next)
       .then((result) => {
         try {
@@ -38,8 +44,12 @@ export function api(fn: (req: Request, res?: Response, next?: NextFunction) => P
         }
       })
       .catch((exception) => {
-        if (exception?.status) {
-          return res.status(exception.status).json(exception)
+        if (exception instanceof HttpError) {
+          return res.status(exception.status).json({
+            status: exception.status,
+            message: exception.message,
+            ...exception.payload,
+          })
         }
 
         console.error(exception)
@@ -51,8 +61,8 @@ export function api(fn: (req: Request, res?: Response, next?: NextFunction) => P
 /**
  * Basic wrapper
  */
-export function wrapper(fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>) {
-  return (req: Request, res: Response, next: NextFunction) => {
+export function wrapper(fn: (req: CustomRequest, res: Response, next: NextFunction) => Promise<unknown>) {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     fn(req, res, next)
       .catch((exception) => {
         if (exception.status) {
@@ -67,10 +77,10 @@ export function wrapper(fn: (req: Request, res: Response, next: NextFunction) =>
 /**
  * Helper for getting a document and throw 404 if not found
  */
-export async function getDocument<T, TQuery = object, TMethods = object, TVirtuals = object>(
+export async function getDocument<T, TQuery, TMethods, TVirtuals>(
   model: Model<T, TQuery, TMethods, TVirtuals>,
   id: string | string[],
-): Promise<HydratedDocument<T, TMethods, TVirtuals>> {
+): Promise<HydratedDocument<T, TMethods, TQuery, TVirtuals>> {
   if (typeof id !== 'string' || !Types.ObjectId.isValid(id)) {
     throw new HttpError(400)
   }
@@ -80,7 +90,7 @@ export async function getDocument<T, TQuery = object, TMethods = object, TVirtua
     throw new HttpError(404)
   }
 
-  return doc as unknown as HydratedDocument<T, TMethods, TVirtuals>
+  return doc as unknown as HydratedDocument<T, TMethods, TQuery, TVirtuals>
 }
 
 /**

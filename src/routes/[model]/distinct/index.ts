@@ -17,7 +17,7 @@
  */
 
 import type { Router } from 'express'
-import { api } from '#/lib/express-helpers.js'
+import { api } from '#~/lib/express-helpers.js'
 
 import path from './[path].js'
 
@@ -25,9 +25,9 @@ export default (router: Router) => {
   path(router)
 
   router.post('/', api(async ({ model, body: { paths } }) => {
-    const result = {}
+    const result: Record<string, unknown[]> = {}
     for (const path of paths) {
-      result[path] = await model.distinct(path)
+      result[path] = await model?.distinct?.(path) ?? []
     }
 
     return result

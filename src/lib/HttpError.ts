@@ -18,9 +18,11 @@
 
 export class HttpError extends Error {
   public readonly status: number
+  public readonly payload: Record<string, unknown> | undefined
 
-  constructor(status: number, message?: string) {
+  constructor(status: number, message?: string, payload?: Record<string, unknown>) {
     super(message)
     this.status = status
+    this.payload = payload
   }
 }

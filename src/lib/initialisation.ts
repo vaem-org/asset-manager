@@ -17,13 +17,10 @@
  */
 
 import { mkdir } from 'fs/promises'
-import { URL } from 'url'
 import mongoose from 'mongoose'
-import { config } from '#/config.js'
-import { createStorage } from '#/lib/Storage/factory.js'
-import { createCDN } from '#/lib/CDN/factory.js'
-import { Local } from '#/lib/Storage/Local.js'
-import { UploadQueue } from '#/lib/UploadQueue.js'
+import { config } from '#~/config.js'
+import { Local } from '#~/lib/Storage/Local.js'
+import { UploadQueue } from '#~/lib/UploadQueue.js'
 
 /**
  * Common app initialisation for server and console
@@ -40,9 +37,6 @@ export async function initialisation({ createUploadQueue = false } = {}) {
   await mkdir(output, {
     recursive: true,
   })
-
-  config.storage = createStorage(new URL(config.storageUrl))
-  config.cdn = config.cdnUrl ? createCDN(new URL(config.cdnUrl)) : null
 
   if (createUploadQueue && !(config.storage instanceof Local)) {
     config.uploadQueue = new UploadQueue(config.storage)

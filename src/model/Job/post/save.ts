@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { getIO } from '#/lib/encoders.socket.io.js'
+import { getIO } from '#~/lib/encoders.socket.io.js'
 import type { Schema } from 'mongoose'
 
 export default (schema: Schema) => {

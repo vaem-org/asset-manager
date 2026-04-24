@@ -17,7 +17,7 @@
  */
 
 import { Bar } from 'cli-progress'
-import { config } from '#/config.js'
+import { config } from '#~/config.js'
 import type { Command } from 'commander'
 
 async function action(assetId: string) {

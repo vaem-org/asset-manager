@@ -16,16 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Job } from '#/model/Job/index.js'
-import type { AssetSchema } from '#/model/Asset/index.js'
+import { Job } from '#~/model/Job/index.js'
+import type { AssetSchema } from '#~/model/Asset/index.js'
 
 export default (schema: AssetSchema) => {
-  schema.post('remove', async function () {
-    this.removeFiles()
+  schema.post('deleteOne', { document: true, query: false }, async function (doc) {
+    doc.removeFiles()
 
     // remove any jobs
     await Job.deleteMany({
-      asset: this._id,
+      asset: doc._id,
     })
   })
 }
