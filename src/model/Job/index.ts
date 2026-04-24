@@ -17,7 +17,7 @@
  */
 
 import { Schema, model, Types } from 'mongoose'
-import type { PopulatedDoc, SchemaTimestampsConfig } from 'mongoose'
+import type { PopulatedDoc, SchemaTimestampsConfig, Model } from 'mongoose'
 import postSave from './post/save.js'
 import type { IAsset } from '#/model/Asset/index.js'
 
@@ -31,6 +31,8 @@ export interface IJob extends SchemaTimestampsConfig {
   startedAt: Date
   completedAt: Date
 }
+
+type JobModelType = Model<IJob>
 
 const schema = new Schema<IJob>({
   asset: {
@@ -50,4 +52,4 @@ const schema = new Schema<IJob>({
 
 postSave(schema)
 
-export const Job = model('Job', schema)
+export const Job = model<IJob, JobModelType>('Job', schema)

@@ -22,7 +22,7 @@ export abstract class Storage {
   /**
    * Upload a file
    */
-  abstract upload(path: string, stream: ReadableStream): Promise<void>
+  abstract upload(path: string, stream: ReadableStream | ReadStream): Promise<void>
 
   /**
    * Download a file

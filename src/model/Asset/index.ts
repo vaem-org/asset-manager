@@ -17,7 +17,7 @@
  */
 
 import { Schema, model, Types } from 'mongoose'
-import type { SchemaTimestampsConfig, PopulatedDoc } from 'mongoose'
+import type { SchemaTimestampsConfig, PopulatedDoc, Model } from 'mongoose'
 
 import finish from './methods/finish.js'
 import setUploadedVariant from './methods/setUploadedVariant.js'
@@ -42,7 +42,7 @@ export interface IAsset extends SchemaTimestampsConfig {
   state: 'new' | 'processing' | 'processed' | 'verified' | 'error'
   ffprobe: FFProbe
   file: string
-  subtitles: Record<string, string>
+  subtitles: Record<string, boolean>
   hls_enc_key: string
   hls_enc_iv: string
   deleted: boolean
@@ -52,7 +52,7 @@ export interface IAsset extends SchemaTimestampsConfig {
   job: PopulatedDoc<IJob>
 }
 
-const schema = new Schema<IAsset, unknown, {
+type IAssetMethods = {
   createMasterPlaylist(): Promise<void>
   finish(): Promise<void>
   getUrl(): string
@@ -61,13 +61,19 @@ const schema = new Schema<IAsset, unknown, {
   setUploadedVariant(variant: string): Promise<boolean>
   verify(): Promise<boolean>
   verifySubtitles(): Promise<boolean>
-}, unknown, {
+}
+
+type IAssetVirtuals = {
   highestVariant: string
   playbackInfo: {
     stream: string
     subtitles: Record<string, string>
   }
-}>({
+}
+
+type AssetModelType = Model<IAsset, object, IAssetMethods, IAssetVirtuals>
+
+const schema = new Schema<IAsset, AssetModelType, IAssetMethods, object, IAssetVirtuals>({
   labels: [String],
   title: String,
   state: { type: String, enum: ['new', 'processing', 'processed', 'verified', 'error'], default: 'new' },
@@ -128,4 +134,4 @@ setSubtitle(schema)
 getUrl(schema)
 removeFiles(schema)
 
-export const Asset = model('Asset', schema)
+export const Asset = model<IAsset, AssetModelType>('Asset', schema)

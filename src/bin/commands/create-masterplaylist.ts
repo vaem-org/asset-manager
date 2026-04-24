@@ -21,6 +21,9 @@ import type { Command } from 'commander'
 
 async function action(assetId: string) {
   const asset = await Asset.findById(assetId)
+  if (!asset) {
+    throw new Error('Asset not found')
+  }
   await asset.createMasterPlaylist()
 }
 

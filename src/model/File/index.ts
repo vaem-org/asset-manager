@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { SchemaTimestampsConfig } from 'mongoose'
+import type { Model, SchemaTimestampsConfig } from 'mongoose'
 import { Schema, model } from 'mongoose'
 
 import synchronise from './statics/synchronise.js'
@@ -33,11 +33,17 @@ interface IFile extends SchemaTimestampsConfig {
   sourceSize: number
 }
 
-const schema = new Schema<IFile, unknown, unknown, unknown, {
+interface IFileVirtuals {
   path: string
-}, {
+}
+
+interface IFileStaticMethods {
   synchronise(): Promise<void>
-}>({
+}
+
+type FileModelType = Model<IFile, object, object, IFileVirtuals>
+
+const schema = new Schema<IFile, FileModelType, object, object, IFileVirtuals, IFileStaticMethods>({
   name: String,
   size: {
     type: Number,
@@ -66,4 +72,4 @@ synchronise(schema, root)
 postRemove(schema)
 preSave(schema)
 
-export const File = model('File', schema)
+export const File = model<IFile, FileModelType>('File', schema)
