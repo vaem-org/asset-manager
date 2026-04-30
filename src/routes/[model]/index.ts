@@ -17,79 +17,92 @@
  */
 
 import type { Router } from 'express'
+import type { Model, Schema } from 'mongoose'
 import mongoose from 'mongoose'
+import type { CustomRequest } from '#~/lib/express-helpers.js'
 import { api, useRouter } from '#~/lib/express-helpers.js'
 import { getFilter, save } from '#~/lib/crud.js'
 
 import { Asset } from '#~/model/Asset/index.js'
 import { Job } from '#~/model/Job/index.js'
+import type { FileModelType } from '#~/model/File/index.js'
 import { File } from '#~/model/File/index.js'
 
 import distinct from './distinct/index.js'
 import count from './count.js'
 import info from './info.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 const { Types: { ObjectId } } = mongoose
 
 export default (router: Router) => {
-  const models = {
-    assets: Asset,
-    jobs: Job,
-    files: File,
-  }
+  const models = new Map<string, Model<unknown>>([
+    ['assets', Asset],
+    ['jobs', Job],
+    ['files', File],
+  ])
 
   count(router)
   info(router)
   useRouter(router, '/distinct', distinct)
 
-  router.use((req, res, next) => {
-    if (!models[req.params.model]) {
+  router.use((req: CustomRequest, res, next) => {
+    if (!models.has(req.params.model.toString())) {
       return res.status(404).end()
     }
 
-    req.model = models[req.params.model]
+    req.model = models.get(req.params.model.toString())
 
     next()
   })
 
-  router.get('/', api(async ({ model, query }, res) => {
-    let filter = getFilter({
+  router.get('/', api(async ({ model, query }: CustomRequest, res) => {
+    if (!model) {
+      throw new HttpError(400)
+    }
+
+    let filter = getFilter<unknown>({
       model,
       filter: query.filter,
     })
 
-    if (query.q && ObjectId.isValid(query.q)) {
+    if (typeof query.q === 'string' && ObjectId.isValid(query.q)) {
       filter._id = query.q
     }
     else if (query.q) {
-      const searchPaths = model.schema.searchPaths || Object.values(model.schema.paths)
+      const searchPaths: string[] = model!.schema.searchPaths ?? Object.values((model.schema as Schema).paths)
         .filter(({ instance }) => instance === 'String')
         .map(({ path }) => path)
 
-      const regex = model.schema.searchExact ? query.q.trim() : new RegExp(query.q.trim(), 'i')
+      const q = typeof query.q === 'string' ? query.q : undefined
+      const regex = model!.schema.searchExact && q
+        ? q.trim()
+        : new RegExp((q ?? '').trim(), 'i')
 
       filter = {
         ...filter,
         $or: searchPaths
-          .map(path => ({ [path]: regex })),
+          .map((path: string) => ({ [path]: regex })),
       }
     }
 
-    const page = Math.max(1, parseInt(query.page || '1', 10))
-    const per_page = Math.max(1, parseInt(query.per_page || '20', 10))
+    const page = Math.max(1, parseInt((query.page ?? '1').toString(), 10))
+    const per_page = Math.max(1, parseInt((query.per_page ?? '20').toString(), 10))
     const sort = query.sort || '-createdAt'
-    const total = await model.countDocuments(filter)
-    const populate = (query.populate || '').split(',').filter(v => v)
+    const total = await model!.countDocuments(filter)
+    const populate = (query.populate ?? '')
+      .toString()
+      .split(',').filter(v => v)
     res.setHeader('x-total', total)
     res.setHeader('Access-Control-Expose-Headers', 'x-total')
 
-    if (model.synchronise && page === 1 && !query.q) {
-      await model.synchronise()
+    if (typeof (model as FileModelType).synchronise !== 'undefined' && page === 1 && !query.q) {
+      await (model as FileModelType).synchronise()
     }
 
-    return (await model
+    return (await model!
       .find(filter)
-      .sort(sort)
+      .sort(sort.toString())
       .populate(populate)
       .skip((page - 1) * per_page)
       .limit(per_page)
@@ -97,7 +110,7 @@ export default (router: Router) => {
   }))
 
   router.post('/', api(async ({ body, model }) => {
-    const doc = new model(body)
+    const doc = new model!(body)
     await save(doc)
 
     return doc.toJSON()

@@ -19,6 +19,12 @@
 import type { Router } from 'express'
 import { api } from '#~/lib/express-helpers.js'
 import { HttpError } from '#~/lib/HttpError.js'
+import type { Schema, SchemaType } from 'mongoose'
+
+interface Virtual {
+  options?: Record<string, unknown>
+  [key: string]: unknown
+}
 
 export default (router: Router) => {
   router.get('/', api(async ({ model }) => {
@@ -29,18 +35,22 @@ export default (router: Router) => {
     return {
       paths: Object.fromEntries(
         [
-          ...Object.entries(model.schema.paths)
-            .map(([key, { path, instance, enumValues, options: { ref, ui } }]) => [
-              key,
-              {
-                path,
-                enumValues,
-                ref,
-                instance: ui?.type ?? instance,
-                label: ui?.label,
-              },
-            ]),
-          ...Object.entries(model.schema.virtuals)
+          ...Object.entries((model.schema as Schema).paths)
+            .map(([key, schema]: [string, SchemaType & {
+              enumValues?: unknown[]
+            }]) => {
+              return [
+                key,
+                {
+                  path: schema.path,
+                  enumValues: schema.enumValues ?? [],
+                  ref: schema.options.ref,
+                  instance: schema.options.ui?.type ?? schema.instance,
+                  label: schema.options.ui?.label,
+                },
+              ]
+            }),
+          ...Object.entries((model.schema as Schema).virtuals as Record<string, Virtual>)
             .filter(([key]) => key !== 'id')
             .map(([key, { path, options }]) => [
               key,

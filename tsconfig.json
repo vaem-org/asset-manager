@@ -8,9 +8,8 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": "./src",
-    "baseUrl": "src",
     "paths": {
-      "#~/*": ["./*"]
+      "#~/*": ["./src/*"]
     },
     "types": ["node"]
   },

@@ -60,12 +60,12 @@ export default (schema: AssetSchema) => {
       console.info(`Checking duration for ${variant}`)
       let duration
       try {
-        duration = (await ffprobe(videoUrl)).format.duration
+        duration = parseInt((await ffprobe(videoUrl)).format.duration)
       }
       catch (_e) {
         duration = 0
       }
-      if (Math.abs(this.ffprobe.format.duration - Math.floor(duration)) > 2) {
+      if (Math.abs(parseInt(this.ffprobe.format.duration) - Math.floor(duration)) > 2) {
         console.error(`Duration for bitrate ${variant} (${duration}) differs from source (${this.ffprobe.format.duration}).`)
       }
       else {

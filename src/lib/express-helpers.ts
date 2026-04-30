@@ -23,15 +23,15 @@ import { Router } from 'express'
 import { HttpError } from '#~/lib/HttpError.js'
 import type { Token } from '#~/types/Token.js'
 
-interface CustomRequest extends Request {
+export interface CustomRequest extends Request {
   token?: Token
-  model?: Model<object>
+  model?: Model<unknown>
 }
 
 /**
  * Wrap an async function into middleware
  */
-export function api(fn: (req: CustomRequest, res?: Response, next?: NextFunction) => Promise<unknown>) {
+export function api(fn: (req: CustomRequest, res: Response, next: NextFunction) => Promise<unknown>) {
   return (req: CustomRequest, res: Response, next: NextFunction) => {
     fn(req, res, next)
       .then((result) => {

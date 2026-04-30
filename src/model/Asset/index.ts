@@ -17,7 +17,7 @@
  */
 
 import { Schema, model, Types } from 'mongoose'
-import type { SchemaTimestampsConfig, PopulatedDoc, Model } from 'mongoose'
+import type { SchemaTimestampsConfig, PopulatedDoc, Model, Document } from 'mongoose'
 
 import finish from './methods/finish.js'
 import setUploadedVariant from './methods/setUploadedVariant.js'
@@ -71,6 +71,7 @@ type IAssetVirtuals = {
   }
 }
 
+export type AssetDocument = Document<Types.ObjectId, object, IAsset, IAssetVirtuals> & IAsset & IAssetMethods
 export type AssetModelType = Model<IAsset, object, IAssetMethods, IAssetVirtuals>
 
 const schema = new Schema<IAsset, AssetModelType, IAssetMethods, object, IAssetVirtuals>({

@@ -16,10 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { spawn } from 'child_process'
-import { join } from 'path'
-import { finished } from 'stream/promises'
-import { mkdir, writeFile } from 'fs/promises'
+import { spawn } from 'node:child_process'
+import { join } from 'node:path'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { text } from 'node:stream/consumers'
+
 import { Asset } from '#~/model/Asset/index.js'
 import { config } from '../config.js'
 import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js'
@@ -134,17 +135,14 @@ export async function segmentVtt(assetId: string, lang: string): Promise<void> {
 
   const stream = await config.storage?.download?.(`${assetId}/subtitles/${lang}.vtt`)
   const outputPath = join(config.root, 'var/output', assetId, 'subtitles')
-  const buffers: Buffer[] = []
-  stream.on('data', (buffer: Buffer) => buffers.push(buffer))
-  await finished(stream)
-  const input = Buffer.concat(buffers).toString()
+  const input = await text(stream)
 
   await mkdir(outputPath, {
     recursive: true,
   })
   await writeFile(
     join(outputPath, `${lang}.m3u8`),
-    hlsSegmentPlaylist(input, 10).replace(
+    hlsSegmentPlaylist(input, 10).toString().replace(
       /^\d+\.vtt$/mg,
       (match: string) => `${lang}.${match}`,
     ),

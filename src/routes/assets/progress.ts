@@ -19,6 +19,7 @@
 import type { Router } from 'express'
 import { api } from '#~/lib/express-helpers.js'
 import { Asset } from '#~/model/Asset/index.js'
+import type { JobDocument } from '#~/model/Job/index.js'
 
 export default (router: Router) => {
   router.get('/', api(async ({ query: { ids } }) => {
@@ -26,7 +27,9 @@ export default (router: Router) => {
       _id: {
         $in: Array.isArray(ids) ? ids : [],
       },
-    }).populate('job')
+    }).populate<{
+      job: JobDocument
+    }>('job')
 
     return assets.map(({ _id, job, state }) => ({
       _id,

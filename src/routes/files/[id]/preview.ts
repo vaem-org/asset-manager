@@ -16,14 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { EventEmitter } from 'node:events'
+import type { ChildProcess } from 'node:child_process'
+import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
+
 import type { Router } from 'express'
-import { EventEmitter } from 'events'
-import { v4 as uuidv4 } from 'uuid'
 import { api, getDocument } from '#~/lib/express-helpers.js'
 import { config } from '#~/config.js'
 import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg.js'
-import type { ChildProcess } from 'node:child_process'
-import { spawn } from 'node:child_process'
 import { getSignedUrl } from '#~/lib/security.js'
 import { File } from '#~/model/File/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
@@ -70,7 +71,7 @@ export default (router: Router) => {
     }
 
     // start a new ffmpeg process
-    const uuid = uuidv4()
+    const uuid = randomUUID()
     const base = config.base + getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
     const child = spawn('ffmpeg', [
       '-re',

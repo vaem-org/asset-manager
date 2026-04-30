@@ -18,6 +18,7 @@
 
 import type { Document, Model } from 'mongoose'
 import { Error as MongooseError } from 'mongoose'
+import type { ParsedQs } from 'qs'
 import { HttpError } from '#~/lib/HttpError.js'
 
 /**
@@ -62,7 +63,7 @@ function setDates(filter: string | object) {
 /**
  * Parse a filter string from the url query
  */
-export function getFilter<T>({ filter, model }: { filter: string | string[], model: Model<T> }) {
+export function getFilter<T>({ filter, model }: { filter: undefined | string | ParsedQs | (string | ParsedQs)[], model: Model<T> }) {
   try {
     return filter
       ? Object.fromEntries(Object.entries(JSON.parse(filter.toString()))

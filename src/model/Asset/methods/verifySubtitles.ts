@@ -16,8 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { config } from '#~/config.js'
-import { parseM3U8 } from '#~/lib/m3u8.js'
 import type { AssetSchema } from '#~/model/Asset/index.js'
+import type { MediaPlaylist } from 'm3u8parse'
+import parseM3U8, { PlaylistType } from 'm3u8parse'
+import { text } from 'node:stream/consumers'
 
 export default (schema: AssetSchema) => {
   /**
@@ -36,10 +38,12 @@ export default (schema: AssetSchema) => {
       result = result && files.has(`${lang}.vtt`) && files.has(`${lang}.m3u8`)
 
       // check if all playlist items of m3u8 are available
-      const playlist = result
-        ? await parseM3U8(await config.storage?.download?.(`${root}/${lang}.m3u8`))
+      const playlist: MediaPlaylist | undefined = result
+        ? parseM3U8(await text(await config.storage?.download?.(`${root}/${lang}.m3u8`)), {
+            type: PlaylistType.Media,
+          })
         : undefined
-      result = result && playlist?.items?.PlaylistItem?.every?.(i => files.has(i.properties?.uri))
+      result = result && !!playlist?.segments?.every?.(i => i.uri && files.has(i.uri))
     }
 
     return result

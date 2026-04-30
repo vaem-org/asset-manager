@@ -64,7 +64,7 @@ export interface Format {
   nb_programs: number
   format_name: string
   start_time: string
-  duration: number
+  duration: string
   size: string
   bit_rate: string
   probe_score: number

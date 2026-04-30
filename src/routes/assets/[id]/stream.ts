@@ -20,11 +20,14 @@ import type { Router } from 'express'
 import dayjs from 'dayjs'
 import send from 'send'
 import axios, { AxiosError } from 'axios'
+import type { AttrList, MediaPlaylist } from 'm3u8parse'
+import parseM3U8, { PlaylistType } from 'm3u8parse'
 import { api, getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { Asset } from '#~/model/Asset/index.js'
 import { config } from '#~/config.js'
-import { parseM3U8 } from '#~/lib/m3u8.js'
 import { HttpError } from '#~/lib/HttpError.js'
+import { text } from 'node:stream/consumers'
+import type { Key } from 'm3u8parse/types/attrs'
 
 export default (router: Router) => {
   router.get('/', api(async (req) => {
@@ -43,14 +46,17 @@ export default (router: Router) => {
     const signedUrl = config.cdn?.getSignedUrl?.(source, 60)
     const doc = await getDocument(Asset, id)
 
-    let m3u
+    let m3u: MediaPlaylist
     try {
-      m3u = await parseM3U8(
-        signedUrl
+      m3u = parseM3U8(
+        await text(signedUrl
           ? (await axios.get(signedUrl, {
               responseType: 'stream',
             })).data
           : await config.storage?.download?.(source),
+        ), {
+          type: PlaylistType.Media,
+        },
       )
     }
     catch (e) {
@@ -59,24 +65,19 @@ export default (router: Router) => {
       )
     }
 
-    if (m3u.properties['EXT-X-KEY']) {
-      // update key url
-      m3u.properties['EXT-X-KEY'] = [
-        'METHOD=AES-128',
-        `URI="file.key"`,
-        `IV=0x${doc.hls_enc_iv}`,
-      ].join(',')
-    }
+    m3u.keysForMsn(0)
+      ?.forEach?.((key: AttrList<Key>) => {
+        key.set('iv', `0x${doc.hls_enc_iv}`)
+      })
 
     if (config.cdn) {
-      m3u.items.PlaylistItem.forEach((stream) => {
-        if (/\.(ts|vtt)$/.exec(stream.get('uri'))) {
-          stream.set('uri',
-            config.cdn!.getSignedUrl(
-              `/${id}/${stream.get('uri')}`,
+      m3u.segments.forEach((stream) => {
+        if (stream.uri && /\.(ts|vtt)$/.exec(stream.uri)) {
+          stream.uri
+            = config.cdn!.getSignedUrl(
+              `/${id}/${stream.uri}`,
               8 * 3600,
-            ),
-          )
+            )
         }
       })
     }

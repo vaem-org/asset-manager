@@ -17,24 +17,50 @@
  */
 
 import { createServer } from 'http'
-import type { DefaultEventsMap } from 'socket.io'
+import type { DefaultEventsMap, Socket } from 'socket.io'
 import { Server } from 'socket.io'
-import type { Connection } from 'mongoose'
 import mongoose from 'mongoose'
 import { mkdir, rmdir } from 'fs/promises'
 import { Mutex } from 'async-mutex'
 import { basename } from 'path'
 import { Job } from '#~/model/Job/index.js'
 import { config } from '#~/config.js'
+import type { AssetDocument } from '#~/model/Asset/index.js'
 import { Asset } from '#~/model/Asset/index.js'
 import { getSignedUrl } from '#~/lib/security.js'
+import type { Express } from 'express'
 
 let io: Server<DefaultEventsMap, DefaultEventsMap>
 
 export const getIO = () => io
 
+interface Event {
+  type: 'ready' | 'done' | 'progress' | 'encodeError'
+}
+
+interface ReadyEvent extends Event {
+  type: 'ready'
+}
+
+interface DoneEvent extends Event {
+  type: 'done'
+  job: string
+}
+
+interface ProgressEvent extends Event {
+  type: 'progress'
+  job: string
+  out_time_ms: number
+}
+
+interface ErrorEvent extends Event {
+  type: 'encodeError'
+  job: string
+  stderr: string
+}
+
 const mutex = new Mutex()
-async function ready({ connection }: { connection: Connection }) {
+async function ready(connection: Socket) {
   const release = await mutex.acquire()
   try {
     const job = await Job.findOne({
@@ -77,7 +103,7 @@ async function ready({ connection }: { connection: Connection }) {
   }
 }
 
-async function progress({ event: { job, out_time_ms } }) {
+async function progress(connection: Socket, { out_time_ms, job }: ProgressEvent) {
   const progress = out_time_ms / 1000 / 1000
 
   await Job.findOneAndUpdate({
@@ -89,22 +115,22 @@ async function progress({ event: { job, out_time_ms } }) {
   })
 }
 
-async function done({ event: { job: id } }) {
+async function done(connection: Socket, { job: id }: DoneEvent) {
   const release = await mutex.acquire()
 
   try {
     console.log(`Job ${id} done`)
-    const job = await Job.findById(id).populate('asset')
-    if (!job) {
-      return
-    }
+    const job = await Job.findById(id).populate<{
+      asset: AssetDocument
+    }>('asset').orFail()
+
     job.state = 'done'
-    job.progress = parseFloat(job.asset.ffprobe?.format?.duration)
+    job.progress = parseFloat(job.asset?.ffprobe?.format?.duration)
     job.completedAt = new Date()
     await job.save()
 
     if (!config.uploadQueue) {
-      await job.asset.finish()
+      await job.asset?.finish?.()
     }
   }
   finally {
@@ -112,7 +138,7 @@ async function done({ event: { job: id } }) {
   }
 }
 
-async function error({ event: { job, stderr } }) {
+async function error(connection: Socket, { job, stderr }: ErrorEvent) {
   console.log(`Error for job ${job}: ${stderr}`)
   await Job.findOneAndUpdate({
     _id: job,
@@ -124,7 +150,7 @@ async function error({ event: { job, stderr } }) {
   })
 }
 
-async function uploaded(file) {
+async function uploaded(file: string) {
   const release = await mutex.acquire()
 
   try {
@@ -148,7 +174,7 @@ async function uploaded(file) {
   }
 }
 
-export function initialise(app) {
+export function initialise(app: Express) {
   if (config.uploadQueue) {
     config.uploadQueue.on('uploaded', (file) => {
       if (file.endsWith('.m3u8')) {
@@ -165,23 +191,16 @@ export function initialise(app) {
 
   io.on('connection', (connection) => {
     console.log(`New connection ${connection.id}`)
-    const wrap = fn => (event) => {
-      fn({
-        connection,
-        event,
-      }).catch((e) => {
+    const wrap = <T>(fn: (event: T) => Promise<void>) => (event: T) => {
+      fn(event).catch((e) => {
         console.warn(e)
       })
     }
 
-    Object.entries({
-      ready,
-      done,
-      error,
-      progress,
-    }).forEach(([name, handler]) => {
-      connection.on(name, wrap(handler))
-    })
+    connection.on('ready', wrap<ReadyEvent>(() => ready(connection)))
+    connection.on('done', wrap<DoneEvent>(event => done(connection, event)))
+    connection.on('encodeError', wrap<ErrorEvent>(event => error(connection, event)))
+    connection.on('progress', wrap<ProgressEvent>(event => progress(connection, event)))
   })
 
   return httpServer
