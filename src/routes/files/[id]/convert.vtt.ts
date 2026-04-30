@@ -24,7 +24,7 @@ import { File } from '#~/model/File/index.js'
 import { convert } from '#~/lib/subtitles.js'
 
 export default (router: Router) => {
-  router.get('', wrapper(async ({ params: { id } }, res) => {
+  router.get('/convert.vtt', wrapper(async ({ params: { id } }, res) => {
     res.setHeader('expires', dayjs().add(7, 'days').toISOString())
     res.setHeader('cache-control', 'private,max-age=604800')
 

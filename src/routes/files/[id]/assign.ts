@@ -22,7 +22,7 @@ import { File } from '#~/model/File/index.js'
 import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
-  router.post('/:assetId/:language', api(async ({ params: { id, assetId, language } }) => {
+  router.post('/assign/:assetId/:language', api(async ({ params: { id, assetId, language } }) => {
     const file = await getDocument(File, id)
     const asset = await getDocument(Asset, assetId)
     await asset.setSubtitle(language.toString(), file.path)

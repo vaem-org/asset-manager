@@ -30,18 +30,18 @@ import { text } from 'node:stream/consumers'
 import type { Key } from 'm3u8parse/types/attrs'
 
 export default (router: Router) => {
-  router.get('/', api(async (req) => {
+  router.get('/stream', api(async (req) => {
     return (await getDocument(Asset, req.params.id)).playbackInfo
   }))
 
-  router.get('/file.key', wrapper(async (req, res) => {
+  router.get('/stream/file.key', wrapper(async (req, res) => {
     res.setHeader('expires', dayjs().add(7, 'days').toISOString())
     res.setHeader('cache-control', 'private,max-age=604800')
 
     res.send(Buffer.from((await getDocument(Asset, req.params.id)).hls_enc_key, 'hex'))
   }))
 
-  router.get(['/:assetId.:bitrate.m3u8', '/subtitles/:language.m3u8'], wrapper(async ({ params: { id, bitrate, language } }, res) => {
+  router.get(['/stream/:assetId.:bitrate.m3u8', '/stream/subtitles/:language.m3u8'], wrapper(async ({ params: { id, bitrate, language } }, res) => {
     const source = !language ? `/${id}/${id}.${bitrate}.m3u8` : `/${id}/subtitles/${language}.m3u8`
     const signedUrl = config.cdn?.getSignedUrl?.(source, 60)
     const doc = await getDocument(Asset, id)
@@ -86,7 +86,7 @@ export default (router: Router) => {
     res.end(m3u.toString())
   }))
 
-  router.get('/:assetId.m3u8', wrapper(async (req, res) => {
+  router.get('/stream/:assetId.m3u8', wrapper(async (req, res) => {
     res.setHeader('cache-control', 'private,max-age=604800')
     res.setHeader('Content-Type', 'application/x-mpegURL')
 
@@ -112,7 +112,7 @@ export default (router: Router) => {
       .pipe(res)
   }))
 
-  router.get(['/:file', '/subtitles/:file'], (req, res) => {
+  router.get(['/stream/:file', '/stream/subtitles/:file'], (req, res) => {
     const { params: { id }, url } = req
     send(req, `${config.root}/var/output/${id}/${url}`).pipe(res)
   })

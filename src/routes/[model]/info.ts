@@ -27,7 +27,7 @@ interface Virtual {
 }
 
 export default (router: Router) => {
-  router.get('/', api(async ({ model }) => {
+  router.get('/info', api(async ({ model }) => {
     if (!model) {
       throw new HttpError(500)
     }

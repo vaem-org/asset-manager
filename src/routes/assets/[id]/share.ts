@@ -22,7 +22,7 @@ import { getSignedUrl } from '#~/lib/security.js'
 import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
-  router.post('/', api(async ({ params: { id }, body: { password, expires } }) => {
+  router.post('/share', api(async ({ params: { id }, body: { password, expires } }) => {
     await getDocument(Asset, id)
     const [,,timestamp,,signature] = getSignedUrl(`/assets/${id}/share/${encodeURIComponent(password)}`, true, Math.floor((parseInt(expires) - Date.now()) / 1000))
       .split('/')
@@ -33,7 +33,7 @@ export default (router: Router) => {
     }
   }))
 
-  router.get('/:password', api(async ({ params: { id } }) => {
+  router.get('/share/:password', api(async ({ params: { id } }) => {
     // Note: password is verified by signed url. No need to verify it here
     const doc = await getDocument(Asset, id)
     return doc.playbackInfo

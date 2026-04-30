@@ -42,7 +42,7 @@ export default (router: Router) => {
 
   const events = new EventEmitter()
 
-  router.post('/', api(async ({ params: { id }, body: { audio } }) => {
+  router.post('/preview', api(async ({ params: { id }, body: { audio } }) => {
     const item = await getDocument(File, id)
     if (!item) {
       throw new HttpError(404)
@@ -144,7 +144,7 @@ export default (router: Router) => {
     return `${base}/stream.m3u8`
   }))
 
-  router.put('/:uuid/:filename', (req, res, next) => {
+  router.put('/preview/:uuid/:filename', (req, res, next) => {
     const { uuid, filename } = req.params
     const process = processes.get(uuid)
     if (!process) {
@@ -173,7 +173,7 @@ export default (router: Router) => {
     })
   })
 
-  router.get('/:uuid/:filename', (req, res, next) => {
+  router.get('/preview/:uuid/:filename', (req, res, next) => {
     const process = processes.get(req.params.uuid)
     const buffer = process && process.buffers.get(req.params.filename)
     if (!buffer) {
@@ -189,7 +189,7 @@ export default (router: Router) => {
     res.end(buffer)
   })
 
-  router.delete('/:uuid', (req, res, next) => {
+  router.delete('/preview/:uuid', (req, res, next) => {
     const process = processes.get(req.params.uuid)
     if (!process) {
       return next()

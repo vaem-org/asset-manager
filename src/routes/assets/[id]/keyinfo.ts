@@ -22,12 +22,12 @@ import { Asset } from '#~/model/Asset/index.js'
 import { config } from '#~/config.js'
 
 export default (router: Router) => {
-  router.get('/file.key', wrapper(async (req, res) => {
+  router.get('/keyinfo/file.key', wrapper(async (req, res) => {
     const asset = await getDocument(Asset, req.params.id)
     return res.send(Buffer.from(asset.hls_enc_key, 'hex'))
   }))
 
-  router.get('/', wrapper(async (req, res) => {
+  router.get('/keyinfo', wrapper(async (req, res) => {
     const doc = await getDocument(Asset, req.params.id)
     return res.send([
       'file.key',

@@ -32,7 +32,7 @@ export default (router: Router) => {
 
   const authConfig = config.auth
 
-  router.get('/', api(async (req) => {
+  router.get('/google', api(async (req) => {
     if (!req.query.redirect_uri) {
       throw new HttpError(400, 'No redirect uri')
     }
@@ -47,7 +47,7 @@ export default (router: Router) => {
     })
   }))
 
-  router.post('/', urlencoded({
+  router.post('/google', urlencoded({
     extended: false,
   }), api(async ({ body: { code, redirect_uri } }) => {
     const client = new OAuth2Client({

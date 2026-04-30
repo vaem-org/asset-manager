@@ -21,20 +21,20 @@ import { save } from '#~/lib/crud.js'
 import { api, getDocument } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
-  router.get('/', api(async ({ params: { id }, model }) => {
+  router.get('/:id', api(async ({ params: { id }, model }) => {
     const doc = id === 'new' ? new model!() : await getDocument(model!, id)
 
     return doc.toJSON()
   }))
 
-  router.put('/', api(async ({ body, model, params: { id } }) => {
+  router.put('/:id', api(async ({ body, model, params: { id } }) => {
     const doc = id === 'new' ? new model!() : await getDocument(model!, id)
     doc.set(body)
     await save(doc)
     return doc.toJSON()
   }))
 
-  router.delete('/', api(async ({ model, params: { id } }) => {
+  router.delete('/:id', api(async ({ model, params: { id } }) => {
     const doc = await getDocument(model!, id)
     return doc.deleteOne()
   }))

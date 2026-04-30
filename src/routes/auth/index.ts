@@ -22,5 +22,5 @@ import google from './google.js'
 import { useRouter } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
-  useRouter(router, '/google', google)
+  google(router)
 }

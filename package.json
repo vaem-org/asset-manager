@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "node --watch src/index.ts",
+    "dev": "tsx --watch src/index.ts",
     "lint": "eslint --ext .js --ignore-path .gitignore src",
     "console": "node src/bin/console.ts"
   },
@@ -30,6 +30,7 @@
     "@types/send": "^1.2.1",
     "eslint": "^10.2.1",
     "eslint-plugin-node": "^11.1.0",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   },
   "dependencies": {

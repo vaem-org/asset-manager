@@ -27,7 +27,7 @@ import { Asset } from '#~/model/Asset/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router): void => {
-  router.get('/', wrapper(async ({ params: { id } }, res) => {
+  router.get('/frame0.webp', wrapper(async ({ params: { id } }, res) => {
     const asset = await getDocument(Asset, id)
     if (!['verified', 'processed'].includes(asset.state) || asset.variants.length === 0 || asset.deleted) {
       throw new HttpError(404)

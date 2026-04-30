@@ -23,7 +23,7 @@ import { File } from '#~/model/File/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
-  router.post('', api(async ({ params: { id }, body: {
+  router.post('/encode', api(async ({ params: { id }, body: {
     audio,
     copyHighestVariant,
     customAudioFilter = null,

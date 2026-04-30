@@ -24,7 +24,7 @@ import { api, getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { File } from '#~/model/File/index.js'
 
 export default (router: Router) => {
-  router.get('/', api(async ({ params: { id } }) => {
+  router.get('/upload', api(async ({ params: { id } }) => {
     const file = await getDocument(File, id)
 
     try {
@@ -36,7 +36,7 @@ export default (router: Router) => {
     return file.toJSON()
   }))
 
-  router.put('/:start', wrapper(async (req, res) => {
+  router.put('/upload/:start', wrapper(async (req, res) => {
     const { params: { id, start } } = req
     const file = await getDocument(File, id)
     await mkdir(dirname(file.path), {

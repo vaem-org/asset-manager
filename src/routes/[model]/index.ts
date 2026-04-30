@@ -42,10 +42,6 @@ export default (router: Router) => {
     ['files', File],
   ])
 
-  count(router)
-  info(router)
-  useRouter(router, '/distinct', distinct)
-
   router.use((req: CustomRequest, res, next) => {
     if (!models.has(req.params.model.toString())) {
       return res.status(404).end()
@@ -55,6 +51,10 @@ export default (router: Router) => {
 
     next()
   })
+
+  count(router)
+  info(router)
+  useRouter(router, '/distinct', distinct)
 
   router.get('/', api(async ({ model, query }: CustomRequest, res) => {
     if (!model) {

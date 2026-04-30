@@ -22,7 +22,7 @@ import { Asset } from '#~/model/Asset/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
-  router.get('/', api(async ({ params: { id } }) => {
+  router.get('/:id', api(async ({ params: { id } }) => {
     const doc = await Asset.findById(id.toString())
     if (!doc?.public) {
       throw new HttpError(401)

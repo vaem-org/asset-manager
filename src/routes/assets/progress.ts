@@ -22,7 +22,7 @@ import { Asset } from '#~/model/Asset/index.js'
 import type { JobDocument } from '#~/model/Job/index.js'
 
 export default (router: Router) => {
-  router.get('/', api(async ({ query: { ids } }) => {
+  router.get('/progress', api(async ({ query: { ids } }) => {
     const assets = await Asset.find({
       _id: {
         $in: Array.isArray(ids) ? ids : [],

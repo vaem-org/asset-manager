@@ -25,6 +25,7 @@ import sign from './sign.js'
 import auth from './auth/index.js'
 import publicRouter from './public/index.js'
 import files from './files/index.js'
+import assets from './assets/index.js'
 import model from './[model]/index.js'
 
 export default (router: Router) => {
@@ -34,5 +35,6 @@ export default (router: Router) => {
   useRouter(router, '/auth', auth)
   useRouter(router, '/public', publicRouter)
   useRouter(router, '/files', files)
+  useRouter(router, '/assets', assets)
   useRouter(router, '/:model', model)
 }

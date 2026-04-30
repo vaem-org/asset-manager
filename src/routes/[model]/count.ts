@@ -21,7 +21,7 @@ import { api } from '#~/lib/express-helpers.js'
 import { getFilter } from '#~/lib/crud.js'
 
 export default (router: Router) => {
-  router.get('/', api(async ({ query: { filter }, model }) => {
+  router.get('/count', api(async ({ query: { filter }, model }) => {
     return model!.countDocuments(getFilter({
       model: model!,
       filter: typeof filter === 'string' ? filter : '{}',

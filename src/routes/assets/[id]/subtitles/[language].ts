@@ -27,7 +27,7 @@ import { Asset } from '#~/model/Asset/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
-  router.get('/', wrapper(async ({ params: { language, id }, query: { direct } }, res) => {
+  router.get('/:language', wrapper(async ({ params: { language, id }, query: { direct } }, res) => {
     const asset = await getDocument(Asset, id)
     if (config.cdn && direct !== '1') {
       return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt?${stringify({
@@ -46,7 +46,7 @@ export default (router: Router) => {
     }
   }))
 
-  router.put('/:name', api(async (req) => {
+  router.put('/:language/:name', api(async (req) => {
     const { params: { language, id, name } } = req
     const tempFile = `${tmpdir()}/${id}${extname(name.toString())}`
     await writeFile(tempFile, req)
@@ -55,7 +55,7 @@ export default (router: Router) => {
     await unlink(tempFile)
   }))
 
-  router.delete('/', api(async ({ params: { language, id } }) => {
+  router.delete('/:language', api(async ({ params: { language, id } }) => {
     const asset = await getDocument(Asset, id)
 
     const { [language.toString()]: _toRemove, ...subtitles } = asset.subtitles

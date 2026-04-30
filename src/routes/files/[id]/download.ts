@@ -22,7 +22,7 @@ import { File } from '#~/model/File/index.js'
 import send from 'send'
 
 export default (router: Router) => {
-  router.get('/', wrapper(async (req, res) => {
+  router.get('/download', wrapper(async (req, res) => {
     const { params: { id } } = req
     const file = await getDocument(File, id)
     res.setHeader('content-disposition', `attachment; filename="${file.name}"`)

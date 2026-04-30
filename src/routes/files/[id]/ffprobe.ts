@@ -22,7 +22,7 @@ import { File } from '#~/model/File/index.js'
 import { ffprobe, getAudio } from '#~/lib/ffmpeg.js'
 
 export default (router: Router) => {
-  router.get('/', api(async ({ params: { id } }) => {
+  router.get('/ffprobe', api(async ({ params: { id } }) => {
     const file = await getDocument(File, id)
     const { streams, format } = await ffprobe(file.path)
     return {

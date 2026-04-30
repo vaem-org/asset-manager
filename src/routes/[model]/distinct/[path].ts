@@ -20,7 +20,7 @@ import type { Router } from 'express'
 import { api } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
-  router.get('/', api(async ({ model, params: { path } }) => {
+  router.get('/:path', api(async ({ model, params: { path } }) => {
     return model!.distinct(path.toString())
   }))
 }

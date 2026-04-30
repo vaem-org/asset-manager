@@ -22,7 +22,7 @@ import { spawn } from 'node:child_process'
 import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
-  router.get('/', wrapper(async (req, res) => {
+  router.get('/download', wrapper(async (req, res) => {
     const { params: { id } } = req
     const asset = await getDocument(Asset, id)
 
