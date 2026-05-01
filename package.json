@@ -11,7 +11,7 @@
     "build": "tsc",
     "dev": "tsx --env-file .env --watch src/index.ts",
     "lint": "eslint --ext .js --ignore-path .gitignore src",
-    "console": "tsx src/bin/console.ts"
+    "console": "tsx --env-file .env src/bin/console.ts"
   },
   "bin": {
     "console": "dist/bin/console.js"
