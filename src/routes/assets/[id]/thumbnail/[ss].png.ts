@@ -16,11 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { createReadStream } from 'node:fs'
+import { access, mkdir } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import { spawn } from 'node:child_process'
 import type { Router } from 'express'
-import { createReadStream } from 'fs'
-import { access, mkdir } from 'fs/promises'
-import { dirname } from 'path'
-import { spawn } from 'child_process'
+import ffmpeg from '@ffmpeg-installer/ffmpeg'
 import { getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { config } from '#~/config.js'
 import { Asset } from '#~/model/Asset/index.js'
@@ -45,7 +46,7 @@ export default (router: Router) => {
 
       // create thumbnail
       await new Promise<void>((resolve, reject) => {
-        spawn('ffmpeg', [
+        spawn(ffmpeg.path, [
           '-v', 'error',
           '-y',
           '-ss', ss.toString(),

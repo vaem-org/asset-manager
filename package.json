@@ -14,7 +14,7 @@
     "console": "node src/bin/console.ts"
   },
   "bin": {
-    "console": "src/bin/console.ts"
+    "console": "dist/bin/console.js"
   },
   "engines": {
     "node": "^24.0.0"
@@ -34,6 +34,7 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "async-mutex": "^0.5.0",
     "axios": "^1.15.2",
     "chokidar": "^5.0.0",

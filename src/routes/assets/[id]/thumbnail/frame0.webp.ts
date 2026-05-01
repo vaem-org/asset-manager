@@ -25,6 +25,7 @@ import { getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { config } from '#~/config.js'
 import { Asset } from '#~/model/Asset/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
+import ffmpeg from '@ffmpeg-installer/ffmpeg'
 
 export default (router: Router): void => {
   router.get('/frame0.webp', wrapper(async ({ params: { id } }, res) => {
@@ -45,7 +46,7 @@ export default (router: Router): void => {
 
       // create thumbnail
       await new Promise<void>((resolve, reject) => {
-        spawn('ffmpeg', [
+        spawn(ffmpeg.path, [
           '-v', 'error',
           '-y',
           '-i', asset.getUrl(asset.highestVariant),
