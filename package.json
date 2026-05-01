@@ -9,9 +9,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx --watch src/index.ts",
+    "dev": "tsx --env-file .env --watch src/index.ts",
     "lint": "eslint --ext .js --ignore-path .gitignore src",
-    "console": "node src/bin/console.ts"
+    "console": "tsx src/bin/console.ts"
   },
   "bin": {
     "console": "dist/bin/console.js"
@@ -43,7 +43,6 @@
     "commander": "^14.0.3",
     "cors": "^2.8.6",
     "dayjs": "^1.11.20",
-    "dotenv": "^17.4.2",
     "express": "^4.22.1",
     "glob": "^13.0.6",
     "google-auth-library": "^10.6.2",

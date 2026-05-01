@@ -15,18 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { config as dotenv } from 'dotenv'
-import { dirname, join } from 'path'
-import { fileURLToPath, URL } from 'url'
+import { dirname } from 'node:path'
+import { fileURLToPath, URL } from 'node:url'
 import type { UploadQueue } from '#~/lib/UploadQueue.js'
 import { createStorage } from '#~/lib/Storage/factory.js'
 import { createCDN } from '#~/lib/CDN/factory.js'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
-
-dotenv({
-  path: join(root, '.env'),
-})
 
 if (!process.env.SECRET) {
   throw new Error('Environment variable SECRET not found.')
