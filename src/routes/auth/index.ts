@@ -19,7 +19,6 @@
 import type { Router } from 'express'
 
 import google from './google.js'
-import { useRouter } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
   google(router)
