@@ -21,6 +21,8 @@ import { join } from 'node:path'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { text } from 'node:stream/consumers'
 
+import { path as ffprobePath } from '@ffprobe-installer/ffprobe'
+
 import { Asset } from '#~/model/Asset/index.js'
 import { config } from '../config.js'
 import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js'
@@ -60,7 +62,7 @@ async function run(cmd: string, args: string[]): Promise<Buffer> {
  */
 export async function ffprobe(filename: string): Promise<{ streams: Stream[], format: Format }> {
   try {
-    return JSON.parse((await run('ffprobe', [
+    return JSON.parse((await run(ffprobePath, [
       '-v', 'error',
       '-print_format', 'json',
       '-show_format',
@@ -119,7 +121,7 @@ export async function segmentVtt(assetId: string, lang: string): Promise<void> {
   }
 
   const { frames } = JSON.parse(
-    (await run('ffprobe', [
+    (await run(ffprobePath, [
       '-v', 'error',
       '-print_format', 'json',
       '-show_frames',

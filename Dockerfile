@@ -26,7 +26,9 @@ ADD . /app
 
 COPY --from=build /app/dist /app/dist
 
-RUN mkdir /app/var && chown 1000 /app/var && chmod +x dist/bin/console.js && ln -s /app/dist/bin/console.js /usr/local/bin/console
+RUN mkdir /app/var && chown 1000 /app/var \
+    && chmod +x dist/bin/console.js && ln -s /app/dist/bin/console.js /usr/local/bin/console \
+    && node /app/fix-perms.js
 
 USER 1000
 

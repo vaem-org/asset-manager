@@ -27,11 +27,12 @@ import { Asset } from '#~/model/Asset/index.js'
 import { Job } from '#~/model/Job/index.js'
 import type { FileModelType } from '#~/model/File/index.js'
 import { File } from '#~/model/File/index.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 import distinct from './distinct/index.js'
 import count from './count.js'
 import info from './info.js'
-import { HttpError } from '#~/lib/HttpError.js'
+import _id from './[id].js'
 
 const { Types: { ObjectId } } = mongoose
 
@@ -55,6 +56,7 @@ export default (router: Router) => {
   count(router)
   info(router)
   useRouter(router, '/distinct', distinct)
+  _id(router)
 
   router.get('/', api(async ({ model, query }: CustomRequest, res) => {
     if (!model) {

@@ -113,7 +113,7 @@ export default (router: Router) => {
   }))
 
   router.get(['/stream/:file', '/stream/subtitles/:file'], (req, res) => {
-    const { params: { id }, url } = req
-    send(req, `${config.root}/var/output/${id}/${url}`).pipe(res)
+    const { params: { id, file } } = req
+    send(req, `${config.root}/var/output/${id}/${file}`).pipe(res)
   })
 }
