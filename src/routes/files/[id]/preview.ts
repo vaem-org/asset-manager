@@ -24,11 +24,10 @@ import { randomUUID } from 'node:crypto'
 import type { Router } from 'express'
 import { api, getDocument } from '#~/lib/express-helpers.js'
 import { config } from '#~/config.js'
-import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg.js'
+import { ffprobe, getAudio, getFramerate, ffmpegPath } from '#~/lib/ffmpeg.js'
 import { getSignedUrl } from '#~/lib/security.js'
 import { File } from '#~/model/File/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
-import ffmpeg from '@ffmpeg-installer/ffmpeg'
 
 interface Child {
   child: ChildProcess
@@ -74,7 +73,7 @@ export default (router: Router) => {
     // start a new ffmpeg process
     const uuid = randomUUID()
     const base = config.base + getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
-    const child = spawn(ffmpeg.path, [
+    const child = spawn(ffmpegPath, [
       '-re',
       '-i', source,
       '-loglevel', 'error',

@@ -36,7 +36,7 @@ export async function encode(
   const path = `${config.root}/var/files/${file}`
   const asset = await Asset.findOne({
     file,
-    deleted: false,
+    deleted: { $ne: true },
   }) ?? new Asset({
     file,
     title: basename(path).replace(/\.[^.]+$/, ''),

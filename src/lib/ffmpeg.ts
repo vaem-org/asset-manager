@@ -21,12 +21,13 @@ import { join } from 'node:path'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { text } from 'node:stream/consumers'
 
-import { path as ffprobePath } from '@ffprobe-installer/ffprobe'
-
 import { Asset } from '#~/model/Asset/index.js'
 import { config } from '../config.js'
 import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js'
 import type { Format, Stream } from '#~/types/ffmpeg.js'
+
+export const ffprobePath = '/usr/bin/ffprobe'
+export const ffmpegPath = '/usr/bin/ffmpeg'
 
 /**
  *

@@ -21,11 +21,11 @@ import { access, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { spawn } from 'node:child_process'
 import type { Router } from 'express'
-import ffmpeg from '@ffmpeg-installer/ffmpeg'
 import { getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { config } from '#~/config.js'
 import { Asset } from '#~/model/Asset/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
+import { ffmpegPath } from '#~/lib/ffmpeg.js'
 
 export default (router: Router) => {
   router.get('/:ss.png', wrapper(async ({ params: { ss, id } }, res) => {
@@ -46,7 +46,7 @@ export default (router: Router) => {
 
       // create thumbnail
       await new Promise<void>((resolve, reject) => {
-        spawn(ffmpeg.path, [
+        spawn(ffmpegPath, [
           '-v', 'error',
           '-y',
           '-ss', ss.toString(),

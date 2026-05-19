@@ -20,14 +20,14 @@ import type { Router } from 'express'
 import { getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { spawn } from 'node:child_process'
 import { Asset } from '#~/model/Asset/index.js'
-import ffmpeg from '@ffmpeg-installer/ffmpeg'
+import { ffmpegPath } from '#~/lib/ffmpeg.js'
 
 export default (router: Router) => {
   router.get('/download', wrapper(async (req, res) => {
     const { params: { id } } = req
     const asset = await getDocument(Asset, id)
 
-    const child = spawn(ffmpeg.path, [
+    const child = spawn(ffmpegPath, [
       '-v', 'error',
       '-i', asset.getUrl(asset.highestVariant),
       '-c', 'copy',

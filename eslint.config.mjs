@@ -36,3 +36,15 @@ export default createConfigForNuxt({
       ],
     },
   })
+  .then((config) => {
+    // remove **/public from ignores
+    return config
+      .map(({ ignores, ...config }) => {
+        return ignores
+          ? {
+              ignores: ignores.filter(v => v !== '**/public'),
+              ...config,
+            }
+          : config
+      })
+  })

@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express';
-import { api, getDocument } from '#~/lib/express-helpers.js';
+import type { Router } from 'express'
+import { api } from '#~/lib/express-helpers.js'
 import { Asset } from '#~/model/Asset/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
 

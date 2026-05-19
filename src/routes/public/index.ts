@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Router } from 'express'
+import type { Router } from 'express'
 import publicAssetsId from '#~/routes/public/assets/[id].js'
 import { useRouter } from '#~/lib/express-helpers.js'
 
