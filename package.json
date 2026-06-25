@@ -20,36 +20,36 @@
     "node": "^24.0.0"
   },
   "devDependencies": {
-    "@nuxt/eslint-config": "^1.15.2",
+    "@nuxt/eslint-config": "^1.16.0",
     "@types/cli-progress": "^3.11.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.12.2",
-    "@types/qs": "^6.15.0",
+    "@types/node": "^24.13.2",
+    "@types/qs": "^6.15.1",
     "@types/send": "^1.2.1",
-    "eslint": "^10.2.1",
+    "eslint": "^10.5.0",
     "eslint-plugin-node": "^11.1.0",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
   "dependencies": {
     "async-mutex": "^0.5.0",
-    "axios": "^1.15.2",
+    "axios": "^1.18.1",
     "chokidar": "^5.0.0",
     "cli-progress": "^3.12.0",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "cors": "^2.8.6",
-    "dayjs": "^1.11.20",
-    "express": "^4.22.1",
+    "dayjs": "^1.11.21",
+    "express": "^4.22.2",
     "glob": "^13.0.6",
-    "google-auth-library": "^10.6.2",
+    "google-auth-library": "^10.9.0",
     "jsonwebtoken": "^9.0.3",
     "m3u8parse": "^5.0.2",
-    "mongoose": "^9.6.1",
+    "mongoose": "^9.7.2",
     "node-webvtt": "^1.9.4",
     "send": "^1.2.1",
     "socket.io": "^4.8.3"
   },
-  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
+  "packageManager": "pnpm@11.9.0+sha512.bd682d5d03fe525ef7c9fd6780c6884d1e756ac4c9c9fe00c538782824310dcf90e3ddc4f53835f06dfaebd5085e41855e0bcbb3b60de2ac5bbab89e5036f03b"
 }
