@@ -26,8 +26,8 @@ import { config } from '../config.js'
 import { hlsSegment, hlsSegmentPlaylist } from 'node-webvtt/lib/hls.js'
 import type { Format, Stream } from '#~/types/ffmpeg.js'
 
-export const ffprobePath = '/usr/bin/ffprobe'
-export const ffmpegPath = '/usr/bin/ffmpeg'
+export const ffprobePath = process.env.FFPROBE_PATH ?? '/usr/bin/ffprobe'
+export const ffmpegPath = process.env.FFMPEG_PATH ?? '/usr/bin/ffmpeg'
 
 /**
  *
@@ -47,6 +47,10 @@ async function run(cmd: string, args: string[]): Promise<Buffer> {
   })
 
   return new Promise((resolve, reject) => {
+    child.on('error', (err) => {
+      reject(err)
+    })
+
     child.on('close', (code) => {
       if (code !== 0) {
         reject(Buffer.concat(stderr))
@@ -74,7 +78,9 @@ export async function ffprobe(filename: string): Promise<{ streams: Stream[], fo
     )
   }
   catch (e) {
-    throw new Error(`ffprobe process failed: ${e?.toString?.()}`)
+    throw new Error(`ffprobe process failed: ${e?.toString?.()}`, {
+      cause: e,
+    })
   }
 }
 

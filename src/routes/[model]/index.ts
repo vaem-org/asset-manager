@@ -37,7 +37,8 @@ import _id from './[id].js'
 const { Types: { ObjectId } } = mongoose
 
 export default (router: Router) => {
-  const models = new Map<string, Model<unknown>>([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const models = new Map<string, Model<any>>([
     ['assets', Asset],
     ['jobs', Job],
     ['files', File],
@@ -98,8 +99,8 @@ export default (router: Router) => {
     res.setHeader('x-total', total)
     res.setHeader('Access-Control-Expose-Headers', 'x-total')
 
-    if (typeof (model as FileModelType).synchronise !== 'undefined' && page === 1 && !query.q) {
-      await (model as FileModelType).synchronise()
+    if (typeof (model as unknown as FileModelType).synchronise !== 'undefined' && page === 1 && !query.q) {
+      await (model as unknown as FileModelType).synchronise()
     }
 
     return (await model!

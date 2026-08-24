@@ -51,7 +51,8 @@ const main = Router({
 
 index(main)
 
-app.use(['/signed/:timestamp/:n/:signature', '/'], security(), main)
+app.use('/signed/:timestamp/:n/:signature', security(), main)
+app.use('/', security(), main)
 
 const server = initialise(app)
 server.listen(config.port, () => {

@@ -44,9 +44,6 @@ export default (router: Router) => {
 
   router.post('/preview', api(async ({ params: { id }, body: { audio } }) => {
     const item = await getDocument(File, id)
-    if (!item) {
-      throw new HttpError(404)
-    }
 
     const source = `${config.root}/var/files/${item.name}`
 
@@ -128,10 +125,11 @@ export default (router: Router) => {
     await new Promise<void>((resolve, reject) => {
       events.once(uuid, (err) => {
         if (err) {
-          reject({
-            status: 500,
-            message: 'ffmpeg failed',
-          })
+          console.warn(err)
+          reject(new HttpError(
+            500,
+            'ffmpeg failed',
+          ))
         }
         else {
           resolve()
@@ -141,7 +139,10 @@ export default (router: Router) => {
 
     processes.get(uuid)?.setTimer?.()
 
-    return `${base}/stream.m3u8`
+    return {
+      stream: `${base}/stream.m3u8`,
+      uuid,
+    }
   }))
 
   router.put('/preview/:uuid/:filename', (req, res, next) => {

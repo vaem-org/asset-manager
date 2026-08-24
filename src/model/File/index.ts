@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Model, SchemaTimestampsConfig } from 'mongoose'
+import type { Model, SchemaTimestampsConfig, Document, Types } from 'mongoose'
 import { Schema, model } from 'mongoose'
 
 import synchronise from './statics/synchronise.js'
@@ -37,7 +37,9 @@ export interface IFileVirtuals {
   path: string
 }
 
-export interface FileModelType extends Model<IFile, object, object, IFileVirtuals> {
+export type FileDocument = Document<Types.ObjectId, object, IFile, IFileVirtuals> & IFile
+
+export type FileModelType = Model<IFile, object, object, IFileVirtuals> & {
   synchronise(): Promise<void>
 }
 

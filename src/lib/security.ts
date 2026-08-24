@@ -66,7 +66,7 @@ export function security() {
 
     if (originalUrl.startsWith('/signed')) {
       // verify signed urls
-      const _timestamp = parseInt(timestamp.toString())
+      const _timestamp = parseInt(timestamp?.toString?.())
       verified = Date.now() < _timestamp && signature === getSignature(url, _timestamp, parseInt(n.toString()))
     }
     else {
@@ -84,8 +84,8 @@ export function security() {
       }
     }
 
+    next()
     if (verified) {
-      next()
     }
     else {
       res.status(401).send('Access denied')
