@@ -28,7 +28,7 @@ export default (router: Router) => {
     copyHighestVariant,
     customAudioFilter = null,
     ss = null,
-  } }) => {
+  } = {} }) => {
     const doc = await getDocument(File, id)
 
     try {

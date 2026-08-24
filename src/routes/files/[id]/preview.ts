@@ -42,7 +42,7 @@ export default (router: Router) => {
 
   const events = new EventEmitter()
 
-  router.post('/preview', api(async ({ params: { id }, body: { audio } }) => {
+  router.post('/preview', api(async ({ params: { id }, body: { audio, ss } }) => {
     const item = await getDocument(File, id)
 
     const source = `${config.root}/var/files/${item.name}`
@@ -72,6 +72,7 @@ export default (router: Router) => {
     const base = config.base + getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
     const child = spawn(ffmpegPath, [
       '-re',
+      '-ss', ss ?? '0',
       '-i', source,
       '-loglevel', 'error',
       '-threads', '0',
