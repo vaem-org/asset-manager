@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:docker": "docker build --platform linux/amd64 -t vaem/asset-manager -f ./docker/prod/Dockerfile .",
     "dev": "tsx --env-file .env --watch src/index.ts",
     "lint": "eslint --ext .js --ignore-path .gitignore src",
     "console": "tsx --env-file .env src/bin/console.ts"

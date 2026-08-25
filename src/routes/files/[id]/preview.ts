@@ -69,7 +69,8 @@ export default (router: Router) => {
 
     // start a new ffmpeg process
     const uuid = randomUUID()
-    const base = `http://localhost:${config.port}` + getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
+    const location = getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
+    const base = `http://localhost:${config.port}` + location
     const child = spawn(ffmpegPath, [
       '-re',
       '-ss', ss ?? '0',
@@ -141,7 +142,7 @@ export default (router: Router) => {
     processes.get(uuid)?.setTimer?.()
 
     return {
-      stream: `${base}/stream.m3u8`,
+      stream: `${config.base}${location}/stream.m3u8`,
       uuid,
     }
   }))
