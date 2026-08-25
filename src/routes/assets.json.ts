@@ -25,15 +25,14 @@ export default (router: Router) => {
     const assets = await Asset.find()
       .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted', 'ffprobe.format.duration'])
 
-    return assets.reduce((byId, doc) => {
-      const { _id, ffprobe, ...item } = doc.toObject()
-      return ({
-        ...byId,
-        [_id.toString()]: {
+    return Object.fromEntries(
+      assets.map((doc) => {
+        const { _id, ffprobe, ...item } = doc.toObject()
+        return [doc._id.toString(), {
           ...item,
           duration: ffprobe.format.duration,
-        },
-      })
-    }, {})
+        }]
+      }),
+    )
   }))
 }
