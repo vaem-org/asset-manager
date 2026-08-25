@@ -69,7 +69,7 @@ export default (router: Router) => {
 
     // start a new ffmpeg process
     const uuid = randomUUID()
-    const base = config.base + getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
+    const base = `http://localhost:${config.port}` + getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
     const child = spawn(ffmpegPath, [
       '-re',
       '-ss', ss ?? '0',
