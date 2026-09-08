@@ -29,12 +29,6 @@ import { HttpError } from '#~/lib/HttpError.js'
 export default (router: Router) => {
   router.get('/:language', wrapper(async ({ params: { language, id }, query: { direct } }, res) => {
     const asset = await getDocument(Asset, id)
-    if (config.cdn && direct !== '1') {
-      return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt?${stringify({
-        updatedAt: asset.updatedAt ? asset.updatedAt.getTime() : 0,
-        v: asset.__v,
-      })}`, 60))
-    }
 
     res.setHeader('content-type', 'text/vtt')
     res.setHeader('content-disposition', `attachment; filename="${asset.title}.${language}.vtt"`)
