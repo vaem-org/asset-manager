@@ -16,17 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Model, SchemaTimestampsConfig, Document, Types } from 'mongoose'
+import type { Model, Document, Types } from 'mongoose'
 import { Schema, model } from 'mongoose'
 
 import synchronise from './statics/synchronise.js'
 import postRemove from './post/deleteOne.js'
 import preSave from './pre/save.js'
 import { config } from '#~/config.js'
+import type { ITimestamps } from '#~/types/ITimestamps.js'
 
 export const root = `${config.root}/var/files`
 
-export interface IFile extends SchemaTimestampsConfig {
+export interface IFile extends ITimestamps {
   name: string
   size: number
   type: 'unknown' | 'video' | 'subtitle'

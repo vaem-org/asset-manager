@@ -17,7 +17,7 @@
  */
 
 import { Schema, model, Types } from 'mongoose'
-import type { SchemaTimestampsConfig, PopulatedDoc, Model, Document } from 'mongoose'
+import type { PopulatedDoc, Model, Document } from 'mongoose'
 
 import finish from './methods/finish.js'
 import setUploadedVariant from './methods/setUploadedVariant.js'
@@ -35,8 +35,9 @@ import { getSignedUrl } from '#~/lib/security.js'
 import { config } from '#~/config.js'
 import type { FFProbe } from '#~/types/ffmpeg.js'
 import type { IJob } from '#~/model/Job/index.js'
+import type { ITimestamps } from '#~/types/ITimestamps.js'
 
-export interface IAsset extends SchemaTimestampsConfig {
+export interface IAsset extends ITimestamps {
   labels: string[]
   title: string
   state: 'new' | 'processing' | 'processed' | 'verified' | 'error'

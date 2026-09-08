@@ -31,7 +31,7 @@ export default (router: Router) => {
     const asset = await getDocument(Asset, id)
     if (config.cdn && direct !== '1') {
       return res.redirect(config.cdn.getSignedUrl(`/${id}/subtitles/${language}.vtt?${stringify({
-        updatedAt: typeof asset.updatedAt === 'string' ? new Date(asset.updatedAt).getTime() : 0,
+        updatedAt: asset.updatedAt ? asset.updatedAt.getTime() : 0,
         v: asset.__v,
       })}`, 60))
     }

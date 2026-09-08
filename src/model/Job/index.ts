@@ -17,11 +17,12 @@
  */
 
 import { Schema, model, Types } from 'mongoose'
-import type { PopulatedDoc, SchemaTimestampsConfig, Model, Document } from 'mongoose'
+import type { PopulatedDoc, Model, Document } from 'mongoose'
 import postSave from './post/save.js'
 import type { IAsset } from '#~/model/Asset/index.js'
+import type { ITimestamps } from '#~/types/ITimestamps.js'
 
-export interface IJob extends SchemaTimestampsConfig {
+export interface IJob extends ITimestamps {
   asset: PopulatedDoc<IAsset>
   file: string
   arguments: string[]
