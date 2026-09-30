@@ -97,7 +97,7 @@ export function getAudio(streams: Stream[]): number[] {
 
   const monoChannels = audioStreams.filter(({ channels }) => channels === 1)
   const findChannel = (layout: string) => {
-    return monoChannels.find(({ channel_layout: layout2 }) => layout2 === layout)?.index
+    return monoChannels.find(({ channel_layout: layout2 }) => layout2.includes(layout))?.index
   }
 
   const dl = findChannel('DL')
