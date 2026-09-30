@@ -26,12 +26,12 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.19.0",
     "@types/qs": "^6.15.1",
     "@types/send": "^1.2.1",
-    "eslint": "^10.10.0",
+    "eslint": "^10.11.0",
     "eslint-plugin-node": "^11.1.0",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   },
   "dependencies": {
@@ -44,13 +44,13 @@
     "dayjs": "^1.11.23",
     "express": "^5.2.1",
     "glob": "^13.0.6",
-    "google-auth-library": "^11.0.2",
+    "google-auth-library": "^11.1.0",
     "jsonwebtoken": "^9.0.3",
     "m3u8parse": "^5.0.2",
-    "mongoose": "^9.9.5",
-    "node-webvtt": "^1.9.4",
+    "mongoose": "^9.10.2",
+    "node-webvtt": "^2.0.0",
     "send": "^1.2.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.4"
   },
   "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457"
 }

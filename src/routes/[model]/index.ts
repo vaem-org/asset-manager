@@ -38,7 +38,7 @@ const { Types: { ObjectId } } = mongoose
 
 export default (router: Router) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const models = new Map<string, Model<any>>([
+  const models = new Map<string, Model<any, any, any, any>>([
     ['assets', Asset],
     ['jobs', Job],
     ['files', File],
