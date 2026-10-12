@@ -23,8 +23,15 @@ import type { AssetSchema } from '#~/model/Asset/index.js'
 export default (schema: AssetSchema) => {
   schema.post('save', function () {
     if (config.webhooks.saved) {
-      axios.post(config.webhooks.saved, {
+      const parsed = new URL(config.webhooks.saved)
+      axios.post(parsed.origin + parsed.pathname + parsed.search, {
         id: this._id,
+      }, {
+        headers: parsed.password
+          ? {
+              authorization: `Bearer ${parsed.password}`,
+            }
+          : {},
       }).catch((e) => {
         console.warn(`Unable to post webhook message: ${e.toString()}`)
       })
