@@ -3,5 +3,5 @@ node_modules
 .idea
 /var/
 .git
-/src/sandbox.js
+/src/sandbox.ts
 /dist
