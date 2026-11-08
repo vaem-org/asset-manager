@@ -17,6 +17,7 @@
  */
 
 import { Bunny } from './Bunny.js'
+import { Google } from './Google.js'
 import { Local } from './Local.js'
 import type { Storage } from './index.js'
 
@@ -29,6 +30,8 @@ export function createStorage(url: URL): Storage {
       return new Local({ url })
     case 'bunny:':
       return new Bunny({ url })
+    case 'gs:':
+      return new Google({ url })
 
     default:
       throw new Error(`Unknown protocol for ${url}`)

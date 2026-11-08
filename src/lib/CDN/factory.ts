@@ -17,6 +17,7 @@
  */
 
 import { Bunny } from './Bunny.js'
+import { Google } from './Google.js'
 import type { CDN } from './index.js'
 
 /**
@@ -26,6 +27,8 @@ export function createCDN(url: URL): CDN {
   switch (url.protocol) {
     case 'bunny:':
       return new Bunny({ url })
+    case 'google:':
+      return new Google({ url })
 
     default:
       throw new Error(`Unknown protocol for ${url}`)
