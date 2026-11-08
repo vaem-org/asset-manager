@@ -6,3 +6,4 @@ node_modules
 /src/sandbox.ts
 /dist
 docker-compose.override.yml
+/.agents/skills
