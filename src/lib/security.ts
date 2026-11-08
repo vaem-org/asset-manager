@@ -84,8 +84,8 @@ export function security() {
       }
     }
 
-    next()
     if (verified) {
+      next()
     }
     else {
       res.status(401).send('Access denied')
