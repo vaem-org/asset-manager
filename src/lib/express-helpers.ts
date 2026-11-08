@@ -85,7 +85,7 @@ export async function getDocument<T, TQuery, TMethods, TVirtuals>(
     throw new HttpError(400)
   }
 
-  const doc = await model.findById(id).exec()
+  const doc = await model.findOne({ _id: id, deleted: { $ne: true } }).exec()
   if (!doc) {
     throw new HttpError(404)
   }

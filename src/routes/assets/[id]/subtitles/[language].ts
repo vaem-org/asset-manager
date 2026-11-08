@@ -20,14 +20,19 @@ import type { Router } from 'express'
 import { unlink, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { extname } from 'path'
-import { stringify } from 'querystring'
 import { api, getDocument, wrapper } from '#~/lib/express-helpers.js'
 import { config } from '#~/config.js'
 import { Asset } from '#~/model/Asset/index.js'
 import { HttpError } from '#~/lib/HttpError.js'
 
+const isValidLanguage = (language: unknown): language is string =>
+  typeof language === 'string' && /^[a-zA-Z0-9_-]+$/.test(language)
+
 export default (router: Router) => {
-  router.get('/:language', wrapper(async ({ params: { language, id }, query: { direct } }, res) => {
+  router.get('/:language', wrapper(async ({ params: { language, id } }, res) => {
+    if (!isValidLanguage(language)) {
+      throw new HttpError(400)
+    }
     const asset = await getDocument(Asset, id)
 
     res.setHeader('content-type', 'text/vtt')
@@ -42,17 +47,28 @@ export default (router: Router) => {
 
   router.put('/:language/:name', api(async (req) => {
     const { params: { language, id, name } } = req
-    const tempFile = `${tmpdir()}/${id}${extname(name.toString())}`
-    await writeFile(tempFile, req)
+    if (!isValidLanguage(language)) {
+      throw new HttpError(400)
+    }
     const asset = await getDocument(Asset, id)
-    await asset.setSubtitle(language.toString(), tempFile)
-    await unlink(tempFile)
+    const ext = extname(name.toString()).replace(/[^a-zA-Z0-9.]/g, '')
+    const tempFile = `${tmpdir()}/${asset._id.toString()}${ext}`
+    await writeFile(tempFile, req)
+    try {
+      await asset.setSubtitle(language, tempFile)
+    }
+    finally {
+      await unlink(tempFile).catch(() => {})
+    }
   }))
 
   router.delete('/:language', api(async ({ params: { language, id } }) => {
+    if (!isValidLanguage(language)) {
+      throw new HttpError(400)
+    }
     const asset = await getDocument(Asset, id)
 
-    const { [language.toString()]: _toRemove, ...subtitles } = asset.subtitles
+    const { [language]: _toRemove, ...subtitles } = asset.subtitles
     asset.subtitles = subtitles
     await asset.save();
 

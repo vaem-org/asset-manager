@@ -30,7 +30,11 @@ import type { Token } from '#~/types/Token.js'
  * @param n the number of path components to match (0 for all)
  */
 function getSignature(url: string, timestamp: number, n: number): string {
-  const data = url.split('/').slice(0, n === 0 ? undefined : (n + 1)).join('/') + timestamp
+  if (!Number.isInteger(n) || n < 0) {
+    throw new Error('Invalid prefix length n')
+  }
+  const prefix = url.split('/').slice(0, n === 0 ? undefined : (n + 1)).join('/')
+  const data = `${n}:${prefix}:${timestamp}`
   return createHmac('sha256', config.secret)
     .update(data)
     .digest('hex')
@@ -66,8 +70,16 @@ export function security() {
 
     if (originalUrl.startsWith('/signed')) {
       // verify signed urls
-      const _timestamp = parseInt(timestamp?.toString?.())
-      verified = Date.now() < _timestamp && signature === getSignature(url, _timestamp, parseInt(n.toString()))
+      const _timestamp = parseInt(timestamp?.toString?.() ?? '', 10)
+      const _n = Number(n?.toString?.() ?? '')
+      const methodAllowed = ['GET', 'HEAD', 'OPTIONS'].includes(req.method)
+        || (req.method === 'PUT' && /^\/files\/[^/]+\/preview\/[^/]+\/[^/]+$/.test(url) && Boolean(headers['x-preview-write-token']))
+      verified = methodAllowed
+        && Number.isFinite(_timestamp)
+        && Number.isInteger(_n)
+        && _n >= 0
+        && Date.now() < _timestamp
+        && signature === getSignature(url, _timestamp, _n)
     }
     else {
       // verify jwt or api token

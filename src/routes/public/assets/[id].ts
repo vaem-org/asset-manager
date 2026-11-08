@@ -24,7 +24,7 @@ import { HttpError } from '#~/lib/HttpError.js'
 export default (router: Router) => {
   router.get('/:id', api(async ({ params: { id } }) => {
     const doc = await Asset.findById(id.toString())
-    if (!doc?.public) {
+    if (!doc?.public || doc.deleted) {
       throw new HttpError(401)
     }
 

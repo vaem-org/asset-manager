@@ -51,12 +51,22 @@ export async function save(doc: Document<unknown>) {
   }
 }
 
+const allowedDateOperators = new Set(['$gt', '$gte', '$lt', '$lte'])
+
 function setDates(filter: string | object) {
   if (typeof filter === 'string') {
     return new Date(filter)
   }
+  if (Array.isArray(filter)) {
+    throw new Error('Date filter cannot be an array')
+  }
   return Object.fromEntries(Object.entries(filter)
-    .map(([key, value]) => [key, new Date(value)]),
+    .map(([key, value]) => {
+      if (!allowedDateOperators.has(key) || (typeof value !== 'string' && typeof value !== 'number')) {
+        throw new Error(`Invalid date filter operator: ${key}`)
+      }
+      return [key, new Date(value)]
+    }),
   )
 }
 
@@ -65,19 +75,27 @@ function setDates(filter: string | object) {
  */
 export function getFilter<T>({ filter, model }: { filter: undefined | string | ParsedQs | (string | ParsedQs)[], model: Model<T> }) {
   try {
-    return filter
-      ? Object.fromEntries(Object.entries(JSON.parse(filter.toString()))
-          .map(([path, filter]) => {
-            if (model.schema.paths[path]?.instance === 'Date'
-              && (typeof filter === 'string' || typeof filter === 'object')
-              && filter
-            ) {
-              return [path, setDates(filter)]
-            }
-            return [path, filter]
-          }),
-        )
-      : {}
+    if (!filter) return {}
+    const parsed = JSON.parse(filter.toString())
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('Filter must be a JSON object')
+    }
+    const forbiddenPaths = new Set(['hls_enc_key', 'hls_enc_iv'])
+    return Object.fromEntries(Object.entries(parsed)
+      .filter(([path]) => !path.startsWith('$') && !forbiddenPaths.has(path) && Boolean(model.schema.paths[path]))
+      .map(([path, value]) => {
+        if (model.schema.paths[path]?.instance === 'Date'
+          && (typeof value === 'string' || typeof value === 'object')
+          && value
+        ) {
+          return [path, setDates(value)]
+        }
+        if (value && typeof value === 'object') {
+          throw new Error(`Nested query operators are not allowed for path ${path}`)
+        }
+        return [path, value]
+      }),
+    )
   }
   catch (e) {
     throw new HttpError(400, `Unable to parse filter "${filter}": ${e?.toString?.()}`)

@@ -29,25 +29,32 @@ export default (schema: AssetSchema) => {
    * Add subtitle
    */
   schema.methods.setSubtitle = async function (language: string, source: string): Promise<void> {
-    let converted = null
-    if (!source.toLowerCase().endsWith('.vtt')) {
-      converted = `${tmpdir()}/${this._id}.vtt`
-      await convert(source, converted)
+    if (!/^[a-zA-Z0-9_-]+$/.test(language)) {
+      throw new Error('Invalid subtitle language')
     }
-    await config.storage?.upload?.(
-      `${this._id}/subtitles/${language}.vtt`,
-      createReadStream(converted || source),
-    )
+    let converted: string | null = null
+    try {
+      if (!source.toLowerCase().endsWith('.vtt')) {
+        converted = `${tmpdir()}/${this._id}.vtt`
+        await convert(source, converted)
+      }
+      await config.storage?.upload?.(
+        `${this._id}/subtitles/${language}.vtt`,
+        createReadStream(converted || source),
+      )
 
-    this.subtitles = {
-      ...this.subtitles,
-      [language]: true,
+      this.subtitles = {
+        ...this.subtitles,
+        [language]: true,
+      }
+      this.increment()
+      await this.save()
+      await segmentVtt(this._id.toString(), language)
     }
-    this.increment()
-    await this.save()
-    await segmentVtt(this._id.toString(), language)
-    if (converted) {
-      await unlink(converted)
+    finally {
+      if (converted) {
+        await unlink(converted).catch(() => {})
+      }
     }
   }
 }

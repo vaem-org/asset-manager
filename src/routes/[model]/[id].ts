@@ -21,15 +21,26 @@ import { save } from '#~/lib/crud.js'
 import { api, getDocument } from '#~/lib/express-helpers.js'
 
 export default (router: Router) => {
+  const writableFields: Record<string, string[]> = {
+    assets: ['title', 'labels', 'public', 'deleted'],
+    files: ['name', 'sourceSize'],
+    jobs: ['state'],
+  }
+
   router.get('/:id', api(async ({ params: { id }, model }) => {
     const doc = id === 'new' ? new model!() : await getDocument(model!, id)
 
     return doc.toJSON()
   }))
 
-  router.put('/:id', api(async ({ body, model, params: { id } }) => {
+  router.put('/:id', api(async ({ body, model, params: { id, model: modelName } }) => {
     const doc = id === 'new' ? new model!() : await getDocument(model!, id)
-    doc.set(body)
+    const allowed = writableFields[modelName.toString()] ?? []
+    const sanitized = Object.fromEntries(
+      Object.entries(body && typeof body === 'object' ? body : {})
+        .filter(([k]) => allowed.includes(k)),
+    )
+    doc.set(sanitized)
     await save(doc)
     return doc.toJSON()
   }))

@@ -33,19 +33,26 @@ interface Child {
   child: ChildProcess
   buffers: Map<string, Buffer>
   files: string[]
+  writeToken: string
   setTimer(): void
   timer?: NodeJS.Timeout
 }
+
+const MAX_PREVIEW_PROCESSES = 5
+const MAX_SEGMENT_BYTES = 16 * 1024 * 1024
 
 export default (router: Router) => {
   const processes = new Map<string, Child>()
 
   const events = new EventEmitter()
 
-  router.post('/preview', api(async ({ params: { id }, body: { audio, ss } }) => {
+  router.post('/preview', api(async ({ params: { id }, body: { audio, ss } = {} }) => {
+    if (processes.size >= MAX_PREVIEW_PROCESSES) {
+      throw new HttpError(429, 'Too many active preview processes')
+    }
     const item = await getDocument(File, id)
 
-    const source = `${config.root}/var/files/${item.name}`
+    const source = item.path
 
     const { streams } = await ffprobe(
       source,
@@ -60,20 +67,28 @@ export default (router: Router) => {
     const framerate = getFramerate(video)
 
     audio = audio ?? getAudio(streams)
+    if (!Array.isArray(audio) || !audio.every((idx: unknown) => typeof idx === 'number' && Number.isInteger(idx) && idx >= 0)) {
+      throw new HttpError(400, 'Invalid audio stream indices')
+    }
+    if (ss !== undefined && ss !== null && !/^\d+(\.\d+)?$/.test(String(ss))) {
+      throw new HttpError(400, 'Invalid ss parameter')
+    }
+
     let audioMapping: string[] = []
     if (audio.length > 0) {
       audioMapping = audio.length > 1
-        ? ['-filter_complex', `${audio.map((index: string) => `[0:${index}]`).join('')}amerge=inputs=2[aout]`, '-map', '[aout]']
+        ? ['-filter_complex', `${audio.map((index: number) => `[0:${index}]`).join('')}amerge=inputs=2[aout]`, '-map', '[aout]']
         : ['-map', `0:${audio[0]}`]
     }
 
     // start a new ffmpeg process
     const uuid = randomUUID()
+    const writeToken = randomUUID()
     const location = getSignedUrl(`/files/${id}/preview/${uuid}`, false, 3600 * 4)
     const base = `http://localhost:${config.port}` + location
     const child = spawn(ffmpegPath, [
       '-re',
-      '-ss', ss ?? '0',
+      '-ss', ss ? String(ss) : '0',
       '-i', source,
       '-loglevel', 'error',
       '-threads', '0',
@@ -93,6 +108,7 @@ export default (router: Router) => {
       '-x264opts', 'no-scenecut',
       '-f', 'hls',
       '-method', 'PUT',
+      '-headers', `X-Preview-Write-Token: ${writeToken}\r\n`,
       '-hls_list_size', '5',
       '-hls_time', '2',
       `${base}/stream.m3u8`,
@@ -112,6 +128,7 @@ export default (router: Router) => {
       child,
       buffers: new Map<string, Buffer>(),
       files: [],
+      writeToken,
       setTimer() {
         if (this.timer) {
           clearTimeout(this.timer)
@@ -123,6 +140,8 @@ export default (router: Router) => {
         }, 30000)
       },
     } satisfies Child)
+
+    processes.get(uuid)?.setTimer?.()
 
     await new Promise<void>((resolve, reject) => {
       events.once(uuid, (err) => {
@@ -150,13 +169,27 @@ export default (router: Router) => {
   router.put('/preview/:uuid/:filename', (req, res, next) => {
     const { uuid, filename } = req.params
     const process = processes.get(uuid)
-    if (!process) {
+    if (!process || req.headers['x-preview-write-token'] !== process.writeToken) {
       return next()
     }
 
     const buffers: Buffer[] = []
-    req.on('data', buf => buffers.push(buf))
+    let totalBytes = 0
+    let aborted = false
+    req.on('data', (buf: Buffer) => {
+      totalBytes += buf.length
+      if (totalBytes > MAX_SEGMENT_BYTES) {
+        aborted = true
+        req.destroy()
+        res.status(413).end()
+        return
+      }
+      buffers.push(buf)
+    })
     req.on('end', () => {
+      if (aborted) {
+        return
+      }
       process.buffers.set(filename, Buffer.concat(buffers))
       res.end()
 

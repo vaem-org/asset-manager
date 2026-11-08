@@ -85,8 +85,14 @@ const schema = new Schema<IAsset, AssetModelType, IAssetMethods, object, IAssetV
     type: Object,
     default: {},
   },
-  hls_enc_key: String,
-  hls_enc_iv: String,
+  hls_enc_key: {
+    type: String,
+    immutable: (doc: AssetDocument): boolean => !doc.isNew,
+  },
+  hls_enc_iv: {
+    type: String,
+    immutable: (doc: AssetDocument): boolean => !doc.isNew,
+  },
   deleted: Boolean,
   public: {
     type: Boolean,

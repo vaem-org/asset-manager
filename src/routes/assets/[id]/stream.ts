@@ -31,6 +31,9 @@ import type { Key } from 'm3u8parse/types/attrs'
 
 export default (router: Router) => {
   router.get('/stream', api(async (req) => {
+    if (req.originalUrl.startsWith('/signed')) {
+      throw new HttpError(401)
+    }
     return (await getDocument(Asset, req.params.id)).playbackInfo
   }))
 

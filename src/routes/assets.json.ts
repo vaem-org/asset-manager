@@ -22,7 +22,7 @@ import { Asset } from '#~/model/Asset/index.js'
 
 export default (router: Router) => {
   router.get('/assets.json', api(async () => {
-    const assets = await Asset.find()
+    const assets = await Asset.find({ deleted: { $ne: true } })
       .select(['subtitles', 'hls_enc_iv', 'hls_enc_key', 'labels', 'title', 'deleted', 'ffprobe.format.duration'])
 
     return Object.fromEntries(

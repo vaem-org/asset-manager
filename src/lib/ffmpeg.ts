@@ -121,6 +121,9 @@ export function getAudio(streams: Stream[]): number[] {
  * Segment a vtt file for playback on Apple devices
  */
 export async function segmentVtt(assetId: string, lang: string): Promise<void> {
+  if (!/^[a-zA-Z0-9_-]+$/.test(lang)) {
+    throw new Error('Invalid subtitle language')
+  }
   const item = await Asset.findById(assetId)
 
   if (!item) {

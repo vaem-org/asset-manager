@@ -18,9 +18,17 @@
 
 import type { Router } from 'express'
 import { api } from '#~/lib/express-helpers.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   router.get('/:path', api(async ({ model, params: { path } }) => {
-    return model!.distinct(path.toString())
+    const pathName = path.toString()
+    const allowedPaths = new Set(
+      Object.keys(model?.schema.paths ?? {}).filter(p => !['hls_enc_key', 'hls_enc_iv'].includes(p)),
+    )
+    if (!allowedPaths.has(pathName)) {
+      throw new HttpError(400, 'Invalid path')
+    }
+    return model!.distinct(pathName)
   }))
 }

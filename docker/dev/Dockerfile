@@ -1,8 +1,8 @@
-FROM node:24.22.1-slim AS base
+FROM node:26.13.0-slim AS base
 
 WORKDIR /app
 
-RUN corepack enable && apt-get update && apt-get install -y --no-install-recommends ffmpeg
+RUN npm i -g corepack && corepack enable && apt-get update && apt-get install -y --no-install-recommends ffmpeg
 
 ADD ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./tsconfig.json /app/
 

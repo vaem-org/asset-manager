@@ -18,7 +18,6 @@
 
 import { createReadStream } from 'node:fs'
 import { access, mkdir } from 'node:fs/promises'
-import { dirname } from 'node:path'
 import { spawn } from 'node:child_process'
 import type { Router } from 'express'
 import { getDocument, wrapper } from '#~/lib/express-helpers.js'
@@ -29,18 +28,22 @@ import { ffmpegPath } from '#~/lib/ffmpeg.js'
 
 export default (router: Router) => {
   router.get('/:ss.png', wrapper(async ({ params: { ss, id } }, res) => {
+    if (typeof ss !== 'string' || !/^\d+(\.\d+)?$/.test(ss)) {
+      throw new HttpError(400)
+    }
     const asset = await getDocument(Asset, id)
     if (!['verified', 'processed'].includes(asset.state) || asset.variants.length === 0 || asset.deleted) {
       throw new HttpError(404)
     }
 
-    const filename = `${config.root}/var/thumbnails/${id}.${ss}.png`
+    const thumbnailsDir = `${config.root}/var/thumbnails`
+    const filename = `${thumbnailsDir}/${asset._id.toString()}.${ss}.png`
 
     try {
       await access(filename)
     }
     catch (_e) {
-      await mkdir(dirname(filename), {
+      await mkdir(thumbnailsDir, {
         recursive: true,
       })
 

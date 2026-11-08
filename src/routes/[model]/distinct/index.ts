@@ -18,16 +18,26 @@
 
 import type { Router } from 'express'
 import { api } from '#~/lib/express-helpers.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 import path from './[path].js'
 
 export default (router: Router) => {
   path(router)
 
-  router.post('/', api(async ({ model, body: { paths } }) => {
+  router.post('/', api(async ({ model, body }) => {
+    const paths = body?.paths
+    if (!Array.isArray(paths) || paths.length > 20) {
+      throw new HttpError(400, 'Invalid paths')
+    }
+    const allowedPaths = new Set(
+      Object.keys(model?.schema.paths ?? {}).filter(p => !['hls_enc_key', 'hls_enc_iv'].includes(p)),
+    )
     const result: Record<string, unknown[]> = {}
     for (const path of paths) {
-      result[path] = await model?.distinct?.(path) ?? []
+      if (typeof path === 'string' && allowedPaths.has(path)) {
+        result[path] = await model?.distinct?.(path) ?? []
+      }
     }
 
     return result

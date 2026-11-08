@@ -59,6 +59,12 @@ export default (router: Router) => {
   useRouter(router, '/distinct', distinct)
   _id(router)
 
+  const writableFields: Record<string, string[]> = {
+    assets: ['title', 'labels', 'public', 'deleted'],
+    files: ['name', 'sourceSize'],
+    jobs: ['state'],
+  }
+
   router.get('/', api(async ({ model, query }: CustomRequest, res) => {
     if (!model) {
       throw new HttpError(400)
@@ -73,14 +79,15 @@ export default (router: Router) => {
       filter._id = query.q
     }
     else if (query.q) {
-      const searchPaths: string[] = model!.schema.searchPaths ?? Object.values((model.schema as Schema).paths)
-        .filter(({ instance }) => instance === 'String')
-        .map(({ path }) => path)
+      const searchPaths: string[] = (model!.schema.searchPaths ?? Object.values((model.schema as Schema).paths)
+        .filter(({ instance, path }) => instance === 'String' && !['hls_enc_key', 'hls_enc_iv'].includes(path))
+        .map(({ path }) => path))
 
-      const q = typeof query.q === 'string' ? query.q : undefined
+      const q = typeof query.q === 'string' ? query.q.slice(0, 128) : undefined
+      const escapedQ = (q ?? '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const regex = model!.schema.searchExact && q
         ? q.trim()
-        : new RegExp((q ?? '').trim(), 'i')
+        : new RegExp(escapedQ, 'i')
 
       filter = {
         ...filter,
@@ -89,13 +96,15 @@ export default (router: Router) => {
       }
     }
 
-    const page = Math.max(1, parseInt((query.page ?? '1').toString(), 10))
-    const per_page = Math.max(1, parseInt((query.per_page ?? '20').toString(), 10))
+    const page = Math.max(1, parseInt((query.page ?? '1').toString(), 10) || 1)
+    const per_page = Math.min(100, Math.max(1, parseInt((query.per_page ?? '20').toString(), 10) || 20))
     const sort = query.sort || '-createdAt'
     const total = await model!.countDocuments(filter)
     const populate = (query.populate ?? '')
       .toString()
-      .split(',').filter(v => v)
+      .split(',')
+      .filter(v => v && Boolean((model.schema as Schema).paths[v]))
+      .slice(0, 5)
     res.setHeader('x-total', total)
     res.setHeader('Access-Control-Expose-Headers', 'x-total')
 
@@ -112,8 +121,13 @@ export default (router: Router) => {
     ).map(doc => doc.toJSON())
   }))
 
-  router.post('/', api(async ({ body, model }) => {
-    const doc = new model!(body)
+  router.post('/', api(async ({ body, model, params }) => {
+    const allowed = writableFields[params.model.toString()] ?? []
+    const sanitized = Object.fromEntries(
+      Object.entries(body && typeof body === 'object' ? body : {})
+        .filter(([k]) => allowed.includes(k)),
+    )
+    const doc = new model!(sanitized)
     await save(doc)
 
     return doc.toJSON()

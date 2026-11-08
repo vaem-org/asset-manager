@@ -18,6 +18,7 @@
 
 import { basename } from 'path'
 import { Asset } from '#~/model/Asset/index.js'
+import { resolveFilePath } from '#~/model/File/index.js'
 import { ffprobe, getAudio, getFramerate } from '#~/lib/ffmpeg.js'
 import { Job } from '#~/model/Job/index.js'
 import profiles from '#~/lib/profiles.js'
@@ -33,7 +34,7 @@ export async function encode(
   customAudioFilter: string | null = null,
   ss: string | null = null,
 ) {
-  const path = `${config.root}/var/files/${file}`
+  const path = resolveFilePath(file)
   const asset = await Asset.findOne({
     file,
     deleted: { $ne: true },
@@ -66,6 +67,15 @@ export async function encode(
 
   const videoFilter = null
   audio = audio ?? getAudio(asset.ffprobe.streams)
+  if (!Array.isArray(audio) || !audio.every(idx => typeof idx === 'number' && Number.isInteger(idx) && idx >= 0)) {
+    throw new Error('Invalid audio stream indices')
+  }
+  if (customAudioFilter !== null && !/^(\[0:\d+\])+amerge=inputs=\d+,pan=stereo\|[c0-9+=|<]+$/.test(customAudioFilter)) {
+    throw new Error('Invalid customAudioFilter')
+  }
+  if (ss !== null && !/^\d+(\.\d+)?$/.test(String(ss))) {
+    throw new Error('Invalid ss parameter')
+  }
 
   const matchingProfiles = Object.entries(profiles)
     .filter(([width]) => parseInt(width) <= videoStream.width)

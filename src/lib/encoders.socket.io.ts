@@ -60,6 +60,14 @@ interface ErrorEvent extends Event {
 }
 
 const mutex = new Mutex()
+const activeJobs = new Map<string, string>()
+
+function isAuthorizedJob(connection: Socket, job: unknown): job is string {
+  return typeof job === 'string'
+    && mongoose.Types.ObjectId.isValid(job)
+    && activeJobs.get(connection.id) === job
+}
+
 async function ready(connection: Socket) {
   const release = await mutex.acquire()
   try {
@@ -81,17 +89,25 @@ async function ready(connection: Socket) {
       job.startedAt = new Date()
       await job.save()
 
-      const response = await new Promise((resolve) => {
-        connection.emit('job', {
+      const response = await new Promise<boolean>((resolve) => {
+        connection.timeout(10000).emit('job', {
           job: job._id,
           ffmpegArguments: [
             ...job['arguments'],
             '-hls_key_info_file', config.base + getSignedUrl(`/assets/${job.asset}/keyinfo`),
           ],
-        }, resolve)
+        }, (err: Error | null, ack?: boolean) => {
+          resolve(!err && Boolean(ack))
+        })
       })
 
-      job.state = response ? 'encoding' : 'new'
+      if (response) {
+        activeJobs.set(connection.id, job._id.toString())
+        job.state = 'encoding'
+      }
+      else {
+        job.state = 'new'
+      }
       await job.save()
     }
   }
@@ -103,11 +119,16 @@ async function ready(connection: Socket) {
   }
 }
 
-async function progress(connection: Socket, { out_time_ms, job }: ProgressEvent) {
+async function progress(connection: Socket, event: ProgressEvent) {
+  const { out_time_ms, job } = event ?? ({} as ProgressEvent)
+  if (!isAuthorizedJob(connection, job) || typeof out_time_ms !== 'number' || !Number.isFinite(out_time_ms)) {
+    return
+  }
   const progress = out_time_ms / 1000 / 1000
 
   await Job.findOneAndUpdate({
     _id: job,
+    state: 'encoding',
   }, {
     $set: {
       progress,
@@ -115,11 +136,16 @@ async function progress(connection: Socket, { out_time_ms, job }: ProgressEvent)
   })
 }
 
-async function done(connection: Socket, { job: id }: DoneEvent) {
+async function done(connection: Socket, event: DoneEvent) {
+  const { job: id } = event ?? ({} as DoneEvent)
+  if (!isAuthorizedJob(connection, id)) {
+    return
+  }
   const release = await mutex.acquire()
 
   try {
     console.log(`Job ${id} done`)
+    activeJobs.delete(connection.id)
     const job = await Job.findById(id).populate<{
       asset: AssetDocument
     }>('asset').orFail()
@@ -129,7 +155,7 @@ async function done(connection: Socket, { job: id }: DoneEvent) {
     job.completedAt = new Date()
     await job.save()
 
-    if (!config.uploadQueue) {
+    if (!config.uploadQueue && !job.asset?.deleted) {
       await job.asset?.finish?.()
     }
   }
@@ -138,14 +164,20 @@ async function done(connection: Socket, { job: id }: DoneEvent) {
   }
 }
 
-async function error(connection: Socket, { job, stderr }: ErrorEvent) {
-  console.log(`Error for job ${job}: ${stderr}`)
+async function error(connection: Socket, event: ErrorEvent) {
+  const { job, stderr } = event ?? ({} as ErrorEvent)
+  if (!isAuthorizedJob(connection, job)) {
+    return
+  }
+  const errorMessage = typeof stderr === 'string' ? stderr : String(stderr ?? '')
+  console.log(`Error for job ${job}: ${errorMessage}`)
+  activeJobs.delete(connection.id)
   await Job.findOneAndUpdate({
     _id: job,
   }, {
     $set: {
       state: 'error',
-      error: stderr,
+      error: errorMessage,
     },
   })
 }
@@ -155,7 +187,7 @@ async function uploaded(file: string) {
 
   try {
     const [assetId, variant] = basename(file).split('.')
-    const asset = mongoose.Types.ObjectId.isValid(assetId) && await Asset.findById(assetId)
+    const asset = mongoose.Types.ObjectId.isValid(assetId) && await Asset.findOne({ _id: assetId, deleted: { $ne: true } })
     if (asset) {
       const finished = await asset.setUploadedVariant(variant)
       if (finished) {
@@ -189,6 +221,15 @@ export function initialise(app: Express) {
   const httpServer = createServer(app)
   io = new Server(httpServer)
 
+  io.use((socket, next) => {
+    const header = socket.handshake.headers['authorization'] ?? ''
+    const token = socket.handshake.auth?.token ?? (/^bearer (.*)$/i.exec(header)?.[1])
+    if (config.skipAuth || (typeof token === 'string' && config.apiTokens.includes(token))) {
+      return next()
+    }
+    return next(new Error('Access denied'))
+  })
+
   io.on('connection', (connection) => {
     console.log(`New connection ${connection.id}`)
     const wrap = <T>(fn: (event: T) => Promise<void>) => (event: T) => {
@@ -201,6 +242,9 @@ export function initialise(app: Express) {
     connection.on('done', wrap<DoneEvent>(event => done(connection, event)))
     connection.on('encodeError', wrap<ErrorEvent>(event => error(connection, event)))
     connection.on('progress', wrap<ProgressEvent>(event => progress(connection, event)))
+    connection.on('disconnect', () => {
+      activeJobs.delete(connection.id)
+    })
   })
 
   return httpServer

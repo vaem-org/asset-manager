@@ -27,6 +27,7 @@ export default (schema: AssetSchema) => {
       this.hls_enc_iv = randomBytes(16).toString('hex')
     }
     else if (this.isModified('deleted') && this.deleted) {
+      this.public = false
       this.removeFiles()
       Job.deleteMany({
         asset: this._id,

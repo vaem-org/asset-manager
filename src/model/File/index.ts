@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { isAbsolute, relative, resolve } from 'node:path'
 import type { Model, Document, Types } from 'mongoose'
 import { Schema, model } from 'mongoose'
 
@@ -26,6 +27,19 @@ import { config } from '#~/config.js'
 import type { ITimestamps } from '#~/types/ITimestamps.js'
 
 export const root = `${config.root}/var/files`
+
+export function resolveFilePath(name: string): string {
+  if (!name || typeof name !== 'string' || name.includes('\0')) {
+    throw new Error('Invalid file name')
+  }
+  const base = resolve(root)
+  const full = resolve(base, name)
+  const rel = relative(base, full)
+  if (!rel || rel.startsWith('..') || isAbsolute(rel)) {
+    throw new Error(`Invalid file path: ${name}`)
+  }
+  return full
+}
 
 export interface IFile extends ITimestamps {
   name: string
@@ -45,7 +59,22 @@ export type FileModelType = Model<IFile, object, object, IFileVirtuals> & {
 }
 
 const schema = new Schema<IFile, FileModelType, object, object, IFileVirtuals>({
-  name: String,
+  name: {
+    type: String,
+    required: true,
+    validate: {
+      validator: (v: string) => {
+        try {
+          resolveFilePath(v)
+          return true
+        }
+        catch {
+          return false
+        }
+      },
+      message: 'File name must resolve within var/files',
+    },
+  },
   size: {
     type: Number,
     default: 0,
@@ -66,7 +95,7 @@ const schema = new Schema<IFile, FileModelType, object, object, IFileVirtuals>({
 export type FileSchema = typeof schema
 
 schema.virtual('path').get(function () {
-  return `${root}/${this.name}`
+  return resolveFilePath(this.name)
 })
 
 synchronise(schema, root)

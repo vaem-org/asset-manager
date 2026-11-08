@@ -20,11 +20,15 @@ import type { Router } from 'express'
 import { api, getDocument } from '#~/lib/express-helpers.js'
 import { File } from '#~/model/File/index.js'
 import { Asset } from '#~/model/Asset/index.js'
+import { HttpError } from '#~/lib/HttpError.js'
 
 export default (router: Router) => {
   router.post('/assign/:assetId/:language', api(async ({ params: { id, assetId, language } }) => {
+    if (typeof language !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(language)) {
+      throw new HttpError(400)
+    }
     const file = await getDocument(File, id)
     const asset = await getDocument(Asset, assetId)
-    await asset.setSubtitle(language.toString(), file.path)
+    await asset.setSubtitle(language, file.path)
   }))
 }
